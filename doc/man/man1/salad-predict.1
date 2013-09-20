@@ -1,0 +1,64 @@
+.TH "salad-predict" 1 "Mon Sep 16 2013" "Letter Salad" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+salad-predict \- Prediction mode of Salad 
+.SH "SYNOPSIS"
+.PP
+salad predict [options]
+.SH "DESCRIPTION"
+.PP
+Predicts the anomaly score or the classification value respectively of the provided data which might be given in various \fIinput format\fPs\&.
+.PP
+Whether the detector performs anomaly detection or classification depends on the number of bloom filters given\&. If only one is specified \fBSalad\fP uses that one in order to detect anomalies thereof\&. For two filters the matching class is determined\&.
+.PP
+Due to structure of the decision function \fINaN\fP value may occur\&. Therefore it might be necessary to specify a default value for these cases\&.
+.SH "OPTIONS"
+.PP
+.SS "I/O Options:"
+\fB-i, --input <file>\fP
+.RS 4
+The input filename\&.
+.RE
+.PP
+\fB-f, --input-format <fmt>\fP
+.RS 4
+Sets the format of input\&. This option might be one of 'lines', 'files' or 'archive'\&.
+.RE
+.PP
+\fB-b, --bloom <file>\fP
+.RS 4
+The bloom filter to be used\&.
+.RE
+.PP
+\fB--bad-bloom <file>\fP
+.RS 4
+The bloom filter for the 2nd class (optional)\&.
+.RE
+.PP
+\fB-o, --output <file>\fP
+.RS 4
+The output filename\&.
+.RE
+.PP
+.SS "Feature Options:"
+\fB-r, --nan-str <str>\fP
+.RS 4
+Set the string to be shown for NaN values\&.
+.RE
+.PP
+.SS "Generic Options:"
+\fB-h, --help\fP
+.RS 4
+Print the help screen\&.
+.RE
+.PP
+.SH "COPYRIGHT"
+.PP
+Copyright (c) 2012-2013, Christian Wressnegger
+.br
+ All rights reserved\&. 
+.PP
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version\&.
+.PP
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\&. See the GNU General Public License for more details\&.  

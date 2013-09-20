@@ -1,0 +1,19 @@
+#ifndef CONFIG_H_
+#define CONFIG_H_
+
+/**
+ * @class hidden_version
+ * \version @VERSION_STR@
+ */
+#define VERSION_STR "@VERSION_STR@"
+
+
+#cmakedefine USE_ARCHIVES
+#cmakedefine LIBARCHIVE2
+
+#cmakedefine Z
+#cmakedefine _GNU_SOURCE		/* getline */
+/* #undef IOTYPE_FILES */
+
+
+#endif /* SALAD_H_ */

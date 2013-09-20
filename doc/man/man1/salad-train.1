@@ -1,0 +1,62 @@
+.TH "salad-train" 1 "Mon Sep 16 2013" "Letter Salad" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+salad-train \- Training mode of Salad 
+.SH "SYNOPSIS"
+.PP
+salad train [options]
+.SH "DESCRIPTION"
+.PP
+Trains a detector based on n-grams extracted from the provided data which might be given in various \fIinput format\fPs\&. The detector is here represented as Bloom filter of a specific \fIsize\fP that gets populated by the extracted n-grams\&. The \fIlength\fP of the n-gram is indicated by the variable n\&. For the type of n-gram it is possible to choose between byte and word n-grams indicated by the \fIn-gram delimiter\fP\&. Thereby \fBSalad\fP implements the general bag-of-words model\&.
+.PP
+Bloom filters basically are associative bit arrays\&. Therefore, \fBSalad\fP is restricted to the binary embedding of n-grams, that is, the representation of the pure Boolean occurrence of such n-grams\&. The actual mapping of an n-gram to the index within the bit array is achieved by hashing the n-gram value\&. To do so \fBSalad\fP offers two different \fIhash sets\fP: (1) three fundamentally different hash functions and (2) three differently seeded instances of the murmur hash function\&.
+.SH "OPTIONS"
+.PP
+.SS "I/O Options:"
+\fB-i, --input <file>\fP
+.RS 4
+The input filename\&.
+.RE
+.PP
+\fB-f, --input-format <fmt>\fP
+.RS 4
+Sets the format of input\&. This option might be one of 'lines', 'files' or 'archive'\&.
+.RE
+.PP
+.SS "Feature Options:"
+\fB-n, --ngram-len <num>\fP
+.RS 4
+Set length of n-grams (Default: 3)\&.
+.RE
+.PP
+\fB-d, --ngram-delim <delim>\fP
+.RS 4
+Set delimiters for the use of words n-grams\&. If omitted or empty byte n-grams are used\&.
+.RE
+.PP
+\fB-s, --filter-size <num>\fP
+.RS 4
+Set the size of the bloom filter as bits of the index (Default: 24)\&.
+.RE
+.PP
+\fB--hash-set <hashes>\fP
+.RS 4
+Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple')\&.
+.RE
+.PP
+.SS "Generic Options:"
+\fB-h, --help\fP
+.RS 4
+Print the help screen\&.
+.RE
+.PP
+.SH "COPYRIGHT"
+.PP
+Copyright (c) 2012-2013, Christian Wressnegger
+.br
+ All rights reserved\&. 
+.PP
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version\&.
+.PP
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\&. See the GNU General Public License for more details\&.  

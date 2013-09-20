@@ -1,0 +1,51 @@
+.TH "salad" 1 "Mon Sep 16 2013" "Letter Salad" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+salad \- A Content Anomaly Detector Based on n-Grams 
+.SH "SYNOPSIS"
+.PP
+salad [<mode>] [options]
+.SH "DESCRIPTION"
+.PP
+\fBLetter\fP \fBSalad\fP or \fBSalad\fP for short, is an efficient and flexible implementation of the well-known anomaly detection method Anagram by Wang et al\&. 
+.PP
+It is based on n-gram models, that is, data is represented as all its substrings of length n\&. During training, cf\&. \fBsalad-train\fP(1), these n-grams are stored in a Bloom filter\&. This enables the detector to represent a large number of n-grams in little memory and still being able to efficiently access the data\&. Anagram was designed to operate on n-grams of bytes\&. \fBSalad\fP extends Anagram in this respect by generalizing this by also allowing n-grams of words or tokens\&. This is often referred to as bag-of-words and is a standard technique for mapping strings to vectors\&.
+.PP
+Furthermore \fBSalad\fP implements a 2-class version of the detector such that next to anomaly detection also a classification of two classes can be performed, cf\&. \fBsalad-predict\fP(1) for more details\&. Analyses on the used data with respect to the n-gram model to be used can be performed with the build-in inspection mode, cf\&. \fBsalad-inspect\fP(1) and on basis of general statistics of the detector, cf\&. \fBsalad-stats\fP(1)\&. 
+.SH "OPTIONS"
+.PP
+The options depend on the provided mode of operation\&. If no mode is specified, the following generic options are available:
+.PP
+\fB--help\fP
+.RS 4
+Print the help screen\&. 
+.RE
+.PP
+\fB--version\fP
+.RS 4
+Print version and copyright\&.
+.RE
+.PP
+.SH "MODES"
+.PP
+There exist two different means of accessing salad's modes: (1) As command line option to the main executable, or (2) as stand-alone executable prefixed with \fBsalad-\fP\&.
+.PP
+The following list contains the names of the stand-alone executables, for which individual man pages are available:
+.SS "salad-train(1)"
+Trains the anomaly detector\&.
+.SS "salad-predict(1)"
+Predicts the anomaly score of the specified data\&.
+.SS "salad-stats(1)"
+Provides statistical information of a trained anomaly detector\&.
+.SS "salad-inspect(1)"
+Analyzes the specified data with respect to the n-gram model used by the detector\&.
+.SH "COPYRIGHT"
+.PP
+Copyright (c) 2012-2013, Christian Wressnegger
+.br
+ All rights reserved\&. 
+.PP
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version\&.
+.PP
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\&. See the GNU General Public License for more details\&.  

@@ -1,0 +1,410 @@
+/**
+ * @class hidden_copyright
+ *
+ * Copyright (c) 2012-2013, Christian Wressnegger\n
+ * All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#ifndef SALAD_H_
+#define SALAD_H_
+
+/**
+ * @class hidden_intro
+ * \b Letter \b Salad or \b Salad for short, is an efficient and flexible
+ * implementation of the well-known anomaly detection method Anagram by Wang et
+ * al. It is based on n-gram models, that is, data is represented as all its
+ * substrings of length n. During training, cf. \ref salad-train
+ * "salad-train"(1), these n-grams are stored in a Bloom filter. This enables
+ * the detector to represent a large number of n-grams in little memory and
+ * still being able to efficiently access the data.
+ * Anagram was designed to operate on n-grams of bytes. \b Salad extends
+ * Anagram in this respect by generalizing this by also allowing n-grams of
+ * words or tokens. This is often referred to as bag-of-words and is a standard
+ * technique for mapping strings to vectors.
+ *
+ * Furthermore \b Salad implements a 2-class version of the detector such that
+ * next to anomaly detection also a classification of two classes can be
+ * performed, cf. \ref salad-predict "salad-predict"(1) for more details.
+ * Analyses on the used data with respect to the n-gram model to be used can be
+ * performed with the build-in inspection mode, cf. \ref salad-inspect
+ * "salad-inspect"(1) and on basis of general statistics of the detector, cf.
+ * \ref salad-stats "salad-stats"(1).
+ */
+
+/**
+ * @mainpage Salad - A Content Anomaly Detector based on n-Grams
+ *
+ * @section sec_overview Overview
+ *
+ * \copydoc hidden_intro
+ *
+ * The individual modes can be accessed using by specifying the mode of
+ * operation as command line option for the main executable. Please refer to the
+ * corresponding man page for more details on its usage: \ref salad "salad"(1).
+ *
+ * \copydoc hidden_version
+ *
+ * @section sec_install Installation
+ * @subsection sec_dependencies Dependencies
+ *
+ * The following libraries are required for building Salad from source code.
+ * These libraries are available as packages with many operating system
+ * distributions, e.g. Debian and Ubuntu Linux.
+ *
+ * - CMake as a build system (&ge;2.6)\n
+ *   http://www.cmake.org
+ * - libarchive (&ge; 2.8.4)\n
+ *   http://www.libarchive.org/
+ *
+ * @subsection sec_compilation Compilation
+ * Salad make use of the cross-platform build system cmake. It has
+   been successfully compiled on Linux, Mac OS X and Windows
+ *
+ * \code
+ * $ cmake [options] .
+ * $ make
+ * $ make doc
+ * $ make install
+ * \endcode
+ *
+ * @subsection sec_options Configuration Options
+ * @par -DCMAKE_INSTALL_PREFIX=PATH
+ * By default Salad is installed into /usr/local. If you prefer a different
+ * location, use this option to select an installation directory.
+ *
+ * @par -DUSE_ARCHIVES=ON/OFF
+ * If this feature is enabled, Sally can also be applied to read the contents
+ * of archives, such as .tgz and .zip. This allows for processing data in
+ * compressed form and may drastically save storage space. By default this
+ * feature is enabled.
+ *
+ * @section sec_background Background information
+ *
+ * The following technical article details the background of Anagram.
+ * - Anagram: A Content Anomaly Detector Resistant to Mimicry Attacks\n
+ *   Ke Wang, Janak J. Parekh and Salvatore J. Stolfo.\n
+ *   Proc. of 9th International Conference on Recent Advances in Intrusion
+ *   Detection (RAID), 2006.
+ *
+ * A detailed description and analysis of the underlying n-gram model and
+ * learning strategies used in Salad can be found here:
+ * - A Close Look on n-Grams in Intrusion Detection\n
+ *   Christian Wressnegger, Guido Schwenk, Daniel Arp and Konrad Rieck.\n
+ *   6th ACM CCS Workshop on Artificial Intelligence and Security (AISEC), 2013.
+ *
+ *
+ * @section sec_license License (3-clause BSD)
+ * \copydoc hidden_copyright
+ */
+
+#include <stdlib.h>
+
+#include "config.h"
+#include "anagram.h"
+#include "util/util.h"
+
+typedef enum {
+	UNDEFINED,
+	TRAINING,
+	PREDICT,
+	INSPECT,
+	STATS,
+	DBG
+} anamode_t;
+
+typedef enum {
+	SALAD_EXIT = -1,
+	SALAD_RUN = 0,
+	SALAD_HELP,
+	SALAD_HELP_TRAIN,
+	SALAD_HELP_PREDICT,
+	SALAD_HELP_INSPECT,
+	SALAD_HELP_STATS,
+	SALAD_VERSION
+} saladmode_t;
+
+typedef struct
+{
+	anamode_t mode;
+	io_mode_t input_type;
+	char* input;
+	char* bloom;
+	char* bbloom;
+	char* output;
+	size_t ngramLength;
+	char* delimiter;
+	int count;
+	unsigned int filter_size;
+	hashset_t hash_set;
+	char* nan;
+} config_t;
+
+
+const char* const anamode_to_string(anamode_t m);
+const anamode_t to_anamode(const char* const str);
+
+const char* const to_delim(uint8_t* const delim, const char* const delimiter);
+BLOOM* const bloom_from_file(const char* const id, const char* const filename, uint8_t* const delim, int* const useWGrams, size_t* const ngramLength);
+
+typedef const int (*FN_SALAD)(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut);
+const int salad_heart(const config_t* const c, FN_SALAD fct);
+
+
+/**
+ * @page salad A Content Anomaly Detector Based on n-Grams
+ *
+ * @section SYNOPSIS
+ *
+ * salad [&lt;mode&gt;] [options]
+ *
+ * @section DESCRIPTION
+ * \copydoc hidden_intro
+ *
+ * @section OPTIONS
+ *
+ * The options depend on the provided mode of operation. If no mode is
+ * specified, the following generic options are available:
+ *
+ * @par --help
+ * Print the help screen.
+ * @par --version
+ * Print version and copyright.
+ *
+ * @section SALAD MODES
+ *
+ * There exist two different means of accessing salad's modes: (1) As command
+ * line option to the main executable, or (2) as stand-alone executable prefixed
+ * with \b salad-.
+ *
+ * The following list contains the names of the stand-alone executables, for
+ * which individual man pages are available:
+ *
+ * @subsection sec_salad-train   salad-train(1)
+ * Trains the anomaly detector.
+ *
+ * @subsection sec_salad-predict salad-predict(1)
+ * Predicts the anomaly score of the specified data.
+ *
+ * @subsection sec_salad-stats   salad-stats(1)
+ * Provides statistical information of a trained anomaly detector.
+ *
+ * @subsection sec_salad-inspect salad-inspect(1)
+ * Analyzes the specified data with respect to the n-gram model used by the
+ * detector.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+int main(int argc, char* argv[]);
+
+/**
+ * @page salad-train Training mode of Salad
+ *
+ * @section SYNOPSIS
+ *
+ * salad train [options]
+ *
+ * @section DESCRIPTION
+ *
+ * Trains a detector based on n-grams extracted from the provided data which
+ * might be given in various <em>input format</em>s. The
+ * detector is here represented as Bloom filter of a specific <em>size</em>
+ * that gets populated by the extracted n-grams. The <em>length</em> of the
+ * n-gram is indicated by the variable n. For the type of n-gram it is
+ * possible to choose between byte and word n-grams indicated by the
+ * <em>n-gram delimiter</em>.
+ * Thereby \b Salad implements the general bag-of-words model.
+ *
+ * Bloom filters basically are associative bit arrays. Therefore, \b Salad is
+ * restricted to the binary embedding of n-grams, that is, the representation of
+ * the pure Boolean occurrence of such n-grams. The actual mapping of an n-gram
+ * to the index within the bit array is achieved by hashing the n-gram value. To
+ * do so \b Salad offers two different <em>hash sets</em>: (1) three fundamentally
+ * different hash functions and (2) three differently seeded instances of the
+ * murmur hash function.
+ *
+ * @section OPTIONS
+ *
+ * @subsection sec_ioops I/O Options:
+ * @par -i, --input &lt;file&gt;
+ * The input filename.
+ *
+ * @par -f, --input-format &lt;fmt&gt;
+ * Sets the format of input. This option might be one of 'lines', 'files' or
+ * 'archive'.
+ *
+ * @subsection sec_featureops Feature Options:
+ * @par -n, --ngram-len &lt;num&gt;
+ * Set length of n-grams (Default: 3).
+ *
+ * @par -d, --ngram-delim &lt;delim&gt;
+ * Set delimiters for the use of words n-grams. If omitted or empty byte
+ * n-grams are used.
+ *
+ * @par -s, --filter-size &lt;num&gt;
+ * Set the size of the bloom filter as bits of the index (Default: 24).
+ *
+ * @par     --hash-set &lt;hashes&gt;
+ * Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple').
+ *
+ * @subsection sec_genericops Generic Options:
+ * @par -h, --help
+ * Print the help screen.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+const int salad_train(const config_t* const c);
+
+/**
+ * @page salad-predict Prediction mode of Salad
+ *
+ * @section SYNOPSIS
+ *
+ * salad predict [options]
+ *
+ * @section DESCRIPTION
+ *
+ * Predicts the anomaly score or the classification value respectively of the
+ * provided data which might be given in various <em>input format</em>s.
+ *
+ * Whether the detector performs anomaly detection or classification depends on
+ * the number of bloom filters given. If only one is specified \b Salad uses
+ * that one in order to detect anomalies thereof. For two filters the matching
+ * class is determined.
+ *
+ * Due to structure of the decision function <em>NaN</em> value may occur.
+ * Therefore it might be necessary to specify a default value for these cases.
+ *
+ * @section OPTIONS
+ *
+ * @subsection sec_ioops I/O Options:
+ * @par -i, --input &lt;file&gt;
+ * The input filename.
+ *
+ * @par -f, --input-format &lt;fmt&gt;
+ * Sets the format of input. This option might be one of 'lines', 'files' or
+ * 'archive'.
+ *
+ * @par -b,  --bloom &lt;file&gt;
+ * The bloom filter to be used.
+ *
+ * @par      --bad-bloom &lt;file&gt;
+ * The bloom filter for the 2nd class (optional).
+ *
+ * @par -o,  --output &lt;file&gt;
+ * The output filename.
+ *
+ * @subsection sec_featureops Feature Options:
+ * @par -r,  --nan-str &lt;str&gt;
+ * Set the string to be shown for NaN values.
+ *
+ * @subsection sec_genericops Generic Options:
+ * @par -h, --help
+ * Print the help screen.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+const int salad_predict(const config_t* const c);
+
+/**
+ * @page salad-stats Statistics mode of Salad
+ *
+ * @section SYNOPSIS
+ *
+ * salad stats [options]
+ *
+ * @section DESCRIPTION
+ *
+ * Provides statistical information of the specified Bloom filter. In particular
+ * this currently is limited to the filter's saturation.
+ *
+ * @section OPTIONS
+ *
+ * @subsection sec_ioops I/O Options:
+ * @par -b,  --bloom &lt;file&gt;
+ * The bloom filter to be analyzed.
+ *
+ * @subsection sec_genericops Generic Options:
+ * @par -h, --help
+ * Print the help screen.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+const int salad_stats(const config_t* const c);
+
+/**
+ * @page salad-inspect Inspection mode of Salad
+ *
+ * @section SYNOPSIS
+ *
+ * salad inspect [options]
+ *
+ * @section DESCRIPTION
+ *
+ * Performs a detailed inspection of the n-grams that would be extracted in the
+ * course of processing the data using salad-train and the model
+ * generated thereby. Specifically the following four values are extracted
+ * for each sample:
+ * - The number of new/ unseen n-grams
+ * - The number of unique n-grams
+ * - The total number of n-grams
+ * - The length of the sample in number of bytes
+ *
+ * This in turn can be used to make a point how well and if anomaly detection is
+ * suitable for this particular data set or classification might be the better
+ * choice in this setting.
+ *
+ * @section OPTIONS
+ *
+ * @subsection sec_ioops I/O Options:
+ * @par -i, --input &lt;file&gt;
+ * The input filename.
+ *
+ * @par -f, --input-format &lt;fmt&gt;
+ * Sets the format of input. This option might be one of 'lines', 'files' or
+ * 'archive'.
+ *
+ * @par -b,  --bloom &lt;file&gt;
+ * The bloom filter to be used.
+ *
+ * @par -o,  --output &lt;file&gt;
+ * The output filename.
+ *
+ * @subsection sec_featureops Feature Options:
+ * @par -n, --ngram-len &lt;num&gt;
+ * Set length of n-grams (Default: 3).
+ *
+ * @par -d, --ngram-delim &lt;delim&gt;
+ * Set delimiters for the use of words n-grams. If omitted or empty byte
+ * n-grams are used.
+ *
+ * @par -s, --filter-size &lt;num&gt;
+ * Set the size of the bloom filter as bits of the index (Default: 24).
+ *
+ * @par     --hash-set &lt;hashes&gt;
+ * Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple').
+ *
+ * @subsection sec_genericops Generic Options:
+ * @par -h, --help
+ * Print the help screen.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+const int salad_inspect(const config_t* const c);
+const int salad_dbg(const config_t* const c);
+
+#endif /* SALAD_H_ */
