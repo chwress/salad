@@ -31,6 +31,7 @@
 #endif
 
 #ifdef USE_ARCHIVES
+	#include <time.h>
 	#include <archive.h>
 	#include <archive_entry.h>
 #endif
@@ -125,11 +126,12 @@ const int archive_open(file_t* const f, const char* const filename)
 	}
 
 	struct archive* const a = archive_read_new();
-#ifndef LIBARCHIVE2
+#ifdef LIBARCHIVE2
+	archive_read_support_compression_all(a);
+#else
 	archive_read_support_filter_all(a);
 #endif
 	archive_read_support_format_all(a);
-	archive_read_support_compression_all(a);
 
 	ret = archive_read_open_FILE(a, f->fd);
 	if (ret == ARCHIVE_OK)

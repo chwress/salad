@@ -9,7 +9,7 @@ project(${PROJECTNAME})
 
 set(${TARGETNAME}_VERSION_MAJOR 0)
 set(${TARGETNAME}_VERSION_MINOR 3)
-set(${TARGETNAME}_VERSION_PATCH 4)
+set(${TARGETNAME}_VERSION_PATCH 5)
 
 set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.${${TARGETNAME}_VERSION_PATCH}")
 
@@ -71,6 +71,15 @@ endif (CMAKE_COMPILER_IS_GNUCC)
 set(DOC_DIR "doc/")
 
 find_package(Doxygen)
+if (${DOXYGEN_VERSION})
+    string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+)(.[0-9]+)" "\\1" DOXYGEN_VERSION_ ${DOXYGEN_VERSION}) 
+
+    if (${DOXYGEN_VERSION_} STREQUAL "1.8.3")
+        message(STATUS "Doxygen-${DOXYGEN_VERSION} contains a bug that breaks the generation of Salad's documentation. Sorry, no can do!")
+        unset(DOXYGEN_FOUND)
+    endif (${DOXYGEN_VERSION_} STREQUAL "1.8.3")
+endif (${DOXYGEN_VERSION})
+
 if (DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile @ONLY)
     add_custom_target(doc

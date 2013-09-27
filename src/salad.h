@@ -103,7 +103,7 @@
  *   6th ACM CCS Workshop on Artificial Intelligence and Security (AISEC), 2013.
  *
  *
- * @section sec_license License (3-clause BSD)
+ * @section sec_license License (GPL-3)
  * \copydoc hidden_copyright
  */
 
