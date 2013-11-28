@@ -1,5 +1,6 @@
 /**
  * @class hidden_copyright
+ * \n
  *
  * Copyright (c) 2012-2013, Christian Wressnegger\n
  * All rights reserved.
@@ -20,25 +21,33 @@
 
 /**
  * @class hidden_intro
+ * \n
+ *
  * \b Letter \b Salad or \b Salad for short, is an efficient and flexible
  * implementation of the well-known anomaly detection method Anagram by Wang et
- * al. It is based on n-gram models, that is, data is represented as all its
- * substrings of length n. During training, cf. \ref salad-train
- * "salad-train"(1), these n-grams are stored in a Bloom filter. This enables
- * the detector to represent a large number of n-grams in little memory and
- * still being able to efficiently access the data.
- * Anagram was designed to operate on n-grams of bytes. \b Salad extends
- * Anagram in this respect by generalizing this by also allowing n-grams of
- * words or tokens. This is often referred to as bag-of-words and is a standard
- * technique for mapping strings to vectors.
+ * al (RAID 2006).
  *
- * Furthermore \b Salad implements a 2-class version of the detector such that
- * next to anomaly detection also a classification of two classes can be
- * performed, cf. \ref salad-predict "salad-predict"(1) for more details.
- * Analyses on the used data with respect to the n-gram model to be used can be
- * performed with the build-in inspection mode, cf. \ref salad-inspect
- * "salad-inspect"(1) and on basis of general statistics of the detector, cf.
- * \ref salad-stats "salad-stats"(1).
+ * \b Salad enables detecting anomalies in large-scale string data. The tool is
+ * based on the concepts of n-grams, that is, strings are compared using all
+ * substrings of length n. During training, cf. \ref salad-train
+ * "salad-train"(1), these n-grams are extracted from a collection of strings
+ * and stored in a Bloom filter. This enables the detector to represent a large
+ * number of n-grams in very little memory. During anomaly detection, the
+ * n-grams of unknown strings are matched against the Bloom filter and strings
+ * containing several n-grams not seen during training are flagged as anomalous.
+ *
+ * \b Salad extends the original method Anagram in different ways: First, the
+ * tool does not only operate on n-grams of bytes, but is also capable of
+ * comparing n-grams over words and tokens. Second, \b Salad implements a
+ * 2-class version of the detector that enables discriminating strings of two
+ * types, cf. \ref salad-predict "salad-predict"(1) for more details. Finally,
+ * the tool features a build-in inspection and statistic mode that can help to
+ * analyze the learned Bloom filter and its predictions, cf. \ref salad-inspect
+ * "salad-inspect"(1) and \ref salad-stats "salad-stats"(1) respectively.
+ *
+ * The tool can be utilized in different fields of application. For example, the
+ * concept underlying \b Salad has been prominently used for intrusion detection,
+ * but is not limited to this scenario.
  */
 
 /**
@@ -137,6 +146,7 @@ typedef struct
 {
 	anamode_t mode;
 	io_mode_t input_type;
+	char* pcap_filter;
 	char* input;
 	char* bloom;
 	char* bbloom;
@@ -149,12 +159,41 @@ typedef struct
 	char* nan;
 } config_t;
 
+static const config_t DEFAULT_CONFIG =
+{
+	/* mode */ UNDEFINED,
+	/* input_type */ LINES,
+	/* pcap_filter */ "tcp",
+	/* input */ NULL,
+	/* bloom */ NULL,
+	/* bbloom */ NULL,
+	/* output */ NULL,
+	/* ngramLength */ 3,
+	/* delimiter */ NULL,
+	/* count */ 0,
+	/* filter_size */ 24,
+	/* hash_set */ HASHES_SIMPLE,
+	/* nan */ "nan"
+};
 
 const char* const anamode_to_string(anamode_t m);
 const anamode_t to_anamode(const char* const str);
 
+#define DELIM_SIZE  	256
+#define DELIM(delim)	uint8_t delim[DELIM_SIZE]
 const char* const to_delim(uint8_t* const delim, const char* const delimiter);
-BLOOM* const bloom_from_file(const char* const id, const char* const filename, uint8_t* const delim, int* const useWGrams, size_t* const ngramLength);
+
+typedef struct
+{
+	BLOOM* bloom;
+	int useWGrams;
+	DELIM(delim);
+	size_t ngramLength;
+} bloom_t;
+
+const int bloom_t_diff(const bloom_t* const a, const bloom_t* const b);
+const int bloom_from_file(const char* const id, const char* const filename, bloom_t* const out);
+BLOOM* const bloom_from_file_ex(const char* const id, const char* const filename, uint8_t* const delim, int* const useWGrams, size_t* const ngramLength);
 
 typedef const int (*FN_SALAD)(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut);
 const int salad_heart(const config_t* const c, FN_SALAD fct);
@@ -240,8 +279,14 @@ int main(int argc, char* argv[]);
  * The input filename.
  *
  * @par -f, --input-format &lt;fmt&gt;
- * Sets the format of input. This option might be one of 'lines', 'files' or
- * 'archive'.
+ * Sets the format of input. This option might be one of 'lines', 'files',
+ * 'archive', 'network' or 'network-dump'. This depends on the configure
+ * Salad was compiled with -- cf. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING.
+ *
+ * @par -p,  --pcap-filter &lt;str&gt;
+ * Filter expression for the PCAP library in case network data is processed
+ * (Default: tcp). This option is only available if Salad was compiled with
+ * network support -- cf. USE_NETWORK.
  *
  * @subsection sec_featureops Feature Options:
  * @par -n, --ngram-len &lt;num&gt;
@@ -293,8 +338,14 @@ const int salad_train(const config_t* const c);
  * The input filename.
  *
  * @par -f, --input-format &lt;fmt&gt;
- * Sets the format of input. This option might be one of 'lines', 'files' or
- * 'archive'.
+ * Sets the format of input. This option might be one of 'lines', 'files',
+ * 'archive', 'network' or 'network-dump'. This depends on the configure
+ * Salad was compiled with -- cf. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING.
+ *
+ * @par -p,  --pcap-filter &lt;str&gt;
+ * Filter expression for the PCAP library in case network data is processed
+ * (Default: tcp). This option is only available if Salad was compiled with
+ * network support -- cf. USE_NETWORK.
  *
  * @par -b,  --bloom &lt;file&gt;
  * The bloom filter to be used.
@@ -374,8 +425,14 @@ const int salad_stats(const config_t* const c);
  * The input filename.
  *
  * @par -f, --input-format &lt;fmt&gt;
- * Sets the format of input. This option might be one of 'lines', 'files' or
- * 'archive'.
+ * Sets the format of input. This option might be one of 'lines', 'files',
+ * 'archive', 'network' or 'network-dump'. This depends on the configure
+ * Salad was compiled with -- cf. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING.
+ *
+ * @par -p,  --pcap-filter &lt;str&gt;
+ * Filter expression for the PCAP library in case network data is processed
+ * (Default: tcp). This option is only available if Salad was compiled with
+ * network support -- cf. USE_NETWORK.
  *
  * @par -b,  --bloom &lt;file&gt;
  * The bloom filter to be used.

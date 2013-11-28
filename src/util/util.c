@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
 
 
 #ifndef IOTYPE_FILES
@@ -63,14 +64,32 @@ const size_t inline_decode(char* s, const size_t len)
 			continue;
 		}
 
-		/* Skip truncated sequence */
-		if (len - i <= 2)
+		// write out truncated truncated sequence
+		const size_t x = len -i;
+		if (x <= 2)
+		{
+			for (unsigned int k = 0; k < x; k++, i++, j++)
+			{
+				s[j] = s[i];
+			}
 			break;
+		}
 
 		buf[2] = s[++i];
 		buf[3] = s[++i];
-		sscanf(buf, "%x", (unsigned int*) &ch);
-		s[j] = ch;
+
+		// is valid encoding?
+		if (isxdigit(buf[2]) && isxdigit(buf[3]))
+		{
+			sscanf(buf, "%x", (unsigned int*) &ch);
+			s[j] = ch;
+		}
+		else
+		{
+			s[j++] = '%';
+			s[j++] = buf[2];
+			s[j]   = buf[3];
+		}
 	}
 	s[j] = 0x00;
 	return j;
@@ -99,6 +118,22 @@ char* const fread_str(FILE* const f)
 const float frand()
 {
 	return (float) rand() / RAND_MAX;
+}
+
+
+void progress_step()
+{
+	fprintf(stdout, ".");
+	fflush(stdout);
+}
+
+void progress()
+{
+	static size_t c = 0; c++;
+	if (c % BATCH_SIZE == 0)
+	{
+		progress_step();
+	}
 }
 
 

@@ -17,6 +17,7 @@
 
 #include "io.h"
 #include "util.h"
+#include "log.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -36,27 +37,50 @@
 	#include <archive_entry.h>
 #endif
 
+#ifdef USE_NETWORK
+	#include <nids.h>
+	#include <errno.h>
+	#include <signal.h>
+
+	struct
+	{
+		FN_DATA callback;
+		void* data;
+		int merge_payloads;
+		size_t num_chunks;
+	} nids_user;
+
+#endif
+
 const char* const to_string(const io_mode_t m)
 {
 	switch (m)
 	{
-	case LINES:   return "lines";
-	case FILES:   return "files";
+	case LINES:        return "lines";
+	case FILES:        return "files";
 #ifdef USE_ARCHIVES
-	case ARCHIVE: return "archive";
+	case ARCHIVE:      return "archive";
 #endif
-	default:      return "unknown";
+#ifdef USE_NETWORK
+	case NETWORK:      return "network";
+	case NETWORK_DUMP: return "network-dump";
+#endif
+	default:           return "unknown";
 	}
 }
 
 const io_mode_t to_iomode(const char* const str)
 {
-	switch (cmp(str, "lines", "files", "archive", NULL))
+	switch (cmp(str, "lines", "files", "archive", "network", "network-dump", NULL))
 	{
 	case 0:  return LINES;
 	case 1:  return FILES;
 #ifdef USE_ARCHIVES
 	case 2:  return ARCHIVE;
+#endif
+#ifdef USE_NETWORK
+	case 3:  return NETWORK;
+	case 4:  return NETWORK_DUMP;
 #endif
 	// Okay that actually cannot happen ;)
 	default: return FILES;
@@ -65,30 +89,61 @@ const io_mode_t to_iomode(const char* const str)
 
 const int is_valid_iomode(const char* const str)
 {
-#ifdef USE_ARCHIVES
-	return (cmp(str, "lines", "files", "archive", NULL) > 0);
-#else
-	return (cmp(str, "lines", "files", NULL) > 0);
+	switch (cmp(str, "lines", "files", "archive", "network", "network-dump", NULL))
+	{
+#ifdef USE_NETWORK
+	case 4:
+	case 3:
 #endif
+#ifdef USE_ARCHIVES
+	case 2:
+#endif
+	case 1:
+	case 0:  return TRUE;
+	default: return FALSE;
+	}
 }
 
-const int    file_open(file_t* const f, const char* const filename);
+void data_free(data_t* const d)
+{
+	assert(d != NULL);
+	free(d->buf);
+}
+
+void data_destroy(data_t* const d)
+{
+	assert(d != NULL);
+	free(d->buf);
+	free(d);
+}
+
+const int    file_open(file_t* const f, const char* const filename, void *const p);
 const size_t file_read(file_t* const f, data_t* data, const size_t numLines);
+const size_t file_recv(file_t* const f, FN_DATA callback, void* const usr);
 const int    file_close(file_t* const f);
 
-data_processor_t dp_lines   = { .open = file_open, .read = file_read, .close = file_close };
-data_processor_t dp_files   = { .open = NULL, .read = NULL, .close = NULL };
+data_processor_t dp_lines   = { .open = file_open, .read = file_read, .recv = file_recv, .close = file_close };
+data_processor_t dp_files   = { .open = NULL, .read = NULL, .recv = NULL, .close = NULL };
 
 
 #ifdef USE_ARCHIVES
-const int    archive_open(file_t* const f, const char* const filename);
+const int    archive_open(file_t* const f, const char* const filename, void *const p);
 const size_t archive_read(file_t* const f, data_t* data, const size_t numFiles);
+const size_t archive_recv(file_t* const f, FN_DATA callback, void* const usr);
 const int    archive_close(file_t* const f);
 
-data_processor_t dp_archive = { .open = archive_open, .read = archive_read, .close = archive_close };
+data_processor_t dp_archive = { .open = archive_open, .read = archive_read, .recv = archive_recv, .close = archive_close };
 #endif
 
 
+#ifdef USE_NETWORK
+const int    net_open(file_t* const f, const char* const filename, void *const p);
+const size_t net_read(file_t* const f, data_t* data, const size_t numFiles);
+const size_t net_recv(file_t* const f, FN_DATA callback, void* const usr);
+const int    net_close(file_t* const f);
+
+data_processor_t dp_network = { .open = net_open, .read = NULL, .recv = net_recv, .close = net_close };
+#endif
 
 const data_processor_t* const to_dataprocssor(const io_mode_t m)
 {
@@ -99,11 +154,15 @@ const data_processor_t* const to_dataprocssor(const io_mode_t m)
 #ifdef USE_ARCHIVES
 	case ARCHIVE: return &dp_archive;
 #endif
+#ifdef USE_NETWORK
+	case NETWORK_DUMP:
+	case NETWORK: return &dp_network;
+#endif
 	default:      return NULL;
 	}
 }
 
-const int file_open(file_t* const f, const char* const filename)
+const int file_open(file_t* const f, const char* const filename, void *const p)
 {
 	assert(f != NULL);
 
@@ -117,9 +176,9 @@ const int file_open(file_t* const f, const char* const filename)
 }
 
 #ifdef USE_ARCHIVES
-const int archive_open(file_t* const f, const char* const filename)
+const int archive_open(file_t* const f, const char* const filename, void *const p)
 {
-	int ret = file_open(f, filename);
+	int ret = file_open(f, filename, p);
 	if (ret != EXIT_SUCCESS)
 	{
 		return ret;
@@ -140,6 +199,76 @@ const int archive_open(file_t* const f, const char* const filename)
 		return EXIT_SUCCESS;
 	}
 	return EXIT_FAILURE;
+}
+#endif
+
+#ifdef USE_NETWORK
+// This is a stripped down version of libnids initialization functionality
+// for opening files and devices.
+pcap_t* const nids_open()
+{
+	// nids.c#nids_init
+	if (nids_params.filename)
+	{
+		return pcap_open_offline(nids_params.filename, nids_errbuf);
+	}
+
+	// nids.c#open_live
+	int promisc = 0;
+
+	if (nids_params.device == NULL)
+	{
+	   nids_params.device = pcap_lookupdev(nids_errbuf);
+	}
+
+	if (nids_params.device == NULL) return NULL;
+
+	// This simplified version does not support the "all" option
+	// if (strcmp(nids_params.device, "all") == 0) { ... }
+
+	promisc = (nids_params.promisc != 0);
+	return pcap_open_live(nids_params.device, 16384, promisc, nids_params.pcap_timeout, nids_errbuf);
+}
+
+void sigfunc(int sig)
+{
+	pcap_breakloop(nids_params.pcap_desc);
+	print("");
+}
+
+const int net_open(file_t* const f, const char* const filename, void *const p)
+{
+	assert(f != NULL);
+
+	net_param_t default_params = { FALSE, NULL };
+	net_param_t* const params = (p != NULL ? (net_param_t*) p : &default_params);
+
+	// Install signal handlers
+	signal(SIGINT,  sigfunc);
+	signal(SIGTERM, sigfunc);
+	signal(SIGABRT, sigfunc);
+
+	// Initialize libnids
+	nids_params.n_tcp_streams = 4096;   // Streams to track for re-assembly
+	nids_params.n_hosts = 1024;         // Hosts to track for defragmentation
+	nids_params.scan_num_hosts = 0;     // Disable port scan detection
+
+	nids_params.device = NULL;
+	nids_params.filename = (params->is_device ? NULL : (char*) filename);
+	nids_params.device = (params->is_device ? (char*) filename : NULL);
+	nids_params.pcap_filter = (char*) params->pcap_filter;
+
+	f->fd = NULL;
+	f->data = &nids_params;
+
+	nids_params.pcap_desc = nids_open();
+
+	if (!nids_init())
+	{
+		params->error_msg = nids_errbuf;
+		return EXIT_FAILURE;
+	}
+	return EXIT_SUCCESS;
 }
 #endif
 
@@ -182,6 +311,39 @@ const size_t file_read(file_t* const f, data_t* data, const size_t numLines)
 	return i;
 }
 
+const size_t recv_stub(file_t* const f, FN_READ read, FN_DATA data, void* const usr)
+{
+	assert(f != NULL);
+	assert(read != NULL);
+	assert(data != NULL);
+
+	data_t buf[BATCH_SIZE];
+	size_t n = 0, N = 0;
+	do
+	{
+		n = read(f, buf, BATCH_SIZE);
+#ifndef NDEBUG
+		const int ret = data(buf, n, usr);
+		assert(ret == EXIT_SUCCESS);
+#else
+		data(buf, n, usr);
+#endif
+		for (size_t i = 0; i < n; i++)
+		{
+			free(buf[i].buf);
+		}
+
+		N += n;
+	} while (n >= BATCH_SIZE);
+
+	return N;
+}
+
+const size_t file_recv(file_t* const f, FN_DATA callback, void* const usr)
+{
+	return recv_stub(f, file_read, callback, usr);
+}
+
 #ifdef USE_ARCHIVES
 const size_t archive_read(file_t* const f, data_t* data, const size_t numFiles)
 {
@@ -211,6 +373,81 @@ const size_t archive_read(file_t* const f, data_t* data, const size_t numFiles)
 
 	return i;
 }
+
+const size_t archive_recv(file_t* const f, FN_DATA callback, void* const usr)
+{
+	return recv_stub(f, archive_read, callback, usr);
+}
+#endif
+
+#ifdef USE_NETWORK
+
+#define PROCESS(hs,count) { \
+	data[0].buf = (hs)->data; \
+	data[0].len = (hs)->count; \
+	nids_user.callback(data, 1, nids_user.data); \
+	nids_user.num_chunks++; \
+}
+
+void net_recv_tcp(struct tcp_stream* const s, void** reserved)
+{
+	// For the network mode we would like to process the data as fast as
+	// possible on a stream basis -> BUFFER_SIZE = 1
+	static data_t data[1];
+
+	switch (s->nids_state)
+	{
+	case NIDS_JUST_EST:
+		s->client.collect++;
+		s->server.collect++;
+#ifdef WE_WANT_URGENT_DATA
+		s->server.collect_urg++;
+		a_tcp->client.collect_urg++;
+#endif
+		return;
+
+	case NIDS_DATA:
+        if (nids_user.merge_payloads)
+        {
+            nids_discard(s, 0);
+            return;
+        }
+
+        // Check who sent the data
+		struct half_stream* hlf = (s->client.count_new ? &s->client : &s->server);
+		PROCESS(hlf, count_new);
+        break;
+
+	case NIDS_CLOSE: case NIDS_RESET: case NIDS_TIMED_OUT:
+        if (nids_user.merge_payloads)
+        {
+			if (s->server.count != 0) PROCESS(&s->server, count);
+			if (s->client.count != 0) PROCESS(&s->client, count);
+        }
+        break;
+	}
+}
+
+
+const size_t net_recv(file_t* const f, FN_DATA callback, void* const usr)
+{
+	nids_user.callback = callback;
+	nids_user.data = usr;
+	nids_user.merge_payloads = TRUE;
+
+	//nids_register_udp((void *) net_recv_udp);
+	nids_register_tcp((void*) net_recv_tcp);
+
+	// Disable checksum control
+	static struct nids_chksum_ctl ctl;
+	ctl.netaddr = 0;
+	ctl.mask = 0;
+	ctl.action = NIDS_DONT_CHKSUM;
+	nids_register_chksum_ctl(&ctl, 1);
+
+	nids_run();
+	return nids_user.num_chunks;
+}
 #endif
 
 
@@ -239,6 +476,18 @@ const int archive_close(file_t* const f)
 		return EXIT_SUCCESS;
 	}
 	return EXIT_FAILURE;
+}
+#endif
+
+#ifdef USE_NETWORK
+const int net_close(file_t* const f)
+{
+	assert(f != NULL);
+
+	nids_exit();
+	pcap_close(nids_params.pcap_desc);
+
+	return EXIT_SUCCESS;
 }
 #endif
 

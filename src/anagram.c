@@ -20,14 +20,6 @@
 #include "hash.h"
 #include "util/util.h"
 
-#if __STDC_VERSION__ >= 199901L
-#include <tgmath.h>
-#define POW pow
-#else
-#include <math.h>
-#define POW (size_t) pow
-#endif
-
 #include <string.h>
 
 
@@ -234,6 +226,7 @@ void extract_wgrams(const char* const str, const size_t len, const size_t n, con
 
 	const char* s = str;
 	size_t slen = len;
+	// ATTENTION! "uniquify" allocates new memory stored in &s
 	uniquify(&s, &slen, delim, ch);
 
     const char** wgrams = (const char**) malloc(sizeof(char*) *(n +1));
@@ -514,7 +507,7 @@ const int fwrite_hashspec(FILE* const f, BLOOM* const bloom)
 
 	if (fwrite(&bloom->nfuncs, sizeof(uint8_t), 1, f) != 1) return -1;
 
-	for (int i = 0; i < bloom->nfuncs; i++)
+	for (uint8_t i = 0; i < bloom->nfuncs; i++)
 	{
 		const int id = to_hashid(bloom->funcs[i]);
 		if (id < 0 || id >= 256) return -1;
@@ -573,12 +566,15 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 	if (useWGrams != NULL) *useWGrams = 0;
 
 	char* const delimiter = fread_str(f);
-	if (delimiter != NULL && delimiter[0] != 0x00)
+	if (delimiter != NULL)
 	{
-		if (useWGrams != NULL) *useWGrams = 1;
-		if (delim != NULL) to_delimiter_array(delim, delimiter);
+		if (delimiter[0] != 0x00)
+		{
+			if (useWGrams != NULL) *useWGrams = 1;
+			if (delim != NULL) to_delimiter_array(delim, delimiter);
+		}
+		free(delimiter);
 	}
-	free(delimiter);
 
 	// n-gram length
 	size_t dummy;
@@ -596,6 +592,7 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 void to_delimiter_array(uint8_t* const out, const char* const s)
 {
 	assert(out != NULL);
+    memset(out, 0, 256);
 
 	if (s == NULL)
 	{
@@ -606,7 +603,6 @@ void to_delimiter_array(uint8_t* const out, const char* const s)
 	strcpy(x, s);
 	inline_decode(x, strlen(x));
 
-    memset(out, 0, 256);
     for (size_t i = 0; i < strlen(x); i++)
     {
     	out[(unsigned int) x[i]] = 1;

@@ -15,14 +15,22 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
+#ifndef TESTS_COMMON_H_
+#define TESTS_COMMON_H_
 
-#define CTEST_MAIN
-#include "test/ctest.h"
+#include "ctest.h"
 
-const int salad_dbg(const config_t* const c)
-{
-	const char* prog[] = { "salad_dbg" };
-	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-}
+#include "../salad.h"
+#include "../util/util.h"
 
+
+static const uint8_t NUM_FUNCS = 3;
+#define FUNCS sax_hash_n, sdbm_hash_n, bernstein_hash_n
+
+static const char* const DELIMITER = "";
+static const char* const TOKEN_DELIMITER = "\r\n \t";
+static const size_t NGRAM_LENGTH = 3;
+
+static const char* const TEST_STR = "The quick brown fox jumps over the lazy dog";
+
+#endif /* TESTS_COMMON_H_ */

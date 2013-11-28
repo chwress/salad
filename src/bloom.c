@@ -222,14 +222,12 @@ const int bloom_compare(BLOOM* const a, BLOOM* const b)
 		return a->bitsize -b->bitsize;
 	}
 
-	for (size_t i = 0; i < a->size; i++)
+	if (a->size != b->size)
 	{
-		if ((a->a[i] ^ b->a[i]) != 0)
-		{
-			return 1;
-		}
+		return a->size -b->size;
 	}
-	return 0;
+
+	return memcmp(a->a, b->a, a->size);
 }
 
 const int bloom_to_file(BLOOM* const bloom, FILE* const f)

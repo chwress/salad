@@ -16,85 +16,109 @@
  */
 
 #include "salad.h"
-
 #include "anagram.h"
+#include "util/log.h"
 
 #include <inttypes.h>
 #include <string.h>
 #include <math.h>
 
 
-typedef void (*FN_BLOOMIZE)(BLOOM* const, BLOOM* const, const char* const, const size_t, const size_t, const uint8_t* const, bloomize_stats_t* const);
-
-void bloomize_ex3_wrapper(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const uint8_t* const delim, bloomize_stats_t* const out)
+void bloomize_ex3_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
 {
-	bloomize_ex3(bloom1, bloom2, str, len, n, out);
+	bloomize_ex3(p->bloom1, p->bloom2, str, len, p->n, out);
 }
 
-void bloomize_ex4_wrapper(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const uint8_t* const delim, bloomize_stats_t* const out)
+void bloomizew_ex3_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
 {
-	bloomize_ex4(bloom1, bloom2, str, len, n, out);
+	bloomizew_ex3(p->bloom1, p->bloom2, str, len, p->n, p->delim, out);
+}
+
+void bloomize_ex4_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
+{
+	bloomize_ex4(p->bloom1, p->bloom2, str, len, p->n, out);
+}
+
+void bloomizew_ex4_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
+{
+	bloomizew_ex4(p->bloom1, p->bloom2, str, len, p->n, p->delim, out);
+}
+
+
+typedef struct {
+	FN_BLOOMIZE fct;
+	bloom_param_t param;
+
+	char buf[0x100];
+	bloomize_stats_t stats[BATCH_SIZE];
+	FILE* const fOut;
+} inspect_t;
+
+const int salad_inspect_callback(data_t* data, const size_t n, void* const usr)
+{
+	inspect_t x = *((inspect_t*) usr);
+
+	for (size_t i = 0; i < n; i++)
+	{
+		x.fct(&x.param, data[i].buf, data[i].len, &x.stats[i]);
+	}
+
+	for (size_t i = 0; i < n; i++)
+	{
+		snprintf(x.buf, 0x100, "%10"Z"\t%10"Z"\t%10"Z"%10"Z"\n",
+					(SIZE_T) x.stats[i].new,
+					(SIZE_T) x.stats[i].uniq,
+					(SIZE_T) x.stats[i].total,
+					(SIZE_T) data[i].len);
+
+		fwrite(x.buf, sizeof(char), strlen(x.buf), x.fOut);
+	}
+
+	(n <= 1 ? progress() : progress_step());
+	return EXIT_SUCCESS;
 }
 
 
 const int salad_inspect_stub(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut)
 {
-	BLOOM* bloom = (c->bloom != NULL ? bloom_from_file("training", c->bloom, NULL, NULL, NULL) : NULL);
+	bloom_t training = { NULL, FALSE, {0}, 0 };
 
-	const int newBloomFilter = (bloom == NULL);
-	if (newBloomFilter)
+	if (c->bloom != NULL && !bloom_from_file("training", c->bloom, &training))
 	{
-		bloom = bloom_init(c->filter_size, c->hash_set);
+		return EXIT_FAILURE;
 	}
 
-	BLOOM* const cur = bloom_init(c->filter_size, c->hash_set);
+	const int newBloomFilter = (training.bloom == NULL);
+	if (newBloomFilter)
+	{
+		training.bloom = bloom_init(c->filter_size, c->hash_set);
+	}
 
-	uint8_t delim[256] = {0};
-	const char* const delimiter = to_delim(delim, c->delimiter);
+	bloom_t cur;
+	cur.ngramLength = c->ngramLength;
+	cur.bloom = bloom_init(c->filter_size, c->hash_set);
+
+	const char* const delimiter = to_delim(cur.delim, c->delimiter);
 
 	FN_BLOOMIZE bloomize = (newBloomFilter ?
-			(delimiter == NULL ? bloomize_ex3_wrapper : bloomizew_ex3) :
-			(delimiter == NULL ? bloomize_ex4_wrapper : bloomizew_ex4));
+			(delimiter == NULL ? bloomize_ex3_wrapper : bloomizew_ex3_wrapper) :
+			(delimiter == NULL ? bloomize_ex4_wrapper : bloomizew_ex4_wrapper));
 
-	char buf[0x1000];
 
-	static const size_t BATCH_SIZE = 1000;
-	data_t data[BATCH_SIZE];
-	bloomize_stats_t stats[BATCH_SIZE];
+	inspect_t context = {
+		bloomize,
+		{training.bloom, cur.bloom, cur.ngramLength, cur.delim},
+		{0}, {{0, 0, 0}}, fOut
+	};
 
-	size_t numRead = 0;
-	do
-	{
-		numRead = dp->read(&fIn, data, BATCH_SIZE);
-		for (size_t i = 0; i < numRead; i++)
-		{
-			bloomize(bloom, cur, data[i].buf, data[i].len, c->ngramLength, delim, &stats[i]);
-			free(data[i].buf);
-		}
+	dp->recv(&fIn, salad_inspect_callback, &context);
+	print("");
 
-		for (size_t i = 0; i < numRead; i++)
-		{
-#ifdef Z
-			snprintf(buf, 0x1000, "%10zu\t%10zu\t%10zu%10zu\n", stats[i].new, stats[i].uniq, stats[i].total, data[i].len);
-#else
-			snprintf(buf, 0x1000, "%10lu\t%10lu\t%10lu\t%10lu\n",
-					(unsigned long) stats[i].new,
-					(unsigned long) stats[i].uniq,
-					(unsigned long) stats[i].total,
-					(unsigned long) data[i].len);
-#endif
-			fwrite(buf, sizeof(char), strlen(buf), fOut);
-		}
+	const size_t n = bloom_count(cur.bloom);
+	error("Saturation: %.3f%%", (((double)n)/ ((double)cur.bloom->bitsize))*100);
 
-		fprintf(stdout, ".");
-		fflush(stdout);
-	} while (numRead >= BATCH_SIZE);
-
-	fprintf(stdout, "\n");
-
-	const size_t set = bloom_count(bloom);
-	fprintf(stdout, "[*] Saturation: %.3f%%\n", (((double)set)/ ((double)bloom->bitsize))*100);
-
+	bloom_destroy(training.bloom);
+	bloom_destroy(cur.bloom);
 	return EXIT_SUCCESS;
 }
 

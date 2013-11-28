@@ -25,6 +25,8 @@
 
 #include "salad.h"
 
+#include "util/log.h"
+
 
 #define MAIN_OPTION_STR "i:f:b:w:o:t:n:d:r:vh"
 
@@ -36,13 +38,14 @@ static struct option main_longopts[] = {
 };
 
 
-#define TRAIN_OPTION_STR "i:f:o:n:d:s:h"
+#define TRAIN_OPTION_STR "i:f:p:o:n:d:s:h"
 #define OPTION_HASHSET 1000
 
 static struct option train_longopts[] = {
 	// I/O options
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
+	{ "pcap-filter",    required_argument, NULL, 'p' },
 	{ "output",         required_argument, NULL, 'o' },
 
 	// Feature options
@@ -57,13 +60,14 @@ static struct option train_longopts[] = {
 };
 
 
-#define PREDICT_OPTION_STR "i:f:o:b:r:h"
+#define PREDICT_OPTION_STR "i:f:p:o:b:r:h"
 #define OPTION_BBLOOM 1000
 
 static struct option predict_longopts[] = {
 	// I/O options
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
+	{ "pcap-filter",    required_argument, NULL, 'p' },
 	{ "output",         required_argument, NULL, 'o' },
 
 	{ "bloom",          required_argument, NULL, 'b' },
@@ -76,12 +80,13 @@ static struct option predict_longopts[] = {
 };
 
 
-#define INSPECT_OPTION_STR "i:f:b:o:n:d:s:h"
+#define INSPECT_OPTION_STR "i:f:p:b:o:n:d:s:h"
 
 static struct option inspect_longopts[] = {
 	// I/O options
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
+	{ "pcap-filter",    required_argument, NULL, 'p' },
 	{ "bloom",          required_argument, NULL, 'b' },
 	{ "output",         required_argument, NULL, 'o' },
 
@@ -111,9 +116,9 @@ static struct option stats_longopts[] = {
 
 const int usage_main()
 {
-	fprintf(stdout, "Usage: salad [<mode>] [options]\n"
+	print("Usage: salad [<mode>] [options]\n"
 	"\n"
-#ifdef DEBUG
+#ifdef TEST_SALAD
 	"<mode> may be one of 'train', 'predict', 'inspect', 'stats', 'dbg'\n"
 #else
 	"<mode> may be one of 'train', 'predict', 'inspect', 'stats'\n"
@@ -121,46 +126,57 @@ const int usage_main()
 	"\n"
 	"Generic options:\n"
 	"  -v,  --version              Print version and copyright.\n"
-	"  -h,  --help                 Print this help screen.\n"
-	"\n");
+	"  -h,  --help                 Print this help screen.\n");
 	return EXIT_SUCCESS;
 }
 
 
 const int usage_train()
 {
-	fprintf(stdout, "Usage: salad train [options]\n"
+	print("Usage: salad train [options]\n"
 	"\n"
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
 	"                              one of " VALID_IOMODES ".\n"
+#ifdef USE_NETWORK
+	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
+	"                              network data is processed (Default: %s).\n"
+#endif
 	"  -o,  --output <file>        The output filename.\n"
 	"\n"
 	"Feature options:\n"
-	"  -n,  --ngram-len <num>      Set length of n-grams (Default: 3).\n"
+	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
-	"                              the index (Default: 24).\n"
+	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
 	"                              (Default: 'simple').\n"
 	"\n"
 	"Generic options:\n"
-	"  -h,  --help                 Print this help screen.\n"
-	"\n");
+	"  -h,  --help                 Print this help screen.\n",
+#ifdef USE_NETWORK
+	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
+#endif
+	/* --ngram-len   */ DEFAULT_CONFIG.ngramLength,
+	/* --filter-size */ DEFAULT_CONFIG.filter_size);
 	return EXIT_SUCCESS;
 }
 
 
 const int usage_predict()
 {
-	fprintf(stdout, "Usage: salad predict [options]\n"
+	print("Usage: salad predict [options]\n"
 	"\n"
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
 	"                              one of " VALID_IOMODES ".\n"
+#ifdef USE_NETWORK
+	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
+	"                              network data is processed (Default: %s).\n"
+#endif
 	"  -b,  --bloom <file>         The bloom filter to be used.\n"
 	"       --bad-bloom <file>     The bloom filter for the 2nd class (optional).\n"
 	"  -o,  --output <file>        The output filename.\n"
@@ -170,88 +186,131 @@ const int usage_predict()
 	"\n"
 	"Generic options:\n"
 	"  -h,  --help                 Print this help screen.\n"
-	"\n");
+#ifdef USE_NETWORK
+	/* --pcap-filter */ ,DEFAULT_CONFIG.pcap_filter
+#endif
+	);
 	return EXIT_SUCCESS;
 }
 
 
 const int usage_inspect()
 {
-	fprintf(stdout, "Usage: salad inspect [options]\n"
+	print("Usage: salad inspect [options]\n"
 	"\n"
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
 	"                              one of " VALID_IOMODES ".\n"
+#ifdef USE_NETWORK
+	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
+	"                              network data is processed (Default: %s).\n"
+#endif
 	"  -b,  --bloom <file>         The bloom filter to be used.\n"
 	"  -o,  --output <file>        The output filename.\n"
 	"\n"
 	"Feature options:\n"
-	"  -n,  --ngram-len <num>      Set length of n-grams (Default: 3).\n"
+	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
-	"                              the index (Default: 24).\n"
+	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
 	"                              (Default: 'simple').\n"
 	"\n"
 	"Generic options:\n"
-	"  -h,  --help                 Print this help screen.\n"
-	"\n");
+	"  -h,  --help                 Print this help screen.\n",
+#ifdef USE_NETWORK
+	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
+#endif
+	/* --ngram-len   */ DEFAULT_CONFIG.ngramLength,
+	/* --filter-size */ DEFAULT_CONFIG.filter_size);
 	return EXIT_SUCCESS;
 }
 
 
 const int usage_stats()
 {
-	fprintf(stdout, "Usage: salad stats [options]\n"
+	print("Usage: salad stats [options]\n"
 	"\n"
 	"I/O options:\n"
 	"  -b,  --bloom <file>         The bloom filter to be analyzed.\n"
 	"\n"
 	"Generic options:\n"
-	"  -h,  --help                 Print this help screen.\n"
-	"\n");
+	"  -h,  --help                 Print this help screen.\n");
 	return EXIT_SUCCESS;
 }
 
 
 const int version()
 {
-	fprintf(stdout, "Letter Salad %s - A Content Anomaly Detector Based on n-Grams\n"
-           "Copyright (c) 2012-2013 Christian Wressnegger (christian@mlsec.org)\n",
-            VERSION_STR);
+	print("Letter Salad %s - A Content Anomaly Detector Based on n-Grams\n"
+	    "Copyright (c) 2012-2013 Christian Wressnegger (christian@mlsec.org)\n",
+	    VERSION_STR);
 
 	return EXIT_SUCCESS;
 }
 
-const int check_input(config_t* const config)
+const int check_input(config_t* const config, const int filesOnly)
 {
 	if (config->input == NULL || config->input[0] == 0x00)
 	{
-		fprintf(stderr, "[!] No input file specified.\n");
+		error("No input file specified.");
 		return EXIT_FAILURE;
 	}
 
 	if (config->mode == STATS)
 	{
-		fprintf(stdout, "[*] input: %s\n", config->input);
+		status("Input: %s", config->input);
 	}
 	else
 	{
-		fprintf(stdout, "[*] input: %s (%s mode)\n", config->input, to_string(config->input_type));
+#ifdef USE_NETWORK
+#ifndef ALLOW_LIVE_TRAINING
+		if (config->input_type == NETWORK && filesOnly)
+		{
+			error("Use a network dump for training");
+			return EXIT_FAILURE;
+		}
+#endif
+		if (config->input_type == NETWORK || config->input_type == NETWORK_DUMP)
+		{
+			const int empty = (config->pcap_filter == NULL || config->pcap_filter[0] == '\0');
+			const char* const filter = (empty ? "unfiltered" : config->pcap_filter);
+
+			status("Input: %s (%s mode: %s)",
+			       config->input, to_string(config->input_type), filter);
+		}
+		else
+#endif
+		{
+			status("Input: %s (%s mode)",
+			       config->input, to_string(config->input_type));
+		}
 	}
 
 	if (config->bloom != NULL)
 	{
-		fprintf(stdout, "[*] bloom filter: %s\n", config->bloom);
+		status("Bloom filter: %s", config->bloom);
 	}
 
 	if (config->bbloom != NULL)
 	{
-		fprintf(stdout, "[*] bad content bloom filter: %s\n", config->bbloom);
+		status("Bad content bloom filter: %s", config->bbloom);
 	}
 
+	return EXIT_SUCCESS;
+}
+
+const int check_output(config_t* const config)
+{
+	if (config->output == NULL || config->output[0] == 0x00)
+	{
+		error("No output file specified.");
+		return EXIT_FAILURE;
+	}
+
+	status("Output: %s", config->output);
 	return EXIT_SUCCESS;
 }
 
@@ -285,8 +344,8 @@ const io_mode_t as_iomode(const char* const x)
 
 	if (!is_valid_iomode(optarg))
 	{
-		fprintf(stdout, "[W] Illegal input type '%s', using '%s' instead\n",
-				optarg, to_string(y));
+		warn("Illegal input type '%s', using '%s' instead",
+		     optarg, to_string(y));
 	}
 	return y;
 }
@@ -310,6 +369,10 @@ const saladmode_t parse_traininglike_options_ex(int argc, char* argv[], config_t
 			config->input_type = as_iomode(optarg);
 			break;
 
+		case 'p':
+			config->pcap_filter = optarg;
+			break;
+
 		case 'b':
 			config->bloom = optarg;
 			break;
@@ -323,8 +386,8 @@ const saladmode_t parse_traininglike_options_ex(int argc, char* argv[], config_t
 			int ngramLength = atoi(optarg); // TODO: strtol
 			if (ngramLength <= 0)
 			{
-				fprintf(stdout, "[W] Illegal n-gram length specified.\n");
-				fprintf(stdout, "[W] Defaulting to: %u\n\n", (unsigned int) config->ngramLength);
+				warn("Illegal n-gram length specified.");
+				warn("Defaulting to: %u\n", (unsigned int) config->ngramLength);
 			}
 			else config->ngramLength = ngramLength;
 			break;
@@ -338,8 +401,8 @@ const saladmode_t parse_traininglike_options_ex(int argc, char* argv[], config_t
 			int filter_size = atoi(optarg); // TODO: strtol
 			if (filter_size <= 0)
 			{
-				fprintf(stdout, "[W] Illegal filter size specified.\n");
-				fprintf(stdout, "[W] Defaulting to: %u\n\n", (unsigned int) config->filter_size);
+				warn("Illegal filter size specified.");
+				warn("Defaulting to: %u\n", (unsigned int) config->filter_size);
 			}
 			else config->filter_size = filter_size;
 			break;
@@ -349,8 +412,8 @@ const saladmode_t parse_traininglike_options_ex(int argc, char* argv[], config_t
 			hashset_t hashset = to_hashset(optarg);
 			if (hashset == HASHES_UNDEFINED)
 			{
-				fprintf(stdout, "[W] Illegal hash set specified.\n");
-				fprintf(stdout, "[W] Defaulting to: %s\n\n", hashset_to_string(config->hash_set));
+				warn("Illegal hash set specified.");
+				warn("Defaulting to: %s\n", hashset_to_string(config->hash_set));
 			}
 			else config->hash_set = hashset;
 			break;
@@ -363,28 +426,24 @@ const saladmode_t parse_traininglike_options_ex(int argc, char* argv[], config_t
 		}
 	}
 
-	fprintf(stdout, "[*] mode: %s\n", anamode_to_string(config->mode));
+	status("Mode: %s", anamode_to_string(config->mode));
 	if (config->bloom != NULL)
 	{
-		fprintf(stdout, "[*] based on: %s\n", config->bloom);
+		status("Based on: %s", config->bloom);
 	}
 
-	if (check_input(config) == EXIT_FAILURE)
-	{
-		return SALAD_EXIT;
-	}
+	if (check_input(config, TRUE) == EXIT_FAILURE) return SALAD_EXIT;
+	if (check_output(config) == EXIT_FAILURE) return SALAD_EXIT;
 
-	fprintf(stdout, "[*] n-gram length: %u\n", (unsigned int) config->ngramLength);
-
+	status("n-Gram length: %u", (unsigned int) config->ngramLength);
 
 	if (config->delimiter != NULL)
 	{
-		fprintf(stdout, "[*] delimiter: '%s'\n", config->delimiter);
+		status("Delimiter: '%s'", config->delimiter);
 	}
 
-	fprintf(stdout, "[*] filter size: %u\n", config->filter_size);
-	fprintf(stdout, "[*] hash set: %s\n", hashset_to_string(config->hash_set));
-	fprintf(stdout, "[*] output: %s\n", config->output);
+	status("Filter size: %u", config->filter_size);
+	status("Hash set: %s", hashset_to_string(config->hash_set));
 	return SALAD_RUN;
 }
 
@@ -413,6 +472,10 @@ const saladmode_t parse_predict_options(int argc, char* argv[], config_t* const 
 			config->input_type = as_iomode(optarg);
 			break;
 
+		case 'p':
+			config->pcap_filter = optarg;
+			break;
+
 		case 'o':
 			config->output = optarg;
 			break;
@@ -437,14 +500,11 @@ const saladmode_t parse_predict_options(int argc, char* argv[], config_t* const 
 		}
 	}
 
-	fprintf(stdout, "[*] mode: %s\n", anamode_to_string(config->mode));
+	status("Mode: %s", anamode_to_string(config->mode));
 
-	if (check_input(config) == EXIT_FAILURE)
-	{
-		return SALAD_EXIT;
-	}
+	if (check_input(config, FALSE) == EXIT_FAILURE) return SALAD_EXIT;
+	if (check_output(config) == EXIT_FAILURE) return SALAD_EXIT;
 
-	fprintf(stdout, "[*] output: %s\n", config->output);
 	return SALAD_RUN;
 }
 
@@ -478,9 +538,9 @@ const saladmode_t parse_stats_options(int argc, char* argv[], config_t* const co
 		}
 	}
 
-	fprintf(stdout, "[*] mode: %s\n", anamode_to_string(config->mode));
+	status("Mode: %s", anamode_to_string(config->mode));
 
-	if (check_input(config) == EXIT_FAILURE)
+	if (check_input(config, TRUE) == EXIT_FAILURE)
 	{
 		return SALAD_EXIT;
 	}
@@ -499,18 +559,7 @@ const saladmode_t parse_options(int argc, char* argv[], config_t* const config)
 		return SALAD_HELP;
 	}
 
-	config->mode = UNDEFINED;
-	config->input_type = LINES;
-	config->input = NULL;
-	config->bloom = NULL;
-	config->bbloom = NULL;
-	config->output = NULL;
-	config->ngramLength = 3;
-	config->delimiter = NULL;
-	config->count = 0;
-	config->filter_size = 24;
-	config->hash_set = HASHES_SIMPLE;
-	config->nan = "nan";
+	*config = DEFAULT_CONFIG;
 
 	if (*argv[1] != '-')
 	{
@@ -521,11 +570,11 @@ const saladmode_t parse_options(int argc, char* argv[], config_t* const config)
 		case PREDICT:  return parse_predict_options(argc, argv, config);
 		case INSPECT:  return parse_inspect_options(argc, argv, config);
 		case STATS:    return parse_stats_options(argc, argv, config);
-#ifdef DEBUG
+#ifdef TEST_SALAD
 		case DBG:      return SALAD_RUN;
 #endif
 		default:
-			fprintf(stderr, "[!] Unknown mode '%s'.\n", argv[1]);
+			error("Unknown mode '%s'.", argv[1]);
 			return SALAD_EXIT;
 		}
 	}
@@ -553,11 +602,11 @@ const int bye(const int ec)
 {
 	if (ec == EXIT_SUCCESS)
 	{
-		fprintf(stdout, "[*] Bye!\n");
+		status("Bye!");
 	}
 	else
 	{
-		fprintf(stderr, "[!] Bye!\n");
+		error("Bye!");
 	}
 	return ec;
 }
@@ -581,7 +630,7 @@ int main(int argc, char* argv[])
 	int ret = 0;
 	if (config.input_type == FILES)
 	{
-		fprintf(stderr, "[!] Input mode 'files' is not yet implemented.\n");
+		error("Input mode 'files' is not yet implemented.");
 		ret = EXIT_FAILURE;
 	}
 	else
@@ -600,7 +649,7 @@ int main(int argc, char* argv[])
 		case STATS:
 			ret = salad_stats(&config);
 			break;
-#ifdef DEBUG
+#ifdef TEST_SALAD
 		case DBG:
 			ret = salad_dbg(&config);
 			break;
@@ -642,6 +691,16 @@ const anamode_t to_anamode(const char* const str)
 }
 
 
+const int bloom_t_diff(const bloom_t* const a, const bloom_t* const b)
+{
+	assert(a != NULL);
+	assert(b != NULL);
+
+	return (memcmp(a->delim, b->delim, 256) != 0
+			|| a->useWGrams != b->useWGrams
+			|| a->ngramLength != b->ngramLength);
+}
+
 const char* const to_delim(uint8_t* const delim, const char* const delimiter)
 {
 	const char* x = delimiter;
@@ -651,20 +710,20 @@ const char* const to_delim(uint8_t* const delim, const char* const delimiter)
 		{
 			x = NULL;
 		}
-		to_delimiter_array(delim, x);
 	}
+	to_delimiter_array(delim, x);
 	return x;
 }
 
 
-BLOOM* const bloom_from_file(const char* const id, const char* const filename, uint8_t* const delim, int* const useWGrams, size_t* const ngramLength)
+BLOOM* const bloom_from_file_ex(const char* const id, const char* const filename, uint8_t* const delim, int* const useWGrams, size_t* const ngramLength)
 {
 	assert(filename != NULL);
 
 	FILE* const fFilter = fopen(filename, "r");
 	if (fFilter == NULL)
 	{
-		fprintf(stderr, "[!] Unable to open %s filter\n", id);
+		error("Unable to open %s filter.", id);
 		return NULL;
 	}
 
@@ -674,10 +733,21 @@ BLOOM* const bloom_from_file(const char* const id, const char* const filename, u
 
 	if (ret != 0)
 	{
-		fprintf(stderr, "[!] Corrupt %s filter.\n", id);
+		error("Corrupt %s filter.", id);
 		return NULL;
 	}
 	return bloom;
+}
+
+
+const int bloom_from_file(const char* const id, const char* const filename, bloom_t* const out)
+{
+	if (out != NULL)
+	{
+		out->bloom = bloom_from_file_ex(id, filename, out->delim, &out->useWGrams, &out->ngramLength);
+		return (out->bloom != NULL);
+	}
+	return (bloom_from_file_ex(id, filename, NULL, NULL, NULL) != NULL);
 }
 
 
@@ -686,19 +756,32 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 	assert(c != NULL);
 	const data_processor_t* const dp = to_dataprocssor(c->input_type);
 
+#ifdef USE_NETWORK
+	net_param_t p = { (c->input_type == NETWORK), c->pcap_filter, NULL };
+#else
+	io_param_t p = { NULL };
+#endif
+
 	file_t fIn;
-	int ret = dp->open(&fIn, c->input);
+	int ret = dp->open(&fIn, c->input, &p);
 	if (ret != EXIT_SUCCESS)
 	{
-		fprintf(stderr, "[!] Unable to open input data.\n");
+		error("Unable to open input data.");
+		if (p.error_msg != NULL)
+		{
+			error("%s", p.error_msg);
+		}
 		return EXIT_FAILURE;
 	}
 
 	FILE* const fOut = fopen(c->output, "w+");
 	if (fOut == NULL)
 	{
-		fprintf(stderr, "[!] Unable to create output file.\n");
-		fclose(fIn.fd);
+		error("Unable to create output file.");
+		if (fIn.fd != NULL)
+		{
+			fclose(fIn.fd);
+		}
 		return EXIT_FAILURE;
 	}
 

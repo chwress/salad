@@ -34,6 +34,14 @@ extern hashfunc_t HASH_FCTS[NUM_HASHFCTS];
 const int to_hashid(hashfunc_t h);
 
 typedef enum { HASHES_UNDEFINED, HASHES_SIMPLE, HASHES_MURMUR } hashset_t;
+#define VALID_HASHES "'simple' or 'murmur'"
+
+typedef struct {
+	BLOOM* const bloom1; // e.g. good content filter
+	BLOOM* const bloom2; // e.g. bad content filter
+	const size_t n;      // n-gram length
+	const uint8_t* const delim;
+} bloom_param_t;
 
 typedef struct
 {
@@ -41,6 +49,8 @@ typedef struct
 	size_t uniq;
 	size_t total;
 } bloomize_stats_t;
+
+typedef void (*FN_BLOOMIZE)(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out);
 
 void bloomize_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n);
 void bloomize_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const vec_t* const weights);
@@ -50,6 +60,8 @@ void bloomizew_ex(BLOOM* const bloom, const char* const str, const size_t len, c
 void bloomizew_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const uint8_t* const delim, const vec_t* const weights);
 void bloomizew_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const uint8_t* const delim, bloomize_stats_t* const out);
 void bloomizew_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const uint8_t* const delim, bloomize_stats_t* const out);
+
+typedef const double (*FN_ANACHECK)(bloom_param_t* const p, const char* const input, const size_t len);
 
 const double anacheck_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n);
 const double anacheck_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n);

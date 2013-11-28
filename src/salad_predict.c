@@ -16,111 +16,168 @@
  */
 
 #include "salad.h"
-
 #include "anagram.h"
 
 #include <sys/time.h>
 #include <math.h>
-#include <string.h>
 
+#include "util/io.h"
+#include "util/log.h"
 
 #define TO_SEC(t) ((t).tv_sec+((t).tv_usec/1000000.0))
 
 
-typedef const double (*FN_ANACHECK)(BLOOM* const, BLOOM* const, const char* const, const size_t, const size_t, const uint8_t* const);
-
-const double anacheck_ex_wrapper(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const uint8_t* const delim)
+const double anacheck_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheck_ex(bloom, input, len, n);
+	return anacheck_ex(p->bloom1, input, len, p->n);
 }
 
-const double anacheck_ex2_wrapper(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const uint8_t* const delim)
+const double anacheck_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheck_ex2(bloom, bbloom, input, len, n);
+	return anacheck_ex2(p->bloom1, p->bloom2, input, len, p->n);
 }
 
-const double anacheckw_ex_wrapper(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const uint8_t* const delim)
+const double anacheckw_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheckw_ex(bloom, input, len, n, delim);
+	return anacheckw_ex(p->bloom1, input, len, p->n, p->delim);
 }
 
+const double anacheckw_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheckw_ex2(p->bloom1, p->bloom2, input, len, p->n, p->delim);
+}
+
+
+typedef struct {
+	FN_ANACHECK fct;
+	bloom_param_t param;
+
+	char nan[0x100];
+	float scores[BATCH_SIZE];
+	FILE* const fOut;
+	double totalTime;
+} predict_t;
+
+const int salad_predict_callback1(data_t* data, const size_t n, void* const usr)
+{
+	predict_t x = *((predict_t*) usr);
+
+	struct timeval start, end;
+	gettimeofday(&start, NULL);
+
+	for (size_t i = 0; i < n; i++)
+	{
+		x.scores[i] = x.fct(&x.param, data[i].buf, data[i].len);
+	}
+
+	// Clock the calculation procedure
+	gettimeofday(&end, NULL);
+	double diff = TO_SEC(end) -TO_SEC(start);
+	x.totalTime += diff;
+
+	// Write scores
+	char buf[0x100];
+	for (size_t j = 0; j < n;  j++)
+	{
+		if (isnan(x.scores[j]))
+		{
+			fputs(x.nan, x.fOut);
+		}
+		else
+		{
+			snprintf(buf, 0x100, "%f\n", 1.0 -x.scores[j]);
+			fputs(buf, x.fOut);
+		}
+	}
+
+	(n <= 1 ? progress() : progress_step());
+	return EXIT_SUCCESS;
+}
+
+#ifdef USE_NETWORK
+const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
+{
+	predict_t x = *((predict_t*) usr);
+
+	for (size_t i = 0; i < n; i++)
+	{
+		x.scores[i] = x.fct(&x.param, data[i].buf, data[i].len);
+	}
+
+	// Write scores
+	char buf[0x100];
+	for (size_t j = 0; j < n;  j++)
+	{
+		if (isnan(x.scores[j]))
+		{
+			fputs(x.nan, x.fOut);
+		}
+		else
+		{
+			snprintf(buf, 0x100, "%f\n", 1.0 -x.scores[j]);
+			fputs(buf, x.fOut);
+		}
+	}
+	return EXIT_SUCCESS;
+}
+#endif
 
 const int salad_predict_stub(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut)
 {
-	uint8_t delim[256] = {0}, delim_b[256] = {0};
-	int useWGrams = 0, useWGrams_b;
-	size_t ngramLength = 0, ngramLength_b;
+	bloom_t good = { NULL, FALSE, {0}, 0 };
+	bloom_t bad = { NULL, FALSE, {0}, 0 };
 
-	BLOOM* bloom = bloom_from_file("training", c->bloom, delim, &useWGrams, &ngramLength);
-	if (bloom == NULL) return EXIT_FAILURE;
+	if (!bloom_from_file("training", c->bloom, &good))
+	{
+		return EXIT_FAILURE;
+	}
 
-	BLOOM* bbloom = NULL;
 	if (c->bbloom)
 	{
-		bbloom = bloom_from_file("bad content", c->bbloom, delim_b, &useWGrams_b, &ngramLength_b);
-		if (bbloom == NULL) return EXIT_FAILURE;
-
-		if (memcmp(delim, delim_b, 256) != 0 || useWGrams != useWGrams_b || ngramLength != ngramLength_b)
+		if (!bloom_from_file("bad content", c->bbloom, &bad))
 		{
-			fprintf(stderr, "[!] The normal and the bad content filter do were not generated with the same parameters.\n");
+			bloom_destroy(good.bloom);
+			return EXIT_FAILURE;
+		}
+
+		if (bloom_t_diff(&good, &bad))
+		{
+			bloom_destroy(good.bloom);
+			bloom_destroy(bad.bloom);
+			status("The normal and the bad content filter were not generated with the same parameters.");
 			return EXIT_FAILURE;
 		}
 	}
 
+	FN_ANACHECK anacheck = (bad.bloom == NULL ?
+			(good.useWGrams ? anacheckw_ex_wrapper  : anacheck_ex_wrapper) :
+			(good.useWGrams ? anacheckw_ex2_wrapper : anacheck_ex2_wrapper));
 
-	char nan[0x100];
-	snprintf(nan, 0x100, "%s\n", c->nan);
+	predict_t context = {
+		anacheck,
+		{good.bloom, bad.bloom, good.ngramLength, good.delim},
+		{0}, {0.0}, fOut, 0.0
+	};
 
-	FN_ANACHECK anacheck = (bbloom == NULL ?
-			(useWGrams ? anacheckw_ex_wrapper : anacheck_ex_wrapper) :
-			(useWGrams ? anacheckw_ex2        : anacheck_ex2_wrapper));
-
-
-	static const size_t BATCH_SIZE = 1000;
-	data_t data[1000];
-	float scores[1000];
-
-	double totalTime = 0;
-	size_t numRead = 0;
-	do
+	snprintf(context.nan, 0x100, "%s\n", c->nan);
+#ifdef USE_NETWORK
+	if (c->input_type == NETWORK)
 	{
-		numRead = dp->read(&fIn, data, BATCH_SIZE);
-		struct timeval start, end;
-		gettimeofday(&start, NULL);
+		dp->recv(&fIn, salad_predict_callback2, &context);
+	}
+#else
+	{
+		dp->recv(&fIn, salad_predict_callback1, &context);
+		print("");
+		info("Net Calculation Time: %.4f seconds", context.totalTime);
+	}
+#endif
 
-		for (size_t i = 0; i < numRead; i++)
-		{
-			scores[i] = anacheck(bloom, bbloom, data[i].buf, data[i].len, ngramLength, delim);
-			free(data[i].buf);
-		}
-
-		// Clock the calculation procedure
-		gettimeofday(&end, NULL);
-		double diff = TO_SEC(end) -TO_SEC(start);
-		fprintf(stdout, ".");
-		fflush(stdout);
-		totalTime += diff;
-
-		// Write scores
-		char buf[0x100];
-		for (size_t j = 0; j < numRead;  j++)
-		{
-			if (isnan(scores[j]))
-			{
-				fputs(nan, fOut);
-			}
-			else
-			{
-				snprintf(buf, 0x100, "%f\n", 1.0 -scores[j]);
-				fputs(buf, fOut);
-			}
-		}
-	} while (numRead >= BATCH_SIZE);
-
-	bloom_destroy(bloom);
-
-	fprintf(stdout, "\n");
-	fprintf(stderr, "[I] Net Calculation Time: %.4f seconds\n", totalTime);
+	if (bad.bloom != NULL)
+	{
+		bloom_destroy(bad.bloom);
+	}
+	bloom_destroy(good.bloom);
 	return EXIT_SUCCESS;
 }
 

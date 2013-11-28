@@ -8,16 +8,20 @@ set(PROJECTNAME ${TARGETNAME})
 project(${PROJECTNAME})
 
 set(${TARGETNAME}_VERSION_MAJOR 0)
-set(${TARGETNAME}_VERSION_MINOR 3)
-set(${TARGETNAME}_VERSION_PATCH 5)
+set(${TARGETNAME}_VERSION_MINOR 4)
+set(${TARGETNAME}_VERSION_PATCH 0)
 
 set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.${${TARGETNAME}_VERSION_PATCH}")
 
 
 # dependencies
 
-option(USE_ARCHIVES  "Enable support for loading archives (requires libarchive)" ON)
+option(USE_ARCHIVES "Enable support for loading archives (requires libarchive)" OFF)
+option(USE_NETWORK  "Enable support for reading data from network interfaces (requires libnids)" OFF)
+option(ALLOW_LIVE_TRAINING
+         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(_GNU_SOURCE  "Enable GNU extensions" OFF)
+option(TEST_SALAD   "Enable the ability to run the integrated unit tests" OFF)
 
 if (USE_ARCHIVES)
     find_package(LibArchive 2.70)    
@@ -34,11 +38,39 @@ if (USE_ARCHIVES)
     endif (LibArchive_FOUND)
 endif (USE_ARCHIVES)
 
-set(Z TRUE)
+
+if (USE_NETWORK)
+    find_library(NIDS_LIB nids)
+    if (NOT NIDS_LIB)
+    	set(USE_NETWORK FALSE)
+    endif (NOT NIDS_LIB)
+    find_library(PCAP_LIB pcap)
+    if (NOT PCAP_LIB)
+    	set(USE_NETWORK FALSE)
+    endif (NOT PCAP_LIB)
+endif (USE_NETWORK)
+
+set(STRICT TRUE)
+if (USE_NETWORK)
+    set(STRICT FALSE)
+endif (USE_NETWORK)
+
+
+set(HAS_Z_MODIFIER TRUE)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(Z FALSE) 
+    set(HAS_Z_MODIFIER FALSE) 
 endif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+	set(TEST_SALAD TRUE)
+endif (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+
+set(TEST_RESOURCES "")
+if (TEST_SALAD)
+	set(TEST_RESOURCES "#define TEST_SRC \"${CMAKE_CURRENT_SOURCE_DIR}/\"\n")
+	message(STATUS "${TEST_RESOURCES}")
+endif (TEST_SALAD)
 
 set(SOURCE_DIR "src/")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h)
@@ -48,22 +80,48 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CUR
 
 file(GLOB_RECURSE sources "${SOURCE_DIR}*.c")
 file(GLOB_RECURSE headers "${SOURCE_DIR}*.h")
+
+if (NOT TEST_SALAD)
+	message(STATUS "${sources}")
+	foreach (f ${sources})
+		if (${f} MATCHES ".*/test/.*")
+			message(STATUS "${f}")
+			list(REMOVE_ITEM sources ${f})
+		endif (${f} MATCHES ".*/test/.*")
+	endforeach (f ${sources})
+endif (NOT TEST_SALAD)
+
 source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
+
 if (NOT MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -pedantic -std=c99")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99")
+    if (STRICT)
+    	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic")
+    else (STRICT)
+    	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U__STRICT_ANSI__")
+    endif (STRICT)
 endif (NOT MSVC)
 
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_executable(${TARGETNAME} ${headers} ${sources})
 target_link_libraries(${TARGETNAME} ${LibArchive_LIBRARIES})
 
 if (CMAKE_COMPILER_IS_GNUCC)
     find_library(M_LIB m)
     if (M_LIB)
-        target_link_libraries(${TARGETNAME} ${LibArchive_LIBRARIES} ${M_LIB})
+        target_link_libraries(${TARGETNAME} ${M_LIB})
     endif (M_LIB)
 endif (CMAKE_COMPILER_IS_GNUCC)
+
+if (NIDS_LIB)
+    target_link_libraries(${TARGETNAME} ${NIDS_LIB})
+endif (NIDS_LIB)
+
+if (PCAP_LIB)
+    target_link_libraries(${TARGETNAME} ${PCAP_LIB})
+endif (PCAP_LIB)
 
 
 # documentation
@@ -83,8 +141,8 @@ endif (${DOXYGEN_VERSION})
 if (DOXYGEN_FOUND)
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile @ONLY)
     add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}
         COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif (DOXYGEN_FOUND)
 

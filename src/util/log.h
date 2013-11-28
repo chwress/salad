@@ -15,14 +15,22 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
 
-#define CTEST_MAIN
-#include "test/ctest.h"
+#ifndef LOG_H_
+#define LOG_H_
 
-const int salad_dbg(const config_t* const c)
-{
-	const char* prog[] = { "salad_dbg" };
-	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-}
+#include <stdarg.h>
 
+typedef enum {STATUS = 0, INFO, WARNING, ERROR, FATAL_ERROR} log_t;
+
+void print_ex(const log_t l, const char* const msg, va_list args);
+
+void print(const char* const msg, ...);
+void status(const char* const msg, ...);
+void info(const char* const msg, ...);
+void warn(const char* const msg, ...);
+void error(const char* const msg, ...);
+void fatal(const char* const msg, ...);
+
+
+#endif /* LOG_H_ */

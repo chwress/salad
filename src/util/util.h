@@ -40,4 +40,27 @@ char* load_file(char* path, char* name, unsigned int* size);
 char* const fread_str(FILE* const f);
 const float frand();
 
+#if __STDC_VERSION__ >= 199901L
+#include <tgmath.h>
+#define POW pow
+#else
+#include <math.h>
+#define POW (size_t) pow
+#endif
+
+void progress_step();
+void progress();
+
+#define FALSE 0
+#define TRUE  1
+
+#ifdef HAS_Z_MODIFIER
+	#define Z "zu"
+	#define SIZE_T size_t
+#else
+	#define Z "lu"
+	#define SIZE_T unsigned long
+#endif
+
+
 #endif /* UTIL_H_ */

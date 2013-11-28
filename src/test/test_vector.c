@@ -15,14 +15,6 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
+#include "common.h"
 
-#define CTEST_MAIN
-#include "test/ctest.h"
-
-const int salad_dbg(const config_t* const c)
-{
-	const char* prog[] = { "salad_dbg" };
-	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-}
-
+// Test sparse vector implementation

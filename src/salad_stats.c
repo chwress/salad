@@ -16,20 +16,19 @@
  */
 
 #include "salad.h"
-
 #include "anagram.h"
-
+#include "util/log.h"
 
 const int salad_stats(const config_t* const c)
 {
 	FILE* const fFilter = fopen(c->bloom, "r");
 	if (fFilter == NULL)
 	{
-		fprintf(stderr, "[!] Unable to open bloom filter\n");
+		error("Unable to open bloom filter.");
 		return EXIT_FAILURE;
 	}
 
-	uint8_t delim[256] = {0};
+	DELIM(delim) = {0};
 	int useWGrams = 0;
 
 	size_t ngramLength = 0;
@@ -39,11 +38,11 @@ const int salad_stats(const config_t* const c)
 	fclose(fFilter);
 	if (ret != 0)
 	{
-		fprintf(stderr, "[!] Corrupt bloom filter file.\n");
+		error("Corrupt bloom filter file.");
 		return EXIT_FAILURE;
 	}
 
 	const size_t set = bloom_count(bloom);
-	fprintf(stdout, "[*] Saturation: %.3f%%\n", (((double)set)/ ((double)bloom->bitsize))*100);
+	status("Saturation: %.3f%%", (((double)set)/ ((double)bloom->bitsize))*100);
 	return EXIT_SUCCESS;
 }

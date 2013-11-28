@@ -3,17 +3,22 @@
 
 /**
  * @class hidden_version
- * \version 0.3.5
+ * \version 0.4.0
  */
-#define VERSION_STR "0.3.5"
+#define VERSION_STR "0.4.0"
 
 
 /* #undef USE_ARCHIVES */
 /* #undef LIBARCHIVE2 */
 
-#define Z
+/* #undef USE_NETWORK */
+/* #undef ALLOW_LIVE_TRAINING */
+
+#define HAS_Z_MODIFIER
 /* #undef _GNU_SOURCE */
 /* #undef IOTYPE_FILES */
 
+
+/* #undef TEST_SALAD */
 
 #endif /* SALAD_H_ */
