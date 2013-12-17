@@ -60,33 +60,33 @@ typedef struct {
 
 const int salad_predict_callback1(data_t* data, const size_t n, void* const usr)
 {
-	predict_t x = *((predict_t*) usr);
+	predict_t* const x = (predict_t*) usr;
 
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 
 	for (size_t i = 0; i < n; i++)
 	{
-		x.scores[i] = x.fct(&x.param, data[i].buf, data[i].len);
+		x->scores[i] = x->fct(&x->param, data[i].buf, data[i].len);
 	}
 
 	// Clock the calculation procedure
 	gettimeofday(&end, NULL);
 	double diff = TO_SEC(end) -TO_SEC(start);
-	x.totalTime += diff;
+	x->totalTime += diff;
 
 	// Write scores
 	char buf[0x100];
 	for (size_t j = 0; j < n;  j++)
 	{
-		if (isnan(x.scores[j]))
+		if (isnan(x->scores[j]))
 		{
-			fputs(x.nan, x.fOut);
+			fputs(x->nan, x->fOut);
 		}
 		else
 		{
-			snprintf(buf, 0x100, "%f\n", 1.0 -x.scores[j]);
-			fputs(buf, x.fOut);
+			snprintf(buf, 0x100, "%f\n", 1.0 -x->scores[j]);
+			fputs(buf, x->fOut);
 		}
 	}
 
@@ -97,25 +97,25 @@ const int salad_predict_callback1(data_t* data, const size_t n, void* const usr)
 #ifdef USE_NETWORK
 const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
 {
-	predict_t x = *((predict_t*) usr);
+	predict_t* const x = (predict_t*) usr;
 
 	for (size_t i = 0; i < n; i++)
 	{
-		x.scores[i] = x.fct(&x.param, data[i].buf, data[i].len);
+		x->scores[i] = x->fct(&x->param, data[i].buf, data[i].len);
 	}
 
 	// Write scores
 	char buf[0x100];
 	for (size_t j = 0; j < n;  j++)
 	{
-		if (isnan(x.scores[j]))
+		if (isnan(x->scores[j]))
 		{
-			fputs(x.nan, x.fOut);
+			fputs(x->nan, x->fOut);
 		}
 		else
 		{
-			snprintf(buf, 0x100, "%f\n", 1.0 -x.scores[j]);
-			fputs(buf, x.fOut);
+			snprintf(buf, 0x100, "%f\n", 1.0 -x->scores[j]);
+			fputs(buf, x->fOut);
 		}
 	}
 	return EXIT_SUCCESS;

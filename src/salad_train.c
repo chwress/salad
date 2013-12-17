@@ -31,11 +31,11 @@ typedef struct {
 
 const int salad_train_callback1(data_t* data, const size_t n, void* usr)
 {
-	train_t x = *((train_t*) usr);
+	train_t* const x = (train_t*) usr;
 
 	for (size_t i = 0; i < n; i++)
 	{
-		bloomize_ex(x.bloom, data[i].buf, data[i].len, x.config->ngramLength);
+		bloomize_ex(x->bloom, data[i].buf, data[i].len, x->config->ngramLength);
 	}
 
 	progress_step();
@@ -45,8 +45,8 @@ const int salad_train_callback1(data_t* data, const size_t n, void* usr)
 const int salad_train_callbackn1(data_t* data, const size_t n, void* usr)
 {
 	assert(n == 1);
-	train_t x = *((train_t*) usr);
-	bloomize_ex(x.bloom, data[0].buf, data[0].len, x.config->ngramLength);
+	train_t* const x = (train_t*) usr;
+	bloomize_ex(x->bloom, data[0].buf, data[0].len, x->config->ngramLength);
 
 	progress();
 	return EXIT_SUCCESS;
@@ -54,11 +54,11 @@ const int salad_train_callbackn1(data_t* data, const size_t n, void* usr)
 
 const int salad_train_callback2(data_t* data, const size_t n, void* usr)
 {
-	train_t x = *((train_t*) usr);
+	train_t* const x = (train_t*) usr;
 
 	for (size_t i = 0; i < n; i++)
 	{
-		bloomizew_ex(x.bloom, data[i].buf, data[i].len, x.config->ngramLength, x.delim);
+		bloomizew_ex(x->bloom, data[i].buf, data[i].len, x->config->ngramLength, x->delim);
 	}
 
 	progress_step();
@@ -68,8 +68,8 @@ const int salad_train_callback2(data_t* data, const size_t n, void* usr)
 const int salad_train_callbackn2(data_t* data, const size_t n, void* usr)
 {
 	assert(n != 1);
-	train_t x = *((train_t*) usr);
-	bloomizew_ex(x.bloom, data[0].buf, data[0].len, x.config->ngramLength, x.delim);
+	train_t* const x = (train_t*) usr;
+	bloomizew_ex(x->bloom, data[0].buf, data[0].len, x->config->ngramLength, x->delim);
 
 	progress();
 	return EXIT_SUCCESS;
