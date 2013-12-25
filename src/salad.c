@@ -720,7 +720,7 @@ BLOOM* const bloom_from_file_ex(const char* const id, const char* const filename
 {
 	assert(filename != NULL);
 
-	FILE* const fFilter = fopen(filename, "r");
+	FILE* const fFilter = fopen(filename, "rb");
 	if (fFilter == NULL)
 	{
 		error("Unable to open %s filter.", id);
@@ -774,7 +774,7 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 		return EXIT_FAILURE;
 	}
 
-	FILE* const fOut = fopen(c->output, "w+");
+	FILE* const fOut = fopen(c->output, "wb+");
 	if (fOut == NULL)
 	{
 		error("Unable to create output file.");

@@ -16,6 +16,18 @@
 #ifndef CTEST_H
 #define CTEST_H
 
+#if defined _WIN32 || defined __CYGWIN__
+#ifndef WIN32
+#define WIN32
+#endif
+#endif
+
+#ifndef WIN32
+#define WEAK __attribute__ ((weak))
+#else
+#define WEAK
+#endif
+
 typedef void (*SetupFunc)(void*);
 typedef void (*TearDownFunc)(void*);
 
@@ -56,10 +68,10 @@ struct ctest {
 #define CTEST_DATA(sname) struct sname##_data
 
 #define CTEST_SETUP(sname) \
-    void __attribute__ ((weak)) sname##_setup(struct sname##_data* data)
+    void WEAK sname##_setup(struct sname##_data* data)
 
 #define CTEST_TEARDOWN(sname) \
-    void __attribute__ ((weak)) sname##_teardown(struct sname##_data* data)
+    void WEAK sname##_teardown(struct sname##_data* data)
 
 #define __CTEST_INTERNAL(sname, tname, _skip) \
     void __FNAME(sname, tname)(); \
@@ -138,15 +150,19 @@ void assert_fail(const char* caller, int line);
 #include <dlfcn.h>
 #endif
 
-//#define COLOR_OK
-
 static size_t ctest_errorsize;
 static char* ctest_errormsg;
 #define MSG_SIZE 4096
 static char ctest_errorbuffer[MSG_SIZE];
 static jmp_buf ctest_err;
-static int color_output = 1;
 static const char* suite_name;
+
+#ifdef WIN32
+static int color_output = 0;
+#else
+static int color_output = 1;
+//#define COLOR_OK
+#endif
 
 typedef int (*filter_func)(struct ctest*);
 

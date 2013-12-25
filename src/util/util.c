@@ -153,7 +153,7 @@ FILE* const open_file_ex(char* path, char* name, struct stat* st)
 	}
 
 	// Open file
-	FILE* f = fopen(file, "r");
+	FILE* f = fopen(file, "rb");
 	if (f == NULL)
 	{
 		// warning("Could not open file '%s'", file);

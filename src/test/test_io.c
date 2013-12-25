@@ -81,7 +81,7 @@ CTEST_SETUP(io)
 
 	for (int i = 0; i < data->ref.n; i++)
 	{
-		FILE* const f = fopen(input_ref[i], "r");
+		FILE* const f = fopen(input_ref[i], "rb");
 		if (f == NULL)
 		{
 			CTEST_ERR("Cannot read reference file '%s'", input_ref[i]);

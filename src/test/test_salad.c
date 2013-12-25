@@ -114,7 +114,7 @@ CTEST(salad, fileformat_consistency)
 
 	bloomize_ex(x.bloom, TEST_STR, strlen(TEST_STR), x.ngramLength);
 
-	FILE* const fOut = fopen(TEST_FILE, "w+");
+	FILE* const fOut = fopen(TEST_FILE, "wb+");
 	if (fOut == NULL)
 	{
 		bloom_destroy(x.bloom);
@@ -132,7 +132,7 @@ CTEST(salad, fileformat_consistency)
 		ASSERT_TRUE(n >= 0);
 	}
 
-	FILE* const fIn = fopen(TEST_FILE, "r");
+	FILE* const fIn = fopen(TEST_FILE, "rb");
 	if (fIn == NULL)
 	{
 		bloom_destroy(x.bloom);

@@ -166,7 +166,7 @@ const int file_open(file_t* const f, const char* const filename, void *const p)
 {
 	assert(f != NULL);
 
-	f->fd = fopen(filename, "r");
+	f->fd = fopen(filename, "rb");
 	if (f->fd == NULL)
 	{
 		return EXIT_FAILURE;

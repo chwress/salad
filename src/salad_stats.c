@@ -21,7 +21,7 @@
 
 const int salad_stats(const config_t* const c)
 {
-	FILE* const fFilter = fopen(c->bloom, "r");
+	FILE* const fFilter = fopen(c->bloom, "rb");
 	if (fFilter == NULL)
 	{
 		error("Unable to open bloom filter.");
