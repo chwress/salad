@@ -2,7 +2,7 @@
  * @class hidden_copyright
  * \n
  *
- * Copyright (c) 2012-2013, Christian Wressnegger\n
+ * Copyright (c) 2012-2014, Christian Wressnegger\n
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify

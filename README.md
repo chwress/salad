@@ -25,4 +25,4 @@ is not limited to this scenario. To illustrate the versatility of Salad we
 provide some concrete examples of its usage. All examples come with data sets
 and instructions.
 
-Copyright (C) 2012-2013 Christian Wressnegger
+Copyright (C) 2012-2014 Christian Wressnegger

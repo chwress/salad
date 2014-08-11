@@ -1,11 +1,10 @@
-.TH "salad" 1 "Wed Dec 25 2013" "Letter Salad" \" -*- nroff -*-
+.TH "salad" 1 "Mon Aug 11 2014" "Letter Salad" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
 salad \- A Content Anomaly Detector Based on n-Grams 
 
 .br
- 
 .SH "SYNOPSIS"
 .PP
 salad [<mode>] [options]
@@ -17,7 +16,7 @@ salad [<mode>] [options]
 .PP
 \fBSalad\fP extends the original method Anagram in different ways: First, the tool does not only operate on n-grams of bytes, but is also capable of comparing n-grams over words and tokens\&. Second, \fBSalad\fP implements a 2-class version of the detector that enables discriminating strings of two types, cf\&. \fBsalad-predict\fP(1) for more details\&. Finally, the tool features a build-in inspection and statistic mode that can help to analyze the learned Bloom filter and its predictions, cf\&. \fBsalad-inspect\fP(1) and \fBsalad-stats\fP(1) respectively\&.
 .PP
-The tool can be utilized in different fields of application\&. For example, the concept underlying \fBSalad\fP has been prominently used for intrusion detection, but is not limited to this scenario\&. 
+The tool can be utilized in different fields of application\&. For example, the concept underlying \fBSalad\fP has been prominently used for intrusion detection, but is not limited to this scenario\&.
 .SH "OPTIONS"
 .PP
 The options depend on the provided mode of operation\&. If no mode is specified, the following generic options are available:
@@ -49,11 +48,9 @@ Analyzes the specified data with respect to the n-gram model used by the detecto
 .PP
 
 .br
- 
-.PP
-Copyright (c) 2012-2013, Christian Wressnegger
+Copyright (c) 2012-2014, Christian Wressnegger
 .br
- All rights reserved\&.
+All rights reserved\&.
 .PP
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version\&.
 .PP

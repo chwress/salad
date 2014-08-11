@@ -3,9 +3,9 @@
 
 /**
  * @class hidden_version
- * \version 0.4.2
+ * \version 0.4.3
  */
-#define VERSION_STR "0.4.2"
+#define VERSION_STR "0.4.3"
 
 
 /* #undef USE_ARCHIVES */

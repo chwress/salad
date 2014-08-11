@@ -1,6 +1,6 @@
 /**
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2013, Christian Wressnegger
+ * Copyright (c) 2012-2014, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -165,13 +165,12 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	{
 		dp->recv(&fIn, salad_predict_callback2, &context);
 	}
-#else
+#endif
 	{
 		dp->recv(&fIn, salad_predict_callback1, &context);
 		print("");
 		info("Net Calculation Time: %.4f seconds", context.totalTime);
 	}
-#endif
 
 	if (bad.bloom != NULL)
 	{

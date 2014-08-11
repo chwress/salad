@@ -1,6 +1,6 @@
 /**
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2013, Christian Wressnegger
+ * Copyright (c) 2012-2014, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -245,7 +245,7 @@ const int usage_stats()
 const int version()
 {
 	print("Letter Salad %s - A Content Anomaly Detector Based on n-Grams\n"
-	    "Copyright (c) 2012-2013 Christian Wressnegger (christian@mlsec.org)\n",
+	    "Copyright (c) 2012-2014 Christian Wressnegger (christian@mlsec.org)\n",
 	    VERSION_STR);
 
 	return EXIT_SUCCESS;
