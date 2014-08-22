@@ -1,0 +1,86 @@
+.TH "salad-predict" 1 "Fri Aug 22 2014" "Letter Salad" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+salad-predict \- Prediction mode of Salad 
+
+.br
+.SH "SYNOPSIS"
+.PP
+salad predict [options]
+.SH "DESCRIPTION"
+.PP
+Predicts the anomaly score or the classification value respectively of the provided data which might be given in various \fIinput format\fPs\&.
+.PP
+Whether the detector performs anomaly detection or classification depends on the number of bloom filters given\&. If only one is specified \fBSalad\fP uses that one in order to detect anomalies thereof\&. For two filters the matching class is determined\&.
+.PP
+Due to structure of the decision function \fINaN\fP value may occur\&. Therefore it might be necessary to specify a default value for these cases\&.
+.SH "OPTIONS"
+.PP
+.SS "I/O Options:"
+\fB-i, --input <file>\fP
+.RS 4
+The input filename\&.
+.RE
+.PP
+\fB-f, --input-format <fmt>\fP
+.RS 4
+Sets the format of input\&. This option might be one of 'lines', 'files', 'archive', 'network' or 'network-dump'\&. This depends on the configure Salad was compiled with -- cf\&. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING\&.
+.RE
+.PP
+\fB--input-filter <regex>\fP
+.RS 4
+The regular expression for filtering input lines or filenames respectively depending on the input format/ type used -- cf\&. USE_REGEX_FILTER\&. This can be used to operate salad more easily in a 2-class setting and use identical input files as used for embeddings created by sally\&.
+.RE
+.PP
+\fB--batch-size <num>\fP
+.RS 4
+Sets the size of batches that are read and processed in one go\&. When processing network streams this is automatically set to 1\&.
+.RE
+.PP
+\fB-p, --pcap-filter <str>\fP
+.RS 4
+Filter expression for the PCAP library in case network data is processed (Default: tcp)\&. This option is only available if Salad was compiled with network support -- cf\&. USE_NETWORK\&.
+.RE
+.PP
+\fB-b, --bloom <file>\fP
+.RS 4
+The bloom filter to be used\&.
+.RE
+.PP
+\fB--bad-bloom <file>\fP
+.RS 4
+The bloom filter for the 2nd class (optional)\&.
+.RE
+.PP
+\fB-o, --output <file>\fP
+.RS 4
+The output filename\&.
+.RE
+.PP
+.SS "Feature Options:"
+\fB-r, --nan-str <str>\fP
+.RS 4
+Set the string to be shown for NaN values\&.
+.RE
+.PP
+.SS "Generic Options:"
+\fB-e, --echo-params\fP
+.RS 4
+Echo used parameters and settings\&.
+.RE
+.PP
+\fB-h, --help\fP
+.RS 4
+Print the help screen\&.
+.RE
+.PP
+.SH "COPYRIGHT"
+.PP
+Copyright (c) 2012-2014, Christian Wressnegger
+.br
+All rights reserved\&.
+.PP
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version\&.
+.PP
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE\&. See the GNU General Public License for more details\&. 

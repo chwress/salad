@@ -1,8 +1,8 @@
-#ifndef GETLINE_H_
-#define GETLINE_H_
+#ifndef UTIL_GETLINE_H_
+#define UTIL_GETLINE_H_
 
-#include "../config.h"
-#ifndef _GNU_SOURCE
+#include <config.h>
+#if (_XOPEN_SOURCE -0) < 700
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,5 +13,8 @@ ssize_t getdelim(char** buf, size_t* bufsiz, int delimiter, FILE* fp);
 ssize_t getline(char** buf, size_t* bufsiz, FILE* fp);
 
 
+#else
+#include <stdio.h>
 #endif
-#endif /* GETLINE_H_ */
+
+#endif /* UTIL_GETLINE_H_ */

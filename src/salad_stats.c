@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,11 +15,12 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
-#include "anagram.h"
-#include "util/log.h"
+#include "main.h"
+#include <salad/salad.h>
+#include <salad/anagram.h>
+#include <util/log.h>
 
-const int salad_stats(const config_t* const c)
+const int _salad_stats_(const config_t* const c)
 {
 	FILE* const fFilter = fopen(c->bloom, "rb");
 	if (fFilter == NULL)

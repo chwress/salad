@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,20 +15,24 @@
  * GNU General Public License for more details.
  */
 
-#ifndef UTIL_H_
-#define UTIL_H_
+/**
+ * @file
+ */
 
-#include "getline.h"
+#ifndef UTIL_UTIL_H_
+#define UTIL_UTIL_H_
 
+#include <config.h>
+
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
+#include <string.h>
 
 #ifdef IOTYPE_FILES
 #include <dirent.h>
 #endif
 
-#include "io.h"
 
 const int cmp(const char* const s, ...);
 const size_t inline_decode(char* s, const size_t len);
@@ -43,13 +47,40 @@ const float frand();
 #if __STDC_VERSION__ >= 199901L
 #include <tgmath.h>
 #define POW pow
+#define MIN fmin
+#define MAX fmax
 #else
 #include <math.h>
 #define POW (size_t) pow
+#define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
+#define MAX(X,Y) ((X) < (Y) ? (Y) : (X))
 #endif
 
-void progress_step();
-void progress();
+#if (_XOPEN_SOURCE -0) >= 700
+	#define STRDUP(from, to) { \
+				to = strdup(from); \
+			}
+
+	#define STRNDUP(n, from, to) { \
+				to = strndup(from, n); \
+			}  // copies n +1
+
+	#define STRNLEN(s, n) strnlen(s, n)
+#else
+	#define STRDUP(from, to) { \
+				to = (char*) malloc(strlen(from) +1); \
+				strcpy(to, from); \
+			}
+
+	#define STRNDUP(n, from, to) { \
+				to = (char*) malloc(n +1); \
+				strncpy(to, from, n); \
+				to[n] = 0x00; \
+			}
+
+	// simply ignore the max-length parameter :/
+	#define STRNLEN(s, n) strlen(s)
+#endif
 
 #define FALSE 0
 #define TRUE  1
@@ -62,5 +93,4 @@ void progress();
 	#define SIZE_T unsigned long
 #endif
 
-
-#endif /* UTIL_H_ */
+#endif /* UTIL_UTIL_H_ */

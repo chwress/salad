@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -16,61 +16,64 @@
  */
 
 #include "common.h"
-#include "../anagram.h"
+#include <salad/salad.h>
+#include <salad/anagram.h>
 
 #include <string.h>
 #include <limits.h>
 
+#include <config.h>
+#include <salad/util.h>
+
 
 CTEST_DATA(salad)
 {
-	bloom_t x;
+	salad_t x;
 };
 
 CTEST_SETUP(salad)
 {
-	data->x.bloom = bloom_init(8, HASHES_SIMPLE);
-	data->x.useWGrams = (strlen(DELIMITER) != 0);
-	to_delim(data->x.delim, DELIMITER);
-	data->x.ngramLength = NGRAM_LENGTH;
+	salad_set_bloomfilter_ex(&data->x, bloom_init(8, HASHES_SIMPLE));
+	salad_set_delimiter(&data->x, DELIMITER);
+	salad_set_ngramlength(&data->x, NGRAM_LENGTH);
 }
 
 CTEST_TEARDOWN(salad)
 {
-	bloom_destroy(data->x.bloom);
+	salad_destroy(&data->x);
 }
 
 CTEST2(salad, bloom_init)
 {
-	ASSERT_NOT_NULL(data->x.bloom);
+	ASSERT_NOT_NULL(data->x.model.x);
 	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngramLength);
 	ASSERT_EQUAL(data->x.useWGrams, (strlen(DELIMITER) != 0));
 	DELIM(delim);
-	to_delimiter_array(delim, DELIMITER);
-	ASSERT_DATA(delim, DELIM_SIZE, data->x.delim, DELIM_SIZE);
+	to_delimiter_array(DELIMITER, delim);
+	ASSERT_DATA(delim, DELIM_SIZE, data->x.delimiter.d, DELIM_SIZE);
 }
 
 CTEST(salad, bloom_diff)
 {
-	bloom_t x = { NULL, FALSE, {0}, 0 };
-	bloom_t y = { NULL, FALSE, {0}, 0 };
+	SALAD_T(x);
+	SALAD_T(y);
 
-	ASSERT_FALSE(bloom_t_diff(&x, &y));
+	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
 	x.useWGrams = TRUE;
-	ASSERT_TRUE(bloom_t_diff(&x, &y));
+	ASSERT_TRUE(salad_spec_diff(&x, &y));
 	y.useWGrams = TRUE;
-	ASSERT_FALSE(bloom_t_diff(&x, &y));
+	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.delim[0] = 1;
-	ASSERT_TRUE(bloom_t_diff(&x, &y));
-	y.delim[0] = 1;
-	ASSERT_FALSE(bloom_t_diff(&x, &y));
+	x.delimiter.d[0] = 1;
+	ASSERT_TRUE(salad_spec_diff(&x, &y));
+	y.delimiter.d[0] = 1;
+	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
 	x.ngramLength = 3;
-	ASSERT_TRUE(bloom_t_diff(&x, &y));
+	ASSERT_TRUE(salad_spec_diff(&x, &y));
 	y.ngramLength = 3;
-	ASSERT_FALSE(bloom_t_diff(&x, &y));
+	ASSERT_FALSE(salad_spec_diff(&x, &y));
 }
 
 CTEST2(salad, bloomize_ex)
@@ -81,9 +84,11 @@ CTEST2(salad, bloomize_ex)
 		"\x26\x96\x81\x18\x73\x54\xfc\xc4"
 		"\xbf\x20\x19\x47\x05\x00\xa8\x0a";
 
-	ASSERT_EQUAL(0, bloom_count(data->x.bloom));
-	bloomize_ex(data->x.bloom, TEST_STR, strlen(TEST_STR), data->x.ngramLength);
-	ASSERT_DATA((unsigned char*) bf, 32, data->x.bloom->a, data->x.bloom->size);
+	BLOOM* bloom = GET_BLOOMFILTER(data->x.model);
+
+	ASSERT_EQUAL(0, bloom_count(bloom));
+	bloomize_ex(bloom, TEST_STR, strlen(TEST_STR), data->x.ngramLength);
+	ASSERT_DATA((unsigned char*) bf, 32, bloom->a, bloom->size);
 }
 
 CTEST2(salad, bloomizew_ex)
@@ -94,40 +99,43 @@ CTEST2(salad, bloomizew_ex)
 		"\x40\x20\x00\x01\x00\x04\x02\x00"
 		"\x20\x00\x20\x80\x00\x00\x00\x00";
 
-	DELIM(zero) = {0};
-	ASSERT_DATA(zero, DELIM_SIZE, data->x.delim, DELIM_SIZE);
-	ASSERT_EQUAL(0, bloom_count(data->x.bloom));
+	BLOOM* bloom = GET_BLOOMFILTER(data->x.model);
 
-	to_delimiter_array(data->x.delim, TOKEN_DELIMITER);
-	bloomizew_ex(data->x.bloom, TEST_STR, strlen(TEST_STR), data->x.ngramLength, data->x.delim);
-	ASSERT_DATA((unsigned char*) bf, 32, data->x.bloom->a, data->x.bloom->size);
+	DELIM(zero) = {0};
+	ASSERT_DATA(zero, DELIM_SIZE, data->x.delimiter.d, DELIM_SIZE);
+	ASSERT_EQUAL(0, bloom_count(bloom));
+
+	to_delimiter_array(TOKEN_DELIMITER, data->x.delimiter.d);
+	bloomizew_ex(bloom, TEST_STR, strlen(TEST_STR), data->x.ngramLength, data->x.delimiter.d);
+	ASSERT_DATA((unsigned char*) bf, 32, bloom->a, bloom->size);
 }
 
 CTEST(salad, fileformat_consistency)
 {
 	char* TEST_FILE = "test.ana";
 
-	bloom_t x = {
-		bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE),
-		(strlen(DELIMITER) != 0), {0}, 3
-	};
+	SALAD_T(x);
+	salad_set_bloomfilter_ex(&x, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
+	salad_set_delimiter(&x, DELIMITER);
+	salad_set_ngramlength(&x, 3);
 
-	bloomize_ex(x.bloom, TEST_STR, strlen(TEST_STR), x.ngramLength);
+	BLOOM* const xbloom = GET_BLOOMFILTER(x.model);
+	bloomize_ex(xbloom, TEST_STR, strlen(TEST_STR), x.ngramLength);
 
 	FILE* const fOut = fopen(TEST_FILE, "wb+");
 	if (fOut == NULL)
 	{
-		bloom_destroy(x.bloom);
+		salad_destroy(&x);
 		CTEST_ERR("Unable to open test file '%s'.", TEST_FILE);
 		ASSERT_NOT_NULL(fOut);
 	}
 
-	const int n = fwrite_model(fOut, x.bloom, x.ngramLength, DELIMITER);
+	const int n = fwrite_model(fOut, xbloom, x.ngramLength, DELIMITER);
 	fclose(fOut);
 
 	if (n < 0)
 	{
-		bloom_destroy(x.bloom);
+		salad_destroy(&x);
 		CTEST_ERR("Failed while writing the model.");
 		ASSERT_TRUE(n >= 0);
 	}
@@ -135,28 +143,29 @@ CTEST(salad, fileformat_consistency)
 	FILE* const fIn = fopen(TEST_FILE, "rb");
 	if (fIn == NULL)
 	{
-		bloom_destroy(x.bloom);
+		salad_destroy(&x);
 		CTEST_ERR("Failed to open file.");
 		ASSERT_NOT_NULL(fIn);
 	}
 
-	bloom_t y = { NULL, FALSE, {0}, 0 };
-
-	const int ret = fread_model(fIn, &y.bloom, &y.ngramLength, y.delim, &y.useWGrams);
+	SALAD_T(y);
+	const int ret = salad_from_file_ex(fIn, &y);
 	fclose(fIn);
+
+	BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
 
 	if (ret != 0)
 	{
-		bloom_destroy(x.bloom);
+		salad_destroy(&x);
 		CTEST_ERR("Failed while reading the model.");
 		ASSERT_EQUAL(0, ret);
 	}
 
-	ASSERT_TRUE(!bloom_t_diff(&x, &y));
-	ASSERT_TRUE(bloom_compare(x.bloom, y.bloom) == 0);
+	ASSERT_TRUE(!salad_spec_diff(&x, &y));
+	ASSERT_TRUE(bloom_compare(xbloom, ybloom) == 0);
 
-	bloom_destroy(x.bloom);
-	bloom_destroy(y.bloom);
+	salad_destroy(&x);
+	salad_destroy(&y);
 }
 
 // Test salad's modes (train, predict, inspect, ...)

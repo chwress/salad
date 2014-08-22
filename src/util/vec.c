@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -14,6 +14,8 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
+
+#include "getline.h"
 
 #include <stdio.h>
 #include <stdlib.h>

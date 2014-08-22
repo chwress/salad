@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,11 +15,16 @@
  * GNU General Public License for more details.
  */
 
+/**
+ * @file
+ */
 
-#ifndef LOG_H_
-#define LOG_H_
+#ifndef UTIL_LOG_H_
+#define UTIL_LOG_H_
 
 #include <stdarg.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 typedef enum {STATUS = 0, INFO, WARNING, ERROR, FATAL_ERROR} log_t;
 
@@ -32,5 +37,12 @@ void warn(const char* const msg, ...);
 void error(const char* const msg, ...);
 void fatal(const char* const msg, ...);
 
+void progress(const size_t cur, const size_t total);
+void hourglass(uint8_t* const state, const size_t c);
+void hourglass_ex(uint8_t* const state);
+void hourglass_stop();
 
-#endif /* LOG_H_ */
+const int bye(const int ec);
+const int bye_ex(const int ec, const char* const msg);
+
+#endif /* UTIL_LOG_H_ */

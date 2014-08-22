@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,9 +15,11 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
-#include "anagram.h"
-#include "util/log.h"
+#include "main.h"
+#include <salad/salad.h>
+#include <salad/anagram.h>
+#include <salad/util.h>
+#include <util/log.h>
 
 #include <inttypes.h>
 #include <string.h>
@@ -50,7 +52,8 @@ typedef struct {
 	bloom_param_t param;
 
 	char buf[0x100];
-	bloomize_stats_t stats[BATCH_SIZE];
+	bloomize_stats_t* stats;
+	size_t num_uniq;
 	FILE* const fOut;
 } inspect_t;
 
@@ -72,58 +75,65 @@ const int salad_inspect_callback(data_t* data, const size_t n, void* const usr)
 					(SIZE_T) data[i].len);
 
 		fwrite(x->buf, sizeof(char), strlen(x->buf), x->fOut);
+		x->num_uniq += x->stats[i].new;
 	}
-
-	(n <= 1 ? progress() : progress_step());
 	return EXIT_SUCCESS;
 }
 
 
-const int salad_inspect_stub(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut)
+const int salad_inspect_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
 {
-	bloom_t training = { NULL, FALSE, {0}, 0 };
+	salad_header("Inspect", &fIn->meta, c);
+	SALAD_T(training);
 
-	if (c->bloom != NULL && !bloom_from_file("training", c->bloom, &training))
+	if (c->bloom != NULL && salad_from_file_v("training", c->bloom, &training) != EXIT_SUCCESS)
 	{
 		return EXIT_FAILURE;
 	}
 
-	const int newBloomFilter = (training.bloom == NULL);
+	// TODO: right now only bloom filter are possible
+	const int newBloomFilter = (training.model.x == NULL);
 	if (newBloomFilter)
 	{
-		training.bloom = bloom_init(c->filter_size, c->hash_set);
+		salad_from_config(&training, c);
 	}
 
-	bloom_t cur;
-	cur.ngramLength = c->ngramLength;
-	cur.bloom = bloom_init(c->filter_size, c->hash_set);
-
-	const char* const delimiter = to_delim(cur.delim, c->delimiter);
+	SALAD_T(cur);
+	salad_from_config(&cur, c);
 
 	FN_BLOOMIZE bloomize = (newBloomFilter ?
-			(delimiter == NULL ? bloomize_ex3_wrapper : bloomizew_ex3_wrapper) :
-			(delimiter == NULL ? bloomize_ex4_wrapper : bloomizew_ex4_wrapper));
+			(cur.useWGrams ? bloomizew_ex3_wrapper : bloomize_ex3_wrapper) :
+			(cur.useWGrams ? bloomizew_ex4_wrapper : bloomize_ex4_wrapper));
 
 
 	inspect_t context = {
-		bloomize,
-		{training.bloom, cur.bloom, cur.ngramLength, cur.delim},
-		{0}, {{0, 0, 0}}, fOut
+			.fct = bloomize,
+			.param = {training.model.x, cur.model.x, cur.ngramLength, cur.delimiter.d},
+			.buf = {0},
+			.stats = (bloomize_stats_t*) calloc(c->batch_size, sizeof(bloomize_stats_t)),
+			.num_uniq = 0,
+			.fOut = fOut
 	};
 
-	dp->recv(&fIn, salad_inspect_callback, &context);
-	print("");
+	dp->recv(fIn, salad_inspect_callback, c->batch_size, &context);
 
-	const size_t n = bloom_count(cur.bloom);
-	error("Saturation: %.3f%%", (((double)n)/ ((double)cur.bloom->bitsize))*100);
+	BLOOM* const cur_model = (BLOOM*) cur.model.x;
 
-	bloom_destroy(training.bloom);
-	bloom_destroy(cur.bloom);
+	const size_t N = bloom_count(cur_model);
+	info("Saturation: %.3f%%", (((double)N)/ ((double)cur_model->bitsize))*100);
+
+	const uint8_t k = cur_model->nfuncs;
+	const size_t n = context.num_uniq;
+	const size_t m = cur_model->bitsize;
+	info("Expected error: %.3f%%", pow(1- exp(((double) -k*n)/ ((double) m)), k) *100);
+
+	salad_destroy(&training);
+	salad_destroy(&cur);
 	return EXIT_SUCCESS;
 }
 
 
-const int salad_inspect(const config_t* const c)
+const int _salad_inspect_(const config_t* const c)
 {
 	return salad_heart(c, salad_inspect_stub);
 }

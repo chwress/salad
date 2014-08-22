@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,12 +15,12 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
+#include "main.h"
 
 #define CTEST_MAIN
 #include "test/ctest.h"
 
-const int salad_dbg(const config_t* const c)
+const int _salad_dbg_(const config_t* const c)
 {
 	const char* prog[] = { "salad_dbg" };
 	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);

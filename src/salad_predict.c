@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,14 +15,16 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
-#include "anagram.h"
+#include "main.h"
+#include <salad/salad.h>
+#include <salad/anagram.h>
+#include <salad/util.h>
 
 #include <sys/time.h>
 #include <math.h>
 
-#include "util/io.h"
-#include "util/log.h"
+#include <util/io.h>
+#include <util/log.h>
 
 #define TO_SEC(t) ((t).tv_sec+((t).tv_usec/1000000.0))
 
@@ -52,14 +54,23 @@ typedef struct {
 	FN_ANACHECK fct;
 	bloom_param_t param;
 
-	char nan[0x100];
-	float scores[BATCH_SIZE];
+	const config_t* const config;
+	float* const scores;
 	FILE* const fOut;
 	double totalTime;
 } predict_t;
 
-const int salad_predict_callback1(data_t* data, const size_t n, void* const usr)
+
+#define TO_STRING(score) (isnan(score) ? \
+			x->config->nan : \
+			snprintf(buf, 0x100, "%f", 1.0 -score) > 0 ? buf : "(null)")
+
+const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 {
+	assert(data != NULL);
+	assert(n > 0);
+	assert(usr != NULL);
+
 	predict_t* const x = (predict_t*) usr;
 
 	struct timeval start, end;
@@ -77,20 +88,29 @@ const int salad_predict_callback1(data_t* data, const size_t n, void* const usr)
 
 	// Write scores
 	char buf[0x100];
-	for (size_t j = 0; j < n;  j++)
+
+#ifdef GROUPED_INPUT
+	if (x->config->group_input)
 	{
-		if (isnan(x->scores[j]))
+		group_t* prev = data[0].meta;
+		fputs(TO_STRING(x->scores[0]), x->fOut);
+
+		for (size_t j = 1; j < n; j++)
 		{
-			fputs(x->nan, x->fOut);
-		}
-		else
-		{
-			snprintf(buf, 0x100, "%f\n", 1.0 -x->scores[j]);
-			fputs(buf, x->fOut);
+			fputs(prev == data[j].meta ? " " : "\n", x->fOut);
+			fputs(TO_STRING(x->scores[j]), x->fOut);
+			prev = data[j].meta;
 		}
 	}
-
-	(n <= 1 ? progress() : progress_step());
+	else
+#endif
+	{
+		for (size_t j = 0; j < n; j++)
+		{
+			fputs(TO_STRING(x->scores[j]), x->fOut);
+			fputs("\n", x->fOut);
+		}
+	}
 	return EXIT_SUCCESS;
 }
 
@@ -106,81 +126,135 @@ const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
 
 	// Write scores
 	char buf[0x100];
-	for (size_t j = 0; j < n;  j++)
+
+#ifdef GROUPED_INPUT
+	if (x->config->group_input)
 	{
-		if (isnan(x->scores[j]))
+		group_t* prev = data[0].meta;
+		fputs(TO_STRING(x->scores[0]), x->fOut);
+
+		for (size_t j = 1; j < n; j++)
 		{
-			fputs(x->nan, x->fOut);
+			fputs(prev == data[j].meta ? " " : "\n", x->fOut);
+			fputs(TO_STRING(x->scores[1]), x->fOut);
+			prev = data[j].meta;
 		}
-		else
+	}
+	else
+#endif
+	{
+		for (size_t j = 0; j < n;  j++)
 		{
-			snprintf(buf, 0x100, "%f\n", 1.0 -x->scores[j]);
-			fputs(buf, x->fOut);
+			fputs(TO_STRING(x->scores[1]), x->fOut);
+			fputs("\n", x->fOut);
 		}
 	}
 	return EXIT_SUCCESS;
 }
 #endif
 
-const int salad_predict_stub(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut)
+const int salad_predict_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
 {
-	bloom_t good = { NULL, FALSE, {0}, 0 };
-	bloom_t bad = { NULL, FALSE, {0}, 0 };
+	salad_header("Predict scores of", &fIn->meta, c);
+	SALAD_T(good);
+	SALAD_T(bad);
 
-	if (!bloom_from_file("training", c->bloom, &good))
+	if (salad_from_file_v("training", c->bloom, &good) != EXIT_SUCCESS)
 	{
 		return EXIT_FAILURE;
 	}
 
+
 	if (c->bbloom)
 	{
-		if (!bloom_from_file("bad content", c->bbloom, &bad))
+		if (salad_from_file_v("bad content", c->bbloom, &bad) != EXIT_SUCCESS)
 		{
-			bloom_destroy(good.bloom);
+			salad_destroy(&good);
 			return EXIT_FAILURE;
 		}
 
-		if (bloom_t_diff(&good, &bad))
+		if (salad_spec_diff(&good, &bad))
 		{
-			bloom_destroy(good.bloom);
-			bloom_destroy(bad.bloom);
+			salad_destroy(&good);
+			salad_destroy(&bad);
 			status("The normal and the bad content filter were not generated with the same parameters.");
 			return EXIT_FAILURE;
 		}
+		// XXX: Just checking the validity of the model ;)
+		// GET_BLOOMFILTER(bad.model);
+		assert(bad.model.type == SALAD_MODEL_BLOOMFILTER);
 	}
 
-	FN_ANACHECK anacheck = (bad.bloom == NULL ?
+	// TODO: right now there only are bloom filters!
+	BLOOM* const good_model = GET_BLOOMFILTER(good.model);
+	BLOOM* const bad_model = TO_BLOOMFILTER(bad.model);
+
+
+	if (c->echo_params)
+	{
+		config_t cfg;
+		cfg.ngramLength = good.ngramLength;
+		cfg.filter_size = log2(good_model->bitsize);
+
+		switch (bloomfct_cmp(good_model, HASHSET_SIMPLE, HASHSET_MURMUR))
+		{
+		case 0:
+			cfg.hash_set = HASHES_SIMPLE;
+			break;
+		case 1:
+			cfg.hash_set = HASHES_MURMUR;
+			break;
+		default:
+			cfg.hash_set = HASHES_UNDEFINED;
+			break;
+		}
+
+		STRDUP(good.delimiter.str, cfg.delimiter);
+		echo_options(&cfg);
+		free(cfg.delimiter);
+	}
+
+	FN_ANACHECK anacheck = (bad_model == NULL ?
 			(good.useWGrams ? anacheckw_ex_wrapper  : anacheck_ex_wrapper) :
 			(good.useWGrams ? anacheckw_ex2_wrapper : anacheck_ex2_wrapper));
 
 	predict_t context = {
-		anacheck,
-		{good.bloom, bad.bloom, good.ngramLength, good.delim},
-		{0}, {0.0}, fOut, 0.0
+			.fct = anacheck,
+			.param = {good_model, bad_model, good.ngramLength, good.delimiter.d},
+			.config = c,
+			// TODO: we do not know the batch size of the recv function
+			.scores = (float*) calloc(c->batch_size, sizeof(float)),
+			.fOut = fOut,
+			.totalTime = 0.0
 	};
 
-	snprintf(context.nan, 0x100, "%s\n", c->nan);
+	dp->recv(fIn, salad_predict_callback, c->batch_size, &context);
+	free(context.scores);
+
 #ifdef USE_NETWORK
-	if (c->input_type == NETWORK)
-	{
-		dp->recv(&fIn, salad_predict_callback2, &context);
-	}
+	if (c->input_type != NETWORK)
 #endif
 	{
-		dp->recv(&fIn, salad_predict_callback1, &context);
-		print("");
-		info("Net Calculation Time: %.4f seconds", context.totalTime);
+		info("Net calculation time: %.4f seconds", context.totalTime);
+
+		const double size = ((double)fIn->meta.total_size) /(1024*1024 /8);
+		const double throughput = size/ context.totalTime;
+
+		if (!isinf(throughput))
+		{
+			info("Net throughput: %.3f Mb/s", throughput);
+		}
 	}
 
-	if (bad.bloom != NULL)
+	if (bad_model != NULL)
 	{
-		bloom_destroy(bad.bloom);
+		salad_destroy(&bad);
 	}
-	bloom_destroy(good.bloom);
+	salad_destroy(&good);
 	return EXIT_SUCCESS;
 }
 
-const int salad_predict(const config_t* const c)
+const int _salad_predict_(const config_t* const c)
 {
 	return salad_heart(c, salad_predict_stub);
 }
