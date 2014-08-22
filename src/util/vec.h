@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,10 +15,14 @@
  * GNU General Public License for more details.
  */
 
-#ifndef VEC_H_
-#define VEC_H_
+/**
+ * @file
+ */
 
-#include "../config.h"
+#ifndef UTIL_VEC_H_
+#define UTIL_VEC_H_
+
+#include <config.h>
 
 #include <stddef.h>
 #include <stdint.h>
@@ -61,4 +65,4 @@ void vec_set(vec_t* const v, const dim_t dim, const float value);
 
 vec_t* const vec_read_liblinear(FILE* const f);
 
-#endif /* VEC_H_ */
+#endif /* UTIL_VEC_H_ */

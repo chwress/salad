@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,95 +15,117 @@
  * GNU General Public License for more details.
  */
 
-#include "salad.h"
-#include "anagram.h"
-#include "util/log.h"
+#include "main.h"
+
+#include <salad/salad.h>
+#include <salad/anagram.h>
+#include <salad/util.h>
+
+#include <util/log.h>
 
 #include <inttypes.h>
 
 
 typedef struct {
 	BLOOM* const bloom;
-	DELIM(delim);
+	delimiter_t* const delim;
 	const config_t* const config;
 } train_t;
 
 
 const int salad_train_callback1(data_t* data, const size_t n, void* usr)
 {
-	train_t* const x = (train_t*) usr;
+	salad_t* const s = (salad_t*) usr;
 
 	for (size_t i = 0; i < n; i++)
 	{
-		bloomize_ex(x->bloom, data[i].buf, data[i].len, x->config->ngramLength);
+		bloomize_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength);
 	}
-
-	progress_step();
 	return EXIT_SUCCESS;
 }
 
 const int salad_train_callbackn1(data_t* data, const size_t n, void* usr)
 {
 	assert(n == 1);
-	train_t* const x = (train_t*) usr;
-	bloomize_ex(x->bloom, data[0].buf, data[0].len, x->config->ngramLength);
-
-	progress();
+	salad_t* const s = (salad_t*) usr;
+	bloomize_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength);
 	return EXIT_SUCCESS;
 }
 
 const int salad_train_callback2(data_t* data, const size_t n, void* usr)
 {
-	train_t* const x = (train_t*) usr;
+	salad_t* const s = (salad_t*) usr;
 
 	for (size_t i = 0; i < n; i++)
 	{
-		bloomizew_ex(x->bloom, data[i].buf, data[i].len, x->config->ngramLength, x->delim);
+		bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);
 	}
-
-	progress_step();
 	return EXIT_SUCCESS;
 }
 
 const int salad_train_callbackn2(data_t* data, const size_t n, void* usr)
 {
-	assert(n != 1);
-	train_t* const x = (train_t*) usr;
-	bloomizew_ex(x->bloom, data[0].buf, data[0].len, x->config->ngramLength, x->delim);
-
-	progress();
+	assert(n == 1);
+	salad_t* const s = (salad_t*) usr;
+	bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength, s->delimiter.d);
 	return EXIT_SUCCESS;
 }
 
-const int salad_train_stub(const config_t* const c, const data_processor_t* const dp, file_t fIn, FILE* const fOut)
+const int salad_train_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
 {
-	train_t usr = {
-		bloom_init(c->filter_size, c->hash_set),
-		{0}, c
-	};
+	salad_header("Train salad on", &fIn->meta, c);
 
-	const char* const d = to_delim(usr.delim, c->delimiter);
+	SALAD_T(s1);
+	salad_from_config(&s1, c);
+
+	if (c->update_model)
+	{
+		SALAD_T(s2);
+
+		if (salad_from_file_ex(fOut, &s2) == EXIT_FAILURE)
+		{
+			error("The provided model cannot be read, hence not updated.");
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			if (!c->transfer_spec && salad_spec_diff(&s1, &s2))
+			{
+				error("The specification of the existing model contradicts with the current one.");
+				return EXIT_FAILURE;
+			}
+
+			salad_destroy(&s1);
+			s1 = s2;
+		}
+		fseek(fOut, 0, SEEK_SET);
+
+		if (c->echo_params)
+		{
+			// TODO: cf. salad_predict
+		}
+	}
+
 #ifdef USE_NETWORK
 	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)
 	{
-		if (d == NULL) dp->recv(&fIn, salad_train_callbackn1, &usr);
-		else           dp->recv(&fIn, salad_train_callbackn2, &usr);
+		if (s1.useWGrams) dp->recv(fIn, salad_train_callbackn2, c->batch_size, &s1);
+		else              dp->recv(fIn, salad_train_callbackn1, c->batch_size, &s1);
 	}
 	else
 #endif
 	{
-		if (d == NULL) dp->recv(&fIn, salad_train_callback1, &usr);
-		else           dp->recv(&fIn, salad_train_callback2, &usr);
+		if (s1.useWGrams) dp->recv(fIn, salad_train_callback2, c->batch_size, &s1);
+		else              dp->recv(fIn, salad_train_callback1, c->batch_size, &s1);
 	}
-	print("");
 
-	const int n = fwrite_model(fOut, usr.bloom, c->ngramLength, d);
-	bloom_destroy(usr.bloom);
+	const int ret = salad_to_file_ex(&s1, fOut);
+	salad_destroy(&s1);
 
-	return (n >= 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	return ret;
 }
 
-const int salad_train(const config_t* const c)
+const int _salad_train_(const config_t* const c)
 {
 	return salad_heart(c, salad_train_stub);
 }

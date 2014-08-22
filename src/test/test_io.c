@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -16,7 +16,7 @@
  */
 
 #include "common.h"
-#include "../util/io.h"
+#include <util/io.h>
 
 #ifndef TEST_SRC
 #define TEST_SRC "./"
@@ -120,14 +120,21 @@ const int test_read_stub(const char* const filename, const data_processor_t* con
 	}
 
 	static const size_t N = 1;
-	data_t data[N];
 
+	dataset_t ds;
+	ds.capacity = N;
+	ds.data = (data_t*) calloc(ds.capacity, sizeof(data_t));
+	ds.n = 0;
+
+	data_t* const data = ds.data;
 	size_t numRead = 0, j = 0;
 	do
 	{
-		numRead = dp->read(&input, data, N);
+		numRead = dp->read(&input, &ds, N);
 		ASSERT_TRUE(j +numRead <= ref->n);
-		for (size_t i = 0; i < numRead; i++)
+		// Do not use dataset_free(.) since we want to reuse the
+		// memory consumed by dataset_t#data
+		for (size_t i = 0; i < ds.n; i++)
 		{
 			ASSERT_DATA(
 				(unsigned char*) ref->expected[j].buf, ref->expected[j].len,
@@ -138,6 +145,7 @@ const int test_read_stub(const char* const filename, const data_processor_t* con
 		}
 	} while (numRead >= N);
 
+	free(ds.data); // cf. comment above
 	dp->close(&input);
 
 	ASSERT_TRUE(j == ref->n);
@@ -184,7 +192,7 @@ const int test_recv_stub(const char* const filename, const data_processor_t* con
 	}
 
 	test_recv_t usr = { 0, ref };
-	const int ret = dp->recv(&input, test_recv_callback, &usr);
+	const int ret = dp->recv(&input, test_recv_callback, 1, &usr);
 	dp->close(&input);
 
 	ASSERT_TRUE(usr.j == ref->n); // That basically is the same check as the following

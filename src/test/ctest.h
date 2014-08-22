@@ -158,9 +158,13 @@ static jmp_buf ctest_err;
 static const char* suite_name;
 
 #ifdef WIN32
-static int color_output = 0;
-#else
+#undef USE_COLORS
+#endif
+
+#ifdef USE_COLORS
 static int color_output = 1;
+#else
+static int color_output = 0;
 //#define COLOR_OK
 #endif
 

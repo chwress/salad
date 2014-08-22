@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <errno.h>
-#include <string.h>
 #include <ctype.h>
 
 
@@ -98,7 +97,7 @@ const size_t inline_decode(char* s, const size_t len)
 char* const fread_str(FILE* const f)
 {
 	size_t n = 2;
-	char* out = (char*) malloc(n +1);
+	char* out = (char*) malloc((n +1) *sizeof(char));
 	char* x = out;
 
 	int c = fgetc(f);
@@ -106,34 +105,19 @@ char* const fread_str(FILE* const f)
 	{
 		if (x >= out +n)
 		{
-			out = realloc(out, (n *= 2) +1);
+			out = realloc(out, (n*2 +1) *sizeof(char));
+			x = out +n; n *= 2;
 		}
-		*(x++) = c;
+		*(x++) = (char) c;
 		c = fgetc(f);
 	}
 	*x = 0x00;
-	return realloc(out, strlen(out) +1);
+	return realloc(out, (STRNLEN(out, n) +1) *sizeof(char));
 }
 
 const float frand()
 {
 	return (float) rand() / RAND_MAX;
-}
-
-
-void progress_step()
-{
-	fprintf(stdout, ".");
-	fflush(stdout);
-}
-
-void progress()
-{
-	static size_t c = 0; c++;
-	if (c % BATCH_SIZE == 0)
-	{
-		progress_step();
-	}
 }
 
 

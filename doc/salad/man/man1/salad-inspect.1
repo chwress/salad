@@ -1,4 +1,4 @@
-.TH "salad-inspect" 1 "Mon Aug 11 2014" "Letter Salad" \" -*- nroff -*-
+.TH "salad-inspect" 1 "Fri Aug 22 2014" "Letter Salad" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -33,6 +33,16 @@ The input filename\&.
 \fB-f, --input-format <fmt>\fP
 .RS 4
 Sets the format of input\&. This option might be one of 'lines', 'files', 'archive', 'network' or 'network-dump'\&. This depends on the configure Salad was compiled with -- cf\&. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING\&.
+.RE
+.PP
+\fB--input-filter <regex>\fP
+.RS 4
+The regular expression for filtering input lines or filenames respectively depending on the input format/ type used -- cf\&. USE_REGEX_FILTER\&. This can be used to operate salad more easily in a 2-class setting and use identical input files as used for embeddings created by sally\&.
+.RE
+.PP
+\fB--batch-size <num>\fP
+.RS 4
+Sets the size of batches that are read and processed in one go\&. When processing network streams this is automatically set to 1\&.
 .RE
 .PP
 \fB-p, --pcap-filter <str>\fP
@@ -72,6 +82,11 @@ Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple')\&.
 .RE
 .PP
 .SS "Generic Options:"
+\fB-e, --echo-params\fP
+.RS 4
+Echo used parameters and settings\&.
+.RE
+.PP
 \fB-h, --help\fP
 .RS 4
 Print the help screen\&.

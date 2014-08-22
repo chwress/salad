@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -15,13 +15,16 @@
  * GNU General Public License for more details.
  */
 
+/**
+ * @file
+ */
+
 #ifndef TESTS_COMMON_H_
 #define TESTS_COMMON_H_
 
 #include "ctest.h"
 
-#include "../salad.h"
-#include "../util/util.h"
+#include <util/util.h>
 
 
 static const uint8_t NUM_FUNCS = 3;

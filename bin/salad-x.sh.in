@@ -1,4 +1,4 @@
 #!/bin/sh
 
-salad @SALAD_MODE@ $@
+$( cd "$( dirname "$0" )" && pwd )/salad @SALAD_MODE@ $@
 exit $?

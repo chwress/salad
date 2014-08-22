@@ -5,12 +5,12 @@
  * and endian-ness issues if used across multiple platforms.
  */
 
-#ifndef MURMUR_H
-#define MURMUR_H
+#ifndef UTIL_MURMUR_H
+#define UTIL_MURMUR_H
 
 #include <stdint.h>
 
 uint32_t MurmurHash2(const void *key, int32_t len, uint32_t seed);
 uint64_t MurmurHash64B(const void *key, int32_t len, uint32_t seed);
 
-#endif
+#endif /* UTIL_MURMUR_H */

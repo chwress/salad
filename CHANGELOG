@@ -1,0 +1,43 @@
+0.5.0
+* Refinements to the user interface
+  This includes a progress indicator, colors, etc.
+* Determine the expected error (salad-inspect) 
+* Enable the user to echo the used parametrization
+  salad [train|predict|inspect] --echo-params
+* Allow to set the input batch size as program argument
+  salad [train|predict|inspect] --batch-size
+* libsalad
+  The library allows to access salad's basic functions
+* Installers and precompiled binaries
+  Windows installer, Debian (ppa:chwress/salad) & RPM
+  packages as well a generic linux installers.
+* Various minor bug fixes
+* Support for "length at end" zip files
+* Improve salad's usage in a 2-class setting:
+  salad [train|predict|inspect] --input-filter
+
+0.4.2
+* Fixes a bug in the unit testing framework on Windows
+
+0.4.1
+* Fixes a critical bug in v0.4.0
+  That bug rendered the previous release pretty much unusable
+
+0.4.0
+* Support for processing network data
+  This allows to handle network dumps as well as packets and stream
+  capturing from network interfaces.
+* Integration of unit tests
+* A logging infrastructure for more consistent output
+* Various bug fixes
+
+0.3.5
+* Fix issues with recent version of doxygen & libarchive
+
+0.3.4
+* Copy the man pages to the correct path
+* Better describe the available program arguments
+* Remove redundant warnings for default values
+
+0.3.2
+* First public release

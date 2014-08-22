@@ -1,4 +1,4 @@
-/**
+/*
  * Salad - A Content Anomaly Detector based on n-Grams
  * Copyright (c) 2012-2014, Christian Wressnegger
  * --
@@ -16,8 +16,8 @@
  */
 
 #include "common.h"
-#include "../anagram.h"
-#include "../util/util.h"
+#include <salad/anagram.h>
+#include <util/util.h>
 
 #include <string.h>
 #include <limits.h>
