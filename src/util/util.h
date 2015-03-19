@@ -57,25 +57,36 @@ const float frand();
 #endif
 
 #if (_XOPEN_SOURCE -0) >= 700
-	#define STRDUP(from, to) { \
-				to = strdup(from); \
+	#define STRDUP(from, to)                              \
+			{	                                          \
+				to = strdup(from);                        \
 			}
 
-	#define STRNDUP(n, from, to) { \
-				to = strndup(from, n); \
+	#define STRNDUP(n, from, to)                          \
+			{	                                          \
+				to = strndup(from, n);                    \
 			}  // copies n +1
 
 	#define STRNLEN(s, n) strnlen(s, n)
 #else
-	#define STRDUP(from, to) { \
-				to = (char*) malloc(strlen(from) +1); \
-				strcpy(to, from); \
+	#define STRDUP(from, to)                              \
+			{	                                          \
+				char* const _from_ = from;                \
+				char* _to_ = to;                          \
+				                                          \
+				_to_ = (char*) malloc(strlen(_from_) +1); \
+				strcpy(_to_, _from_);                     \
 			}
 
-	#define STRNDUP(n, from, to) { \
-				to = (char*) malloc(n +1); \
-				strncpy(to, from, n); \
-				to[n] = 0x00; \
+	#define STRNDUP(n, from, to)                          \
+			{	                                          \
+				const size_t _n_ = n;                     \
+				char* const _from_ = from;                \
+				char* _to_ = to;                          \
+				                                          \
+				_to_ = (char*) malloc(_n_ +1);            \
+				strncpy(_to_, _from_, _n_);               \
+				_to_[_n_] = 0x00;                         \
 			}
 
 	// simply ignore the max-length parameter :/
