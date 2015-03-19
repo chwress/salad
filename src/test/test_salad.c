@@ -130,7 +130,7 @@ CTEST(salad, fileformat_consistency)
 		ASSERT_NOT_NULL(fOut);
 	}
 
-	const int n = fwrite_model(fOut, xbloom, x.ngramLength, DELIMITER);
+	const int n = fwrite_model(fOut, xbloom, x.ngramLength, DELIMITER, 0);
 	fclose(fOut);
 
 	if (n < 0)

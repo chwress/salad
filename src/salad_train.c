@@ -33,42 +33,73 @@ typedef struct {
 } train_t;
 
 
-const int salad_train_callback1(data_t* data, const size_t n, void* usr)
-{
-	salad_t* const s = (salad_t*) usr;
+#define TRAINING_CALLBACK(X, _data_, _n_, _usr_)                                                        \
+static inline const int salad_train_callback##X(data_t* data, const size_t n, void* usr)                \
+{	                                                                                                    \
+	salad_t* const s = (salad_t*) usr;                                                                  \
+	                                                                                                    \
+	for (size_t i = 0; i < n; i++)                                                                      \
+	{                                                                                                   \
+		switch (#X[0]) /* This is a static check and will be optimized away */                          \
+		{                                                                                               \
+		case 'b':                                                                                       \
+			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength);                         \
+			break;                                                                                      \
+		case 'w':                                                                                       \
+			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);         \
+			break;                                                                                      \
+		default:                                                                                        \
+			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngramLength);                         \
+			break;                                                                                      \
+		}                                                                                               \
+	}                                                                                                   \
+	return EXIT_SUCCESS;                                                                                \
+}
 
-	for (size_t i = 0; i < n; i++)
+#define TRAINING_NET_CALLBACK(X, _data_, _n_, _usr_)                                                    \
+static inline const int salad_train_net_callback##X(data_t* data, const size_t n, void* usr)            \
+{	                                                                                                    \
+	assert(n == 1);                                                                                     \
+	salad_t* const s = (salad_t*) usr;                                                                  \
+	switch (#X[0]) /* This is a static check and will be optimized away */                              \
+	{                                                                                                   \
+	case 'b':                                                                                           \
+		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength);                             \
+		break;                                                                                          \
+	case 'w':                                                                                           \
+		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength, s->delimiter.d);             \
+		break;                                                                                          \
+	default:                                                                                            \
+		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngramLength);                             \
+		break;                                                                                          \
+	}                                                                                                   \
+	return EXIT_SUCCESS;                                                                                \
+}
+
+TRAINING_CALLBACK(b, data, n, usr);
+TRAINING_NET_CALLBACK(b, data, n, usr);
+
+TRAINING_CALLBACK(, data, n, usr);
+TRAINING_NET_CALLBACK(, data, n, usr);
+
+TRAINING_CALLBACK(w, data, n, usr);
+TRAINING_NET_CALLBACK(w, data, n, usr);
+
+
+FN_DATA pick_callback(const model_type_t t, const int use_network)
+{
+	switch (t)
 	{
-		bloomize_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength);
+	case BIT_NGRAM:
+		return (use_network ? salad_train_net_callbackb : salad_train_callbackb);
+
+	case BYTE_NGRAM:
+		return (use_network ? salad_train_net_callback  : salad_train_callback );
+
+	case TOKEN_NGRAM:
+		return (use_network ? salad_train_net_callbackw : salad_train_callbackw);
 	}
-	return EXIT_SUCCESS;
-}
-
-const int salad_train_callbackn1(data_t* data, const size_t n, void* usr)
-{
-	assert(n == 1);
-	salad_t* const s = (salad_t*) usr;
-	bloomize_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength);
-	return EXIT_SUCCESS;
-}
-
-const int salad_train_callback2(data_t* data, const size_t n, void* usr)
-{
-	salad_t* const s = (salad_t*) usr;
-
-	for (size_t i = 0; i < n; i++)
-	{
-		bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);
-	}
-	return EXIT_SUCCESS;
-}
-
-const int salad_train_callbackn2(data_t* data, const size_t n, void* usr)
-{
-	assert(n == 1);
-	salad_t* const s = (salad_t*) usr;
-	bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength, s->delimiter.d);
-	return EXIT_SUCCESS;
+	return NULL;
 }
 
 const int salad_train_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
@@ -106,17 +137,17 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 		}
 	}
 
+	const model_type_t t = to_model_type(s1.asBinary, s1.useWGrams);
+
 #ifdef USE_NETWORK
 	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)
 	{
-		if (s1.useWGrams) dp->recv(fIn, salad_train_callbackn2, c->batch_size, &s1);
-		else              dp->recv(fIn, salad_train_callbackn1, c->batch_size, &s1);
+		dp->recv(fIn, pick_callback(t, 1), c->batch_size, &s1);
 	}
 	else
 #endif
 	{
-		if (s1.useWGrams) dp->recv(fIn, salad_train_callback2, c->batch_size, &s1);
-		else              dp->recv(fIn, salad_train_callback1, c->batch_size, &s1);
+		dp->recv(fIn, pick_callback(t, 0), c->batch_size, &s1);
 	}
 
 	const int ret = salad_to_file_ex(&s1, fOut);

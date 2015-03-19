@@ -29,13 +29,9 @@ const int _salad_stats_(const config_t* const c)
 		return EXIT_FAILURE;
 	}
 
-	DELIM(delim) = {0};
-	int useWGrams = 0;
-
-	size_t ngramLength = 0;
 	BLOOM* bloom = NULL;
 
-	int ret = fread_model(fFilter, &bloom, &ngramLength, delim, &useWGrams);
+	int ret = fread_model(fFilter, &bloom, NULL, NULL, NULL, NULL);
 	fclose(fFilter);
 	if (ret != 0)
 	{

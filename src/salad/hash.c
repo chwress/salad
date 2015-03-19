@@ -22,7 +22,10 @@ uint32_t sax_hash(const char* const key)
 	uint32_t h=0;
 	const unsigned char* x = (const unsigned char*) key;
 
-	while(*x) h^=(h<<5)+(h>>2)+*x++;
+	while(*x)
+	{
+		h^=(h<<5)+(h>>2)+*x++;
+	}
 	return h;
 }
 
@@ -32,7 +35,9 @@ uint32_t sax_hash_n(const char* const key, const size_t len)
 	const unsigned char* x = (const unsigned char*) key;
 
 	for(size_t i = 0; i < len; i++)
+	{
 		h^=(h<<5)+(h>>2)+*x++;
+	}
 	return h;
 }
 
@@ -41,7 +46,10 @@ uint32_t sdbm_hash(const char* const key)
 	uint32_t h = 0;
 	const unsigned char* x = (const unsigned char*) key;
 
-	while(*x) h=*x++ + (h<<6) + (h<<16) - h;
+	while(*x)
+	{
+		h=*x++ + (h<<6) + (h<<16) - h;
+	}
 	return h;
 }
 
@@ -51,7 +59,9 @@ uint32_t sdbm_hash_n(const char* const key, const size_t len)
 	const unsigned char* x = (const unsigned char*) key;
 
 	for(size_t i = 0; i < len; i++)
+	{
 		h=*x++ + (h<<6) + (h<<16) - h;
+	}
 	return h;
 }
 
@@ -61,7 +71,10 @@ uint32_t bernstein_hash(const char* const key)
 	uint32_t h = 0;
 	const unsigned char* x = (const unsigned char*) key;
 
-	while(*x) h=33*h + *x++;
+	while(*x)
+	{
+		h=33*h + *x++;
+	}
 	return h;
 }
 
@@ -72,7 +85,9 @@ uint32_t bernstein_hash_n(const char* const key, const size_t len)
 	const unsigned char* x = (const unsigned char*) key;
 
 	for(size_t i = 0; i < len; i++)
+	{
 		h=33*h + *x++;
+	}
 	return h;
 }
 

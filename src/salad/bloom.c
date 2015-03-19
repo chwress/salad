@@ -44,7 +44,7 @@ BLOOM* const bloom_create_ex(const size_t bitsize, hashfunc_t* const funcs, cons
 		return NULL;
 	}
 
-	bloom->funcs= (hashfunc_t*) malloc(nfuncs *sizeof(hashfunc_t));
+	bloom->funcs = (hashfunc_t*) malloc(nfuncs *sizeof(hashfunc_t));
 	if (bloom->funcs == NULL)
 	{
 		free(bloom->a);
@@ -160,7 +160,7 @@ void bloom_destroy(BLOOM* const bloom)
 	free(bloom);
 }
 
-void bloom_add(BLOOM* const bloom, const char* s, const size_t len)
+void bloom_add_str(BLOOM* const bloom, const char* s, const size_t len)
 {
 	assert(bloom != NULL);
 
@@ -171,20 +171,40 @@ void bloom_add(BLOOM* const bloom, const char* s, const size_t len)
 	}
 }
 
-const int bloom_check(BLOOM* const bloom, const char* s, const size_t len)
+void bloom_add_num(BLOOM* const bloom, const bitgram_t num)
 {
 	assert(bloom != NULL);
 
 	for(size_t n = 0; n < bloom->nfuncs; ++n)
 	{
-		hash_t h = bloom->funcs[n](s, len) % bloom->bitsize;
-		if (!GETBIT(bloom->a, h))
+		unsigned int h = bloom->funcs[n]((char*) &num, BITGRAM_SIZE) % bloom->bitsize;
+		SETBIT(bloom->a, h);
+	}
+}
+
+static inline int bloom_check(BLOOM* const bloom, const char* s, const size_t len)
+{
+	assert((bloom) != NULL);
+
+	for(size_t n = 0; n < (bloom)->nfuncs; ++n)
+	{
+		hash_t h = (bloom)->funcs[n](s, len) % (bloom)->bitsize;
+		if (!GETBIT((bloom)->a, h))
 		{
 			return 0;
 		}
 	}
-
 	return 1;
+}
+
+const int bloom_check_str(BLOOM* const bloom, const char* s, const size_t len)
+{
+	return bloom_check(bloom, s, len);
+}
+
+const int bloom_check_num(BLOOM* const bloom, const bitgram_t num)
+{
+	return bloom_check(bloom, (const char*) &num, BITGRAM_SIZE);
 }
 
 /**

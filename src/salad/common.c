@@ -24,7 +24,7 @@
 
 #include <util/util.h>
 
-const char* const to_delimiter(const char* const str, delimiter_t* const out)
+const char* const to_delimiter(const char* const str, const int bit_ngrams, delimiter_t* const out)
 {
 	assert(out != NULL);
 
@@ -36,8 +36,22 @@ const char* const to_delimiter(const char* const str, delimiter_t* const out)
 			x = NULL;
 		}
 	}
-	to_delimiter_array(x, out->d);
-	delimiter_array_to_string(out->d, &out->str);
+	if (bit_ngrams)
+	{
+		to_ngram_mask(x, &out->m);
+		ngram_mask_to_string(out->m, &out->str);
+
+		// Reset the character n-gram settings
+		memset(&out->d, 0x00, DELIM_SIZE);
+	}
+	else
+	{
+		to_delimiter_array(x, out->d);
+		delimiter_array_to_string(out->d, &out->str);
+
+		// Reset the bit n-gram mask
+		out->m = 0;
+	}
 	return x;
 }
 
@@ -75,5 +89,41 @@ const char* const delimiter_array_to_string(const delimiter_array_t delim, char*
 		}
 	}
 	STRNDUP(strlen(x), x, *out);
+	return *out;
+}
+
+#define SETBIT(m, x)	(m) |= (0x80>>(x))
+#define GETBIT(m, x)	(m) & (0x80>>(x))
+
+int to_ngram_mask(const char* const s, ngram_mask_t* const out)
+{
+	assert(out != NULL);
+
+	if (s == NULL)
+	{
+		*out = 0;
+	}
+	else
+	{
+		for (int i = 0; i < strlen(s); i++)
+		{
+			if (s[i] != '0' && s[i] != '1')
+			{
+				return FALSE;
+			}
+			SETBIT(*out, i);
+		}
+	}
+	return TRUE;
+}
+
+const char* const ngram_mask_to_string(const ngram_mask_t m, char** out)
+{
+	*out = (char*) calloc(MASK_BITSIZE +1, sizeof(char));
+
+	for (int i = 0; i < MASK_BITSIZE; i++)
+	{
+		(*out)[i] = (GETBIT(m, i) ? '1' : '0');
+	}
 	return *out;
 }

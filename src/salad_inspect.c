@@ -25,6 +25,10 @@
 #include <string.h>
 #include <math.h>
 
+void bloomizeb_ex3_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
+{
+	bloomizeb_ex3(p->bloom1, p->bloom2, str, len, p->n, out);
+}
 
 void bloomize_ex3_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
 {
@@ -34,6 +38,11 @@ void bloomize_ex3_wrapper(bloom_param_t* const p, const char* const str, const s
 void bloomizew_ex3_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
 {
 	bloomizew_ex3(p->bloom1, p->bloom2, str, len, p->n, p->delim, out);
+}
+
+void bloomizeb_ex4_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
+{
+	bloomizeb_ex4(p->bloom1, p->bloom2, str, len, p->n, out);
 }
 
 void bloomize_ex4_wrapper(bloom_param_t* const p, const char* const str, const size_t len, bloomize_stats_t* const out)
@@ -46,6 +55,22 @@ void bloomizew_ex4_wrapper(bloom_param_t* const p, const char* const str, const 
 	bloomizew_ex4(p->bloom1, p->bloom2, str, len, p->n, p->delim, out);
 }
 
+
+FN_BLOOMIZE pick_wrapper(const model_type_t t, const int use_new)
+{
+	switch (t)
+	{
+	case BIT_NGRAM:
+		return (use_new ? bloomizeb_ex3_wrapper : bloomizeb_ex4_wrapper);
+
+	case BYTE_NGRAM:
+		return (use_new ? bloomize_ex3_wrapper  : bloomize_ex4_wrapper );
+
+	case TOKEN_NGRAM:
+		return (use_new ? bloomizew_ex3_wrapper : bloomizew_ex4_wrapper);
+	}
+	return NULL;
+}
 
 typedef struct {
 	FN_BLOOMIZE fct;
@@ -101,13 +126,10 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 	SALAD_T(cur);
 	salad_from_config(&cur, c);
 
-	FN_BLOOMIZE bloomize = (newBloomFilter ?
-			(cur.useWGrams ? bloomizew_ex3_wrapper : bloomize_ex3_wrapper) :
-			(cur.useWGrams ? bloomizew_ex4_wrapper : bloomize_ex4_wrapper));
-
+	const model_type_t t = to_model_type(cur.asBinary, cur.useWGrams);
 
 	inspect_t context = {
-			.fct = bloomize,
+			.fct = pick_wrapper(t, newBloomFilter),
 			.param = {training.model.x, cur.model.x, cur.ngramLength, cur.delimiter.d},
 			.buf = {0},
 			.stats = (bloomize_stats_t*) calloc(c->batch_size, sizeof(bloomize_stats_t)),

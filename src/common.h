@@ -73,6 +73,7 @@ typedef struct
 	char* output;
 	size_t ngramLength;
 	char* delimiter;
+	int binary_ngrams;
 	int count;
 	unsigned int filter_size;
 	hashset_t hash_set;
@@ -96,6 +97,7 @@ static const config_t DEFAULT_CONFIG =
 	.output = NULL,
 	.ngramLength = 3,
 	.delimiter = NULL,
+	.binary_ngrams = FALSE,
 	.count = 0,
 	.filter_size = 24,
 	.hash_set = HASHES_SIMPLE,

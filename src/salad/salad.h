@@ -65,8 +65,9 @@ typedef struct
 {
 	saladmodel_t model; //!< The model to be used by salad.
 
-	size_t ngramLength; //!< The n-gram length
-	int useWGrams; //!< Whether to use world/ token n-grams rather than byte n-grams.
+	size_t ngramLength; //!< The n-gram length.
+	int useWGrams; //!< Whether or not to use world/ token n-grams rather than byte n-grams.
+	int asBinary; //!> Whether or not to use binary n-grams.
 	delimiter_t delimiter; //!< The delimiter of the tokens in case token n-grams are used.
 } salad_t;
 
@@ -128,9 +129,25 @@ PUBLIC const int salad_allocate(saladdata_t* const d, const size_t n);
  */
 PUBLIC const int salad_set_bloomfilter(salad_t* const s, const unsigned int filter_size, const char* const hashset);
 /**
+ * Use binary n-grams rather than n-grams based on character/bytes.
+ *
+ * ATTENTION! This also changes how the n-gram delimiter interpreted.
+ * If set it is handled as binary string!
+ *
+ * @param[inout] s The salad object to be modified.
+ * @param[in] b A boolean indicator for whether or not to use binary n-grams.
+ */
+PUBLIC void salad_use_binary_ngrams(salad_t* const s, const int b);
+/**
  * Set the n-gram delimiter that should be used for the
- * model. If not delimiter is set byte n-grams are used otherwise
+ * model. If no delimiter is set byte n-grams are used otherwise
  * salad extract tokens that are split at the given delimiters.
+ *
+ * If additionally the binary "flag" is set (salad_use_binary_ngrams(.,.))
+ * salad extracts n-grams based on bits. This holds true for "standard"
+ * n-grams as well as those based on tokens. In this case the delimiter
+ * is interpreted as binary string and therefore, may only contain the
+ * characters '0' & '1'.
  *
  * @param[inout] s The salad object to be modified.
  * @param[in] d The delimiter that should be used for extracting n-grams.

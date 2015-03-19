@@ -29,27 +29,6 @@
 #define TO_SEC(t) ((t).tv_sec+((t).tv_usec/1000000.0))
 
 
-const double anacheck_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
-{
-	return anacheck_ex(p->bloom1, input, len, p->n);
-}
-
-const double anacheck_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
-{
-	return anacheck_ex2(p->bloom1, p->bloom2, input, len, p->n);
-}
-
-const double anacheckw_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
-{
-	return anacheckw_ex(p->bloom1, input, len, p->n, p->delim);
-}
-
-const double anacheckw_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
-{
-	return anacheckw_ex2(p->bloom1, p->bloom2, input, len, p->n, p->delim);
-}
-
-
 typedef struct {
 	FN_ANACHECK fct;
 	bloom_param_t param;
@@ -214,9 +193,8 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 		free(cfg.delimiter);
 	}
 
-	FN_ANACHECK anacheck = (bad_model == NULL ?
-			(good.useWGrams ? anacheckw_ex_wrapper  : anacheck_ex_wrapper) :
-			(good.useWGrams ? anacheckw_ex2_wrapper : anacheck_ex2_wrapper));
+	const model_type_t t = to_model_type(good.asBinary, good.useWGrams);
+	FN_ANACHECK anacheck = pick_classifier(t, bad_model == NULL);
 
 	predict_t context = {
 			.fct = anacheck,

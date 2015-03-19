@@ -28,8 +28,10 @@
 
 uint32_t sax_hash(const char* const key);
 uint32_t sax_hash_n(const char* const key, const size_t len);
+
 uint32_t sdbm_hash(const char* const key);
 uint32_t sdbm_hash_n(const char* const key, const size_t len);
+
 uint32_t bernstein_hash(const char* const key);
 uint32_t bernstein_hash_n(const char* const key, const size_t len);
 

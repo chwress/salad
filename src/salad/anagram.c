@@ -20,7 +20,23 @@
 #include "hash.h"
 #include <util/util.h>
 
+#include <limits.h>
 #include <string.h>
+
+
+typedef struct
+{
+	BLOOM* bloom;
+	const vec_t* weights;
+
+} bloomize_t;
+
+typedef struct
+{
+	BLOOM* bloom1;
+	BLOOM* bloom2;
+	size_t new, uniq, total;
+} blommize_stats_ex_t;
 
 
 const hashset_t to_hashset(const char* const str)
@@ -67,412 +83,6 @@ const int to_hashid(hashfunc_t h)
 		}
 	}
 	return -1;
-}
-
-
-// n-grams
-
-// ATTENTION: Due to the reasonable size of the code for extracting n-grams,
-// we accept the code duplicate for the following 3 functions, in order to keep
-// the runtime performance of the program high.
-void bloomize_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
-{
-	const char* x = str;
-    for (; x < str + len; x++)
-    {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
-        bloom_add(bloom, x, n);
-    }
-}
-
-void bloomize_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const vec_t* const weights)
-{
-	const char* x = str;
-    for (; x < str + len; x++)
-    {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
-	    const dim_t dim = hash(x, n);
-	    if (vec_get(weights, dim) > 0.0)
-	    {
-	        bloom_add(bloom, x, n);
-	    }
-    }
-}
-
-void bloomize_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
-{
-	if (out == NULL)
-	{
-		bloomize_ex(bloom1, str, len, n);
-		return;
-	}
-
-	out->new = out->uniq = 0;
-	out->total = (len >= n ? len -n +1 : 0);
-	bloom_clear(bloom2);
-
-	const char* x = str;
-    for (; x < str + len; x++)
-    {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
-        if (!bloom_check(bloom1, x, n)) out->new++;
-        bloom_add(bloom1, x, n);
-
-        if (!bloom_check(bloom2, x, n)) out->uniq++;
-        bloom_add(bloom2, x, n);
-    }
-}
-
-void bloomize_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
-{
-	if (out == NULL)
-	{
-		bloomize_ex(bloom1, str, len, n);
-		return;
-	}
-
-	out->new = out->uniq = 0;
-	out->total = (len >= n ? len -n +1 : 0);
-	bloom_clear(bloom2);
-
-	const char* x = str;
-    for (; x < str + len; x++)
-    {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
-        if (!bloom_check(bloom1, x, n)) out->new++;
-        if (!bloom_check(bloom2, x, n)) out->uniq++;
-        bloom_add(bloom2, x, n);
-    }
-}
-
-const double anacheck_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
-{
-	const char* x = input;
-
-	unsigned int numKnown = 0;
-	unsigned int numNGrams = 0;
-
-	for (; x < input + len; x++)
-	{
-		// Check for sequence end
-		if (x + n > input + len) break;
-
-		numKnown += bloom_check(bloom, x, n);
-		numNGrams++;
-	}
-
-	return ((double) (numNGrams -numKnown))/ numNGrams;
-}
-
-const double anacheck_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
-{
-	const char* x = input;
-
-	unsigned int numGoodKnown = 0;
-	unsigned int numBadKnown = 0;
-	unsigned int numNGrams = 0;
-
-	for (; x < input + len; x++)
-	{
-		// Check for sequence end
-		if (x + n > input + len) break;
-
-		numGoodKnown += bloom_check(bloom, x, n);
-		numBadKnown += bloom_check(bbloom, x, n);
-		numNGrams++;
-	}
-
-	return (((double) (numBadKnown)) -numGoodKnown) /numNGrams;
-}
-
-
-// w-grams
-const int pick_delimiterchar(const delimiter_array_t delim)
-{
-	for (size_t i = 0; i < 256; i++)
-	{
-		if (delim[i])
-		{
-			return i;
-		}
-	}
-	return -1;
-}
-
-char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch)
-{
-	assert(str != NULL && *str != NULL && len != NULL);
-
-	size_t slen = 0;
-	char* s = (char*) malloc(*len +2);
-
-	int prev = ch;
-    for (const char* x = *str; x < *str +*len; x++)
-    {
-		if (delim[(unsigned char) *x])
-		{
-			if (prev != ch)
-			{
-				prev = s[slen++] = ch;
-			}
-		}
-		else
-		{
-			prev = s[slen++] = *x;
-		}
-    }
-    // make sure to end with a separator character
-    if (prev != ch)
-    {
-    	s[slen++] = ch;
-    }
-
-    *str = s;
-    *len = slen;
-    return s;
-}
-
-
-typedef void(*FN_PROCESS_WGRAM)(const char* const wgram, const size_t len, void* const data);
-
-
-void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_WGRAM fct, void* const data)
-{
-	int ch = pick_delimiterchar(delim);
-
-	const char* s = str;
-	size_t slen = len;
-	// ATTENTION! "uniquify" allocates new memory stored in &s
-	uniquify(&s, &slen, delim, ch);
-
-    const char** wgrams = (const char**) malloc(sizeof(char*) *(n +1));
-    wgrams[0] = s;
-
-    // Initialize sliding window
-	const char* x = s;
-    for (int i = 1; x < s +slen && i < n; x++)
-    {
-    	if (*x == ch)
-    	{
-    		wgrams[i++] = x +1;
-    	}
-    }
-
-    int i = n -1, a = n +1;
-    for (; x < s +slen; x++)
-    {
-    	if (*x == ch)
-    	{
-    		i = (i+1) % a;
-    		wgrams[i] = x +1;
-
-    		const int y = (i +1) % a;
-    		const char* const next = wgrams[y];
-    		const size_t wlen =  wgrams[i] -next -1;
-
-    		fct(next, wlen, data);
-    	}
-    }
-
-    free(wgrams);
-    free((void*) s);
-}
-
-typedef struct
-{
-	BLOOM* bloom;
-	const vec_t* weights;
-
-} bloomize_t;
-
-typedef struct
-{
-	BLOOM* bloom1;
-	BLOOM* bloom2;
-	size_t new, uniq, total;
-} blommize_stats_ex_t;
-
-
-void simple_add(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	bloomize_t* const d = (bloomize_t*) data;
-
-	bloom_add(d->bloom, wgram, len);
-}
-
-void checked_add(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	bloomize_t* const d = (bloomize_t*) data;
-
-    const dim_t dim = hash(wgram, len);
-    if (vec_get(d->weights, dim) > 0.0)
-    {
-		bloom_add(d->bloom, wgram, len);
-    }
-}
-
-void counted_add(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
-
-	if (!bloom_check(d->bloom1, wgram, len))
-	{
-		d->new++;
-	}
-	if (!bloom_check(d->bloom2, wgram, len))
-	{
-		d->uniq++;
-	}
-	d->total++;
-
-	bloom_add(d->bloom1, wgram, len);
-	bloom_add(d->bloom2, wgram, len);
-}
-
-void count(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
-
-	if (!bloom_check(d->bloom1, wgram, len))
-	{
-		d->new++;
-	}
-	if (!bloom_check(d->bloom2, wgram, len))
-	{
-		d->uniq++;
-	}
-	d->total++;
-
-	bloom_add(d->bloom2, wgram, len);
-}
-
-void bloomizew_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim)
-{
-	bloomize_t data;
-	data.bloom = bloom;
-	data.weights = NULL;
-
-	extract_wgrams(str, len, n, delim, simple_add, &data);
-}
-
-void bloomizew_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, const vec_t* const weights)
-{
-	bloomize_t data;
-	data.bloom = bloom;
-	data.weights = weights;
-
-	extract_wgrams(str, len, n, delim, checked_add, &data);
-}
-
-void bloomizew_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, bloomize_stats_t* const out)
-{
-	if (out == NULL)
-	{
-		bloomizew_ex(bloom1, str, len, n, delim);
-		return;
-	}
-
-	blommize_stats_ex_t data;
-	data.bloom1 = bloom1;
-	data.bloom2 = bloom2;
-	data.new = data.uniq = data.total = 0;
-
-	bloom_clear(bloom2);
-	extract_wgrams(str, len, n, delim, counted_add, &data);
-
-	out->new = data.new;
-	out->uniq = data.uniq;
-	out->total = data.total;
-}
-
-void bloomizew_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, bloomize_stats_t* const out)
-{
-	if (out == NULL)
-	{
-		bloomizew_ex(bloom1, str, len, n, delim);
-		return;
-	}
-
-	blommize_stats_ex_t data;
-	data.bloom1 = bloom1;
-	data.bloom2 = bloom2;
-	data.new = data.uniq = data.total = 0;
-
-	bloom_clear(bloom2);
-	extract_wgrams(str, len, n, delim, count, &data);
-
-	out->new = data.new;
-	out->uniq = data.uniq;
-	out->total = data.total;
-}
-
-typedef struct
-{
-	BLOOM* bloom;
-	unsigned int numKnown;
-	unsigned int numNGrams;
-
-} anacheck_t;
-
-void check(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	anacheck_t* const d = (anacheck_t*) data;
-
-	d->numKnown += bloom_check(d->bloom, wgram, len);
-	d->numNGrams++;
-}
-
-#define GOOD 0
-#define BAD  1
-
-void check2(const char* const wgram, const size_t len, void* const data)
-{
-	assert(wgram != NULL && data != NULL);
-	anacheck_t* const d = (anacheck_t*) data;
-
-	d[GOOD].numKnown += bloom_check(d[GOOD].bloom, wgram, len);
-	d[BAD ].numKnown += bloom_check(d[BAD ].bloom, wgram, len);
-	d[BAD ].numNGrams++;
-}
-
-const double anacheckw_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
-{
-	anacheck_t data;
-	data.bloom = bloom;
-	data.numKnown = 0;
-	data.numNGrams = 0;
-
-	extract_wgrams(input, len, n, delim, check, &data);
-	return ((double) (data.numNGrams -data.numKnown))/ data.numNGrams;
-}
-
-const double anacheckw_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
-{
-
-	anacheck_t data[2];
-	data[GOOD].bloom = bloom;
-	data[GOOD].numKnown = 0;
-	data[GOOD].numNGrams = 0;
-
-	data[BAD].bloom = bbloom;
-	data[BAD].numKnown = 0;
-	data[BAD].numNGrams = 0;
-
-	extract_wgrams(input, len, n, delim, check2, &data);
-	return (((double)data[BAD].numKnown) -data[GOOD].numKnown)/ data[BAD].numNGrams;
 }
 
 
@@ -558,6 +168,8 @@ BLOOM* const bloomizew(const char* str, const size_t len, const size_t n, const 
 	return bloom;
 }
 
+// file i/o
+
 const int fwrite_hashspec(FILE* const f, BLOOM* const bloom)
 {
 	assert(f != NULL);
@@ -575,8 +187,11 @@ const int fwrite_hashspec(FILE* const f, BLOOM* const bloom)
 	return 1 +bloom->nfuncs;
 }
 
-const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLength, const char* const delimiter)
+const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLength, const char* const delimiter, const int asBinary)
 {
+	const char b = (asBinary ? 1 : 0);
+	if (fwrite(&b, sizeof(char), 1, f) != 1) return -1;
+
 	const char* const x = (delimiter == NULL ? "" : delimiter);
 
 	size_t n = strlen(x);
@@ -618,8 +233,15 @@ const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* c
 	return nread;
 }
 
-const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLength, delimiter_array_t delim, int* const useWGrams)
+const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLength, delimiter_array_t delim, int* const useWGrams, int* const asBinary)
 {
+	assert(f != NULL && bloom != NULL);
+
+	char cdummy;
+	size_t n1 = fread(&cdummy, sizeof(size_t), 1, f);
+	if (asBinary != NULL) *asBinary = cdummy;
+
+
 	if (useWGrams != NULL) *useWGrams = 0;
 
 	char* const delimiter = fread_str(f);
@@ -638,10 +260,568 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 	size_t* const _ngramLength = (ngramLength == NULL ? &dummy : ngramLength);
 
 	*_ngramLength = 0;
-	size_t numRead = fread(_ngramLength, sizeof(size_t), 1, f);
+	size_t n2 = fread(_ngramLength, sizeof(size_t), 1, f);
 
 	// The actual bloom filter values
 	*bloom = bloom_init_from_file(f);
 
-	return (numRead <= 0 || *_ngramLength <= 0 || *bloom == NULL ? -1 : 0);
+	return (n1 <= 0 || n2 <= 0 || *_ngramLength <= 0 || *bloom == NULL ? -1 : 0);
+}
+
+// n-grams
+// generic implementations
+
+static inline void simple_add(const char* const wgram, const size_t len, void* const data)
+{
+	assert(wgram != NULL && data != NULL);
+	bloomize_t* const d = (bloomize_t*) data;
+
+	bloom_add_str(d->bloom, wgram, len);
+}
+
+static inline void checked_add(const char* const wgram, const size_t len, void* const data)
+{
+	assert(wgram != NULL && data != NULL);
+	bloomize_t* const d = (bloomize_t*) data;
+
+    const dim_t dim = hash(wgram, len);
+    if (vec_get(d->weights, dim) > 0.0)
+    {
+		bloom_add_str(d->bloom, wgram, len);
+    }
+}
+
+static inline void counted_add(const char* const wgram, const size_t len, void* const data)
+{
+	assert(wgram != NULL && data != NULL);
+	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
+
+	if (!bloom_check_str(d->bloom1, wgram, len))
+	{
+		d->new++;
+	}
+	if (!bloom_check_str(d->bloom2, wgram, len))
+	{
+		d->uniq++;
+	}
+	d->total++;
+
+	bloom_add_str(d->bloom1, wgram, len);
+	bloom_add_str(d->bloom2, wgram, len);
+}
+
+static inline void count(const char* const wgram, const size_t len, void* const data)
+{
+	assert(wgram != NULL && data != NULL);
+	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
+
+	if (!bloom_check_str(d->bloom1, wgram, len))
+	{
+		d->new++;
+	}
+	if (!bloom_check_str(d->bloom2, wgram, len))
+	{
+		d->uniq++;
+	}
+	d->total++;
+
+	bloom_add_str(d->bloom2, wgram, len);
+}
+
+typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void* const data);
+
+
+#define BLOOMIZE_DUAL(X, bloom1, _bloom2, str, len, n, delim, out, fct)         \
+{                                                                               \
+	BLOOM* const _bloom1_ = bloom1;                                             \
+	BLOOM* const _bloom2_ = bloom2;                                             \
+	const char* const _str_ = str;                                              \
+	const size_t _len_ = len;                                                   \
+	const size_t _n_ = n;                                                       \
+	const delimiter_array_t _delim_ = delim;                                    \
+	bloomize_stats_t* const _out_ = out;                                        \
+	                                                                            \
+	if (out == NULL)                                                            \
+	{                                                                           \
+		switch (#X[0]) /* This is a static check and will be optimized away */  \
+		{                                                                       \
+		case 'b':                                                               \
+			bloomizeb_ex(_bloom1_, _str_, _len_, _n_);                          \
+			break;                                                              \
+		case 'w':                                                               \
+			bloomizew_ex(_bloom1_, _str_, _len_, _n_, _delim_);                 \
+			break;                                                              \
+		default:                                                                \
+			bloomize_ex (_bloom1_, _str_, _len_, _n_);                          \
+			break;                                                              \
+		}                                                                       \
+		return;                                                                 \
+	}                                                                           \
+	                                                                            \
+	blommize_stats_ex_t data;                                                   \
+	data.bloom1 = _bloom1_;                                                     \
+	data.bloom2 = _bloom2_;                                                     \
+	data.new = data.uniq = data.total = 0;                                      \
+	                                                                            \
+	bloom_clear(_bloom2_);                                                      \
+	extract_##X##grams(_str_, _len_, _n_, _delim_, fct, &data);                 \
+	                                                                            \
+	_out_->new = data.new;                                                      \
+	_out_->uniq = data.uniq;                                                    \
+	_out_->total = data.total;                                                  \
+}
+
+// bit n-grams
+
+static inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
+{
+	const ngram_mask_t mask = ((ngram_mask_t) -1) >> (int) MAX(BITGRAM_BITSIZE -n, 0);
+
+	const char* x = str;
+	for (; x < str +len -BITGRAM_SIZE; x++)
+	{
+		bitgram_t u = *(bitgram_t*) x;
+		for (int i = 0; i < CHAR_BIT; i++)
+		{
+			bitgram_t cur = (u & mask);
+			fct((char*) &cur, BITGRAM_SIZE, data);
+			u >>= 1;
+		}
+	}
+
+	bitgram_t u = *(bitgram_t*) x;
+	const size_t remainder = (len -(x -str)) *8;
+
+	for (int i = 0; i < remainder -n +1; i++)
+	{
+		bitgram_t cur = (u & mask);
+		fct((char*) &cur, BITGRAM_SIZE, data);
+		u >>= 1;
+	}
+}
+
+static inline void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
+{
+	extract_bitgrams(str, len, n, fct, data);
+}
+
+void bloomizeb_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
+{
+	bloomize_t data;
+	data.bloom = bloom;
+	data.weights = NULL;
+
+	extract_bitgrams(str, len, n, simple_add, &data);
+}
+
+void bloomizeb_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const vec_t* const weights)
+{
+	bloomize_t data;
+	data.bloom = bloom;
+	data.weights = weights;
+
+	extract_bitgrams(str, len, n, checked_add, &data);
+}
+
+void bloomizeb_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
+{
+	BLOOMIZE_DUAL(b, bloom1, bloom2, str, len, n, NO_DELIMITER, out, counted_add);
+}
+
+void bloomizeb_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
+{
+	BLOOMIZE_DUAL(b, bloom1, bloom2, str, len, n, NO_DELIMITER, out, count);
+}
+
+
+// byte or character n-grams
+
+// ATTENTION: Due to the reasonable size of the code for extracting n-grams,
+// we accept the code duplicate for the following 3 functions, in order to keep
+// the runtime performance of the program high.
+void bloomize_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
+{
+	const char* x = str;
+    for (; x < str + len; x++)
+    {
+        // Check for sequence end
+        if (x + n > str + len) break;
+
+        bloom_add_str(bloom, x, n);
+    }
+}
+
+void bloomize_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const vec_t* const weights)
+{
+	const char* x = str;
+    for (; x < str + len; x++)
+    {
+        // Check for sequence end
+        if (x + n > str + len) break;
+
+	    const dim_t dim = hash(x, n);
+	    if (vec_get(weights, dim) > 0.0)
+	    {
+	        bloom_add_str(bloom, x, n);
+	    }
+    }
+}
+
+void bloomize_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
+{
+	if (out == NULL)
+	{
+		bloomize_ex(bloom1, str, len, n);
+		return;
+	}
+
+	out->new = out->uniq = 0;
+	out->total = (len >= n ? len -n +1 : 0);
+	bloom_clear(bloom2);
+
+	const char* x = str;
+    for (; x < str + len; x++)
+    {
+        // Check for sequence end
+        if (x + n > str + len) break;
+
+        if (!bloom_check_str(bloom1, x, n)) out->new++;
+        bloom_add_str(bloom1, x, n);
+
+        if (!bloom_check_str(bloom2, x, n)) out->uniq++;
+        bloom_add_str(bloom2, x, n);
+    }
+}
+
+void bloomize_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, bloomize_stats_t* const out)
+{
+	if (out == NULL)
+	{
+		bloomize_ex(bloom1, str, len, n);
+		return;
+	}
+
+	out->new = out->uniq = 0;
+	out->total = (len >= n ? len -n +1 : 0);
+	bloom_clear(bloom2);
+
+	const char* x = str;
+    for (; x < str + len; x++)
+    {
+        // Check for sequence end
+        if (x + n > str + len) break;
+
+        if (!bloom_check_str(bloom1, x, n)) out->new++;
+        if (!bloom_check_str(bloom2, x, n)) out->uniq++;
+        bloom_add_str(bloom2, x, n);
+    }
+}
+
+
+// token or word n-grams
+
+const int pick_delimiterchar(const delimiter_array_t delim)
+{
+	for (size_t i = 0; i < 256; i++)
+	{
+		if (delim[i])
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch)
+{
+	assert(str != NULL && *str != NULL && len != NULL);
+
+	size_t slen = 0;
+	char* s = (char*) malloc(*len +2);
+
+	int prev = ch;
+    for (const char* x = *str; x < *str +*len; x++)
+    {
+		if (delim[(unsigned char) *x])
+		{
+			if (prev != ch)
+			{
+				prev = s[slen++] = ch;
+			}
+		}
+		else
+		{
+			prev = s[slen++] = *x;
+		}
+    }
+    // make sure to end with a separator character
+    if (prev != ch)
+    {
+    	s[slen++] = ch;
+    }
+
+    *str = s;
+    *len = slen;
+    return s;
+}
+
+static inline void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
+{
+	int ch = pick_delimiterchar(delim);
+
+	const char* s = str;
+	size_t slen = len;
+	// ATTENTION! "uniquify" allocates new memory stored in &s
+	uniquify(&s, &slen, delim, ch);
+
+    const char** wgrams = (const char**) malloc(sizeof(char*) *(n +1));
+    wgrams[0] = s;
+
+    // Initialize sliding window
+	const char* x = s;
+    for (int i = 1; x < s +slen && i < n; x++)
+    {
+    	if (*x == ch)
+    	{
+    		wgrams[i++] = x +1;
+    	}
+    }
+
+    int i = n -1, a = n +1;
+    for (; x < s +slen; x++)
+    {
+    	if (*x == ch)
+    	{
+    		i = (i+1) % a;
+    		wgrams[i] = x +1;
+
+    		const int y = (i +1) % a;
+    		const char* const next = wgrams[y];
+    		const size_t wlen =  wgrams[i] -next -1;
+
+    		fct(next, wlen, data);
+    	}
+    }
+
+    free(wgrams);
+    free((void*) s);
+}
+
+void bloomizew_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim)
+{
+	bloomize_t data;
+	data.bloom = bloom;
+	data.weights = NULL;
+
+	extract_wgrams(str, len, n, delim, simple_add, &data);
+}
+
+void bloomizew_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, const vec_t* const weights)
+{
+	bloomize_t data;
+	data.bloom = bloom;
+	data.weights = weights;
+
+	extract_wgrams(str, len, n, delim, checked_add, &data);
+}
+
+void bloomizew_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, bloomize_stats_t* const out)
+{
+	BLOOMIZE_DUAL(w, bloom1, bloom2, str, len, n, delim, out, counted_add);
+}
+
+void bloomizew_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, bloomize_stats_t* const out)
+{
+	BLOOMIZE_DUAL(w, bloom1, bloom2, str, len, n, delim, out, count);
+}
+
+
+// anagram stuff
+
+typedef struct
+{
+	BLOOM* bloom;
+	unsigned int numKnown;
+	unsigned int numNGrams;
+
+} anacheck_t;
+
+void check(const char* const wgram, const size_t len, void* const data)
+{
+	assert(wgram != NULL && data != NULL);
+	anacheck_t* const d = (anacheck_t*) data;
+
+	d->numKnown += bloom_check_str(d->bloom, wgram, len);
+	d->numNGrams++;
+}
+
+#define ANACHECK(X, bloom, input, len, n, delim)                       \
+{	                                                                   \
+	BLOOM* const _bloom_ = bloom;                                      \
+	const char* const _input_ = input;                                 \
+	const size_t _len_ = len;                                          \
+	const size_t _n_ = n;                                              \
+	const delimiter_array_t _delim_ = delim;                           \
+	                                                                   \
+	anacheck_t data;                                                   \
+	data.bloom = _bloom_;                                              \
+	data.numKnown = 0;                                                 \
+	data.numNGrams = 0;                                                \
+	                                                                   \
+	extract_##X##grams(_input_, _len_, _n_, _delim_, check, &data);    \
+	return ((double) (data.numNGrams -data.numKnown))/ data.numNGrams; \
+}
+
+#define GOOD 0
+#define BAD  1
+
+void check2(const char* const ngram, const size_t len, void* const data)
+{
+	assert(ngram != NULL && data != NULL);
+	anacheck_t* const d = (anacheck_t*) data;
+
+	d[GOOD].numKnown += bloom_check_str(d[GOOD].bloom, ngram, len);
+	d[BAD ].numKnown += bloom_check_str(d[BAD ].bloom, ngram, len);
+	d[BAD ].numNGrams++;
+}
+
+#define ANACHECK2(X, bloom, bbloom, input, len, n, delim)                            \
+{	                                                                                 \
+	BLOOM* const _bloom_ = bloom;                                                    \
+	BLOOM* const _bbloom_ = bbloom;                                                  \
+	const char* const _input_ = input;                                               \
+	const size_t _len_ = len;                                                        \
+	const size_t _n_ = n;                                                            \
+	const delimiter_array_t _delim_ = delim;                                         \
+	                                                                                 \
+	anacheck_t data[2];                                                              \
+	data[GOOD].bloom = _bloom_;                                                      \
+	data[GOOD].numKnown = 0;                                                         \
+	data[GOOD].numNGrams = 0;                                                        \
+	                                                                                 \
+	data[BAD].bloom = _bbloom_;                                                      \
+	data[BAD].numKnown = 0;                                                          \
+	data[BAD].numNGrams = 0;                                                         \
+	                                                                                 \
+	extract_wgrams(_input_, _len_, _n_, _delim_, check2, &data);                     \
+	return (((double)data[BAD].numKnown) -data[GOOD].numKnown)/ data[BAD].numNGrams; \
+}
+
+const double anacheckb_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
+{
+	ANACHECK(b, bloom, input, len, n, NO_DELIMITER);
+}
+
+const double anacheckb_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheckb_ex(p->bloom1, input, len, p->n);
+}
+
+const double anacheckb_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
+{
+	ANACHECK2(w, bloom, bbloom, input, len, n, NO_DELIMITER);
+}
+
+const double anacheckb_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheckb_ex2(p->bloom1, p->bloom2, input, len, p->n);
+}
+
+const double anacheck_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
+{
+	const char* x = input;
+
+	unsigned int numKnown = 0;
+	unsigned int numNGrams = 0;
+
+	for (; x < input + len; x++)
+	{
+		// Check for sequence end
+		if (x + n > input + len) break;
+
+		numKnown += bloom_check_str(bloom, x, n);
+		numNGrams++;
+	}
+	return ((double) (numNGrams -numKnown))/ numNGrams;
+}
+
+const double anacheck_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheck_ex(p->bloom1, input, len, p->n);
+}
+
+const double anacheck_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
+{
+	const char* x = input;
+
+	unsigned int numGoodKnown = 0;
+	unsigned int numBadKnown = 0;
+	unsigned int numNGrams = 0;
+
+	for (; x < input + len; x++)
+	{
+		// Check for sequence end
+		if (x + n > input + len) break;
+
+		numGoodKnown += bloom_check_str(bloom, x, n);
+		numBadKnown += bloom_check_str(bbloom, x, n);
+		numNGrams++;
+	}
+	return (((double) (numBadKnown)) -numGoodKnown) /numNGrams;
+}
+
+const double anacheck_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheck_ex2(p->bloom1, p->bloom2, input, len, p->n);
+}
+
+
+const double anacheckw_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
+{
+	ANACHECK(w, bloom, input, len, n, delim);
+}
+
+const double anacheckw_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheckw_ex(p->bloom1, input, len, p->n, p->delim);
+}
+
+const double anacheckw_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
+{
+	ANACHECK2(w, bloom, bbloom, input, len, n, delim);
+}
+
+const double anacheckw_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+{
+	return anacheckw_ex2(p->bloom1, p->bloom2, input, len, p->n, p->delim);
+}
+
+
+const model_type_t to_model_type(const int as_binary, const int use_tokens)
+{
+	if (as_binary) {
+		return BIT_NGRAM;
+
+	} else if (use_tokens) {
+		return TOKEN_NGRAM;
+
+	} else {
+		return BYTE_NGRAM;
+	}
+}
+
+FN_ANACHECK pick_classifier(const model_type_t t, const int anomaly_detection)
+{
+	switch (t)
+	{
+	case BIT_NGRAM:
+		return (anomaly_detection ? anacheckb_ex_wrapper : anacheckb_ex2_wrapper);
+
+	case BYTE_NGRAM:
+		return (anomaly_detection ? anacheck_ex_wrapper  : anacheck_ex2_wrapper );
+
+	case TOKEN_NGRAM:
+		return (anomaly_detection ? anacheckw_ex_wrapper : anacheckw_ex2_wrapper);
+	}
+	return NULL;
 }

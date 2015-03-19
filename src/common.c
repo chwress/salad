@@ -49,7 +49,6 @@ const saladmode_t to_saladmode(const char* const str)
 
 
 
-
 const int salad_heart(const config_t* const c, FN_SALAD fct)
 {
 	assert(c != NULL);
@@ -136,6 +135,11 @@ void echo_options(config_t* const config)
 	info("Options:");
 	info(" # n-Gram length: %u", (unsigned int) config->ngramLength);
 
+	if (config->binary_ngrams)
+	{
+		info("  # Use binary n-Grams");
+	}
+
 	if (config->delimiter != NULL)
 	{
 		info(" # Delimiter: '%s'", config->delimiter);
@@ -152,6 +156,7 @@ const int salad_from_config(salad_t* const s, const config_t* const c)
 
 	// TODO: right now there only are bloom filters!
 	salad_set_bloomfilter_ex(s, bloom_init(c->filter_size, c->hash_set));
+	salad_use_binary_ngrams(s, c->binary_ngrams);
 	salad_set_delimiter(s, c->delimiter);
 	salad_set_ngramlength(s, c->ngramLength);
 

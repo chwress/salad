@@ -27,8 +27,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include "common.h"
+
 typedef unsigned int hash_t;
 typedef hash_t (*hashfunc_t)(const char* const, const size_t n);
+typedef hash_t (*hashfunc_num_t)(const bitgram_t, const size_t n);
 
 typedef struct {
 	size_t bitsize; ///< The number of bit used by the bloom filter
@@ -48,8 +51,10 @@ BLOOM* const bloom_create_from_file_ex(FILE* const f, hashfunc_t* const funcs, c
 
 void bloom_clear(BLOOM* const bloom);
 void bloom_destroy(BLOOM* const bloom);
-void bloom_add(BLOOM* const bloom, const char *s, const size_t len);
-const int bloom_check(BLOOM* const bloom, const char *s, const size_t len);
+void bloom_add_str(BLOOM* const bloom, const char *s, const size_t len);
+void bloom_add_num(BLOOM* const bloom, const bitgram_t num);
+const int bloom_check_str(BLOOM* const bloom, const char *s, const size_t len);
+const int bloom_check_num(BLOOM* const bloom, const bitgram_t num);
 const size_t bloom_count(BLOOM* const bloom);
 const int bloom_compare(BLOOM* const a, BLOOM* const b);
 

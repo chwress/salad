@@ -46,6 +46,7 @@ static struct option main_longopts[] = {
 #define OPTION_INPUTFILTER 1000
 #define OPTION_BATCHSIZE   1001
 #define OPTION_HASHSET     1002
+#define OPTION_BINARY      1003
 
 static struct option train_longopts[] = {
 	// I/O options
@@ -60,6 +61,7 @@ static struct option train_longopts[] = {
 	// Feature options
 	{ "ngram-length",   required_argument, NULL, 'n' },
 	{ "ngram-delim",    required_argument, NULL, 'd' },
+	{ "binary",         no_argument,       NULL, OPTION_BINARY },
 	{ "filter-size",    required_argument, NULL, 's' },
 	{ "hash-set",       required_argument, NULL, OPTION_HASHSET},
 
@@ -109,6 +111,7 @@ static struct option inspect_longopts[] = {
 	// Feature options
 	{ "ngram-length",   required_argument, NULL, 'n' },
 	{ "ngram-delim",    required_argument, NULL, 'd' },
+	{ "binary",         no_argument,       NULL, OPTION_BINARY },
 	{ "filter-size",    required_argument, NULL, 's' },
 	{ "hash-set",       required_argument, NULL, OPTION_HASHSET},
 
@@ -176,6 +179,10 @@ const int usage_train()
 	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
+	"       --binary               Indicates to use binary n-grams. This modifier\n"
+	"                              also changes how the n-gram delimiter (-d) is\n"
+	"                              interpreted. If set it is handled as binary string\n"
+	"                              and limited the characters '0' & '1'.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
@@ -260,6 +267,10 @@ const int usage_inspect()
 	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
+	"       --binary               Indicates to use binary n-grams. This modifier\n"
+	"                              also changes how the n-gram delimiter (-d) is\n"
+	"                              interpreted. If set it is handled as binary string\n"
+	"                              and limited the characters '0' & '1'.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
@@ -452,6 +463,10 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			config->delimiter = optarg;
 			break;
 
+		case OPTION_BINARY:
+			config->binary_ngrams = TRUE;
+			break;
+
 		case 's':
 		{
 			fo = TRUE;
@@ -493,6 +508,13 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 	}
 
 	config->transfer_spec = !fo;
+
+	if (config->binary_ngrams && config->ngramLength > MASK_BITSIZE)
+	{
+		error("When using binary n-grams currently only a maximal");
+		error("length of %u bits is supported.", MASK_BITSIZE);
+		return SALAD_EXIT;
+	}
 
 	if (check_input(config, TRUE, bs) == EXIT_FAILURE) return SALAD_EXIT;
 	if (check_output(config) == EXIT_FAILURE) return SALAD_EXIT;

@@ -99,7 +99,7 @@ CTEST2(bloom, compare)
 
 CTEST2(bloom, add)
 {
-	bloom_add(data->b1, "abc", 3);
+	bloom_add_str(data->b1, "abc", 3);
 	ASSERT_NOT_EQUAL(0, bloom_compare(data->b1, data->b2));
 }
 
@@ -112,10 +112,10 @@ CTEST2(bloom, count)
 
 CTEST2(bloom, hash_collisions)
 {
-	bloom_add(data->x1, "abc", 3);
+	bloom_add_str(data->x1, "abc", 3);
 	ASSERT_EQUAL(3, bloom_count(data->x1));
 
-	bloom_add(data->x2, "abc", 3);
+	bloom_add_str(data->x2, "abc", 3);
 	ASSERT_EQUAL(3, bloom_count(data->x2));
 }
 
