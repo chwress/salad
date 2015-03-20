@@ -181,16 +181,17 @@ const int fwrite_hashspec(FILE* const f, BLOOM* const bloom)
 		const int id = to_hashid(bloom->funcs[i]);
 		if (id < 0 || id >= 256) return -1;
 
-		if (fwrite(&id, sizeof(uint8_t), 1, f) != 1) return -1;
+		const uint8_t hid = id;
+		if (fwrite(&hid, sizeof(uint8_t), 1, f) != 1) return -1;
 	}
 
-	return 1 +bloom->nfuncs;
+	return (1 +bloom->nfuncs) *sizeof(uint8_t);
 }
 
 const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLength, const char* const delimiter, const int asBinary)
 {
-	const char b = (asBinary ? 1 : 0);
-	if (fwrite(&b, sizeof(char), 1, f) != 1) return -1;
+	const uint8_t b = (asBinary ? 1 : 0);
+	if (fwrite(&b, sizeof(uint8_t), 1, f) != 1) return -1;
 
 	const char* const x = (delimiter == NULL ? "" : delimiter);
 
@@ -204,7 +205,7 @@ const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLeng
 
 	if ((l = bloom_to_file(bloom, f)) < 0) return -1;
 
-	return n *sizeof(char) +sizeof(size_t) +m +l;
+	return sizeof(uint8_t) + (n+1)*sizeof(char) +sizeof(size_t) +m +l;
 }
 
 const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* const nfuncs)
@@ -237,8 +238,8 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 {
 	assert(f != NULL && bloom != NULL);
 
-	char cdummy;
-	size_t n1 = fread(&cdummy, sizeof(size_t), 1, f);
+	uint8_t cdummy;
+	size_t n1 = fread(&cdummy, sizeof(uint8_t), 1, f);
 	if (asBinary != NULL) *asBinary = cdummy;
 
 
