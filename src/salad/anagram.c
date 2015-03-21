@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -344,18 +344,7 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 	                                                                            \
 	if (out == NULL)                                                            \
 	{                                                                           \
-		switch (#X[0]) /* This is a static check and will be optimized away */  \
-		{                                                                       \
-		case 'b':                                                               \
-			bloomizeb_ex(_bloom1_, _str_, _len_, _n_);                          \
-			break;                                                              \
-		case 'w':                                                               \
-			bloomizew_ex(_bloom1_, _str_, _len_, _n_, _delim_);                 \
-			break;                                                              \
-		default:                                                                \
-			bloomize_ex (_bloom1_, _str_, _len_, _n_);                          \
-			break;                                                              \
-		}                                                                       \
+		BLOOMIZE_EX(#X[0], _bloom1_, _str_, _len_, _n_, _delim_);               \
 		return;                                                                 \
 	}                                                                           \
 	                                                                            \

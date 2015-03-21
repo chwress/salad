@@ -113,4 +113,8 @@ const model_type_t to_model_type(const int as_binary, const int use_tokens);
 FN_ANACHECK pick_classifier(const model_type_t t, const int anomaly_detection);
 
 
+// macros for the generic use of the bloomize functions
+#include "anagram_ex.c"
+
+
 #endif /* SALAD_ANAGRAM_H_ */
