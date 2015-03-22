@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -99,8 +99,27 @@ CTEST2(bloom, compare)
 
 CTEST2(bloom, add)
 {
+	ASSERT_EQUAL(0, bloom_compare(data->b1, data->b2));
+
 	bloom_add_str(data->b1, "abc", 3);
 	ASSERT_NOT_EQUAL(0, bloom_compare(data->b1, data->b2));
+
+	memset(data->b1->a, 0x00, data->b1->size);
+	ASSERT_EQUAL(0, bloom_compare(data->b1, data->b2));
+
+	bloom_add_num(data->b2, 0x5A7AD);
+	ASSERT_NOT_EQUAL(0, bloom_compare(data->b1, data->b2));
+}
+
+CTEST2(bloom, check)
+{
+	bloom_add_str(data->b1, "abc", 3);
+	ASSERT_EQUAL(0, bloom_check_str(data->b1, "ABC", 3));
+	ASSERT_EQUAL(1, bloom_check_str(data->b1, "abc", 3));
+
+	bloom_add_num(data->b2, 0x5A7AD);
+	ASSERT_EQUAL(0, bloom_check_num(data->b2, 0xC0FFEE));
+	ASSERT_EQUAL(1, bloom_check_num(data->b2, 0x5A7AD));
 }
 
 CTEST2(bloom, count)
@@ -108,6 +127,14 @@ CTEST2(bloom, count)
 	data->b1->a[0] = 0x03;
 	data->b1->a[data->b1->size -1] = 0x80;
 	ASSERT_EQUAL(3, bloom_count(data->b1));
+}
+
+CTEST2(bloom, clear)
+{
+	data->b1->a[0] = 0xCA;
+	data->b1->a[data->b1->size -1] = 0xFE;
+	bloom_clear(data->b1);
+	ASSERT_EQUAL(0, bloom_count(data->b1));
 }
 
 CTEST2(bloom, hash_collisions)

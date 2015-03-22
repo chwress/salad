@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -34,6 +34,7 @@ static const char* const DELIMITER = "";
 static const char* const TOKEN_DELIMITER = "\r\n \t";
 static const size_t NGRAM_LENGTH = 3;
 
-static const char* const TEST_STR = "The quick brown fox jumps over the lazy dog";
+static const char* const TEST_STR1 = "The quick brown fox jumps over the lazy dog";
+static const char* const TEST_STR2 = "The quick brown fox jumps over the lazy dog!";
 
 #endif /* TESTS_COMMON_H_ */
