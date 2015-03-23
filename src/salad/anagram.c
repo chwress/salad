@@ -300,15 +300,14 @@ static inline void counted_add(const char* const ngram, const size_t len, void* 
 	if (!bloom_check_str(d->bloom1, ngram, len))
 	{
 		d->new++;
+		bloom_add_str(d->bloom1, ngram, len);
 	}
 	if (!bloom_check_str(d->bloom2, ngram, len))
 	{
 		d->uniq++;
+		bloom_add_str(d->bloom2, ngram, len);
 	}
 	d->total++;
-
-	bloom_add_str(d->bloom1, ngram, len);
-	bloom_add_str(d->bloom2, ngram, len);
 }
 
 static inline void count(const char* const ngram, const size_t len, void* const data)
@@ -323,10 +322,9 @@ static inline void count(const char* const ngram, const size_t len, void* const 
 	if (!bloom_check_str(d->bloom2, ngram, len))
 	{
 		d->uniq++;
+		bloom_add_str(d->bloom2, ngram, len);
 	}
 	d->total++;
-
-	bloom_add_str(d->bloom2, ngram, len);
 }
 
 typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void* const data);
@@ -426,29 +424,46 @@ void bloomizeb_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const s
 
 // byte or character n-grams
 
+static inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
+{
+	const char* x = str;
+    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
+    {
+        fct(x, n, data);
+    }
+}
+
+static inline void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
+{
+	extract_bytegrams(str, len, n, fct, data);
+}
+
+
 // ATTENTION: Due to the reasonable size of the code for extracting n-grams,
 // we accept the code duplicate for the following 3 functions, in order to keep
 // the runtime performance of the program high.
 void bloomize_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
 {
+#if 0
 	const char* x = str;
-    for (; x < str + len; x++)
+    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
     {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
         bloom_add_str(bloom, x, n);
     }
+#else
+	bloomize_t data;
+	data.bloom = bloom;
+	data.weights = NULL;
+
+    extract_bytegrams(str, len, n, simple_add, &data);
+#endif
 }
 
 void bloomize_ex2(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const vec_t* const weights)
 {
 	const char* x = str;
-    for (; x < str + len; x++)
+    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
     {
-        // Check for sequence end
-        if (x + n > str + len) break;
-
 	    const dim_t dim = hash(x, n);
 	    if (vec_get(weights, dim) > 0.0)
 	    {
@@ -470,16 +485,19 @@ void bloomize_ex3(BLOOM* const bloom1, BLOOM* const bloom2, const char* const st
 	bloom_clear(bloom2);
 
 	const char* x = str;
-    for (; x < str + len; x++)
+    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
     {
-        // Check for sequence end
-        if (x + n > str + len) break;
+        if (!bloom_check_str(bloom1, x, n))
+        {
+        	out->new++;
+            bloom_add_str(bloom1, x, n);
+        }
 
-        if (!bloom_check_str(bloom1, x, n)) out->new++;
-        bloom_add_str(bloom1, x, n);
-
-        if (!bloom_check_str(bloom2, x, n)) out->uniq++;
-        bloom_add_str(bloom2, x, n);
+        if (!bloom_check_str(bloom2, x, n))
+        {
+        	out->uniq++;
+        	bloom_add_str(bloom2, x, n);
+        }
     }
 }
 
@@ -496,14 +514,18 @@ void bloomize_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const st
 	bloom_clear(bloom2);
 
 	const char* x = str;
-    for (; x < str + len; x++)
+    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
     {
-        // Check for sequence end
-        if (x + n > str + len) break;
+        if (!bloom_check_str(bloom1, x, n))
+        {
+        	out->new++;
+        }
 
-        if (!bloom_check_str(bloom1, x, n)) out->new++;
-        if (!bloom_check_str(bloom2, x, n)) out->uniq++;
-        bloom_add_str(bloom2, x, n);
+        if (!bloom_check_str(bloom2, x, n))
+        {
+        	out->uniq++;
+            bloom_add_str(bloom2, x, n);
+        }
     }
 }
 
