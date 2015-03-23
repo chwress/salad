@@ -36,7 +36,7 @@ typedef struct
 	BLOOM* bloom1;
 	BLOOM* bloom2;
 	size_t new, uniq, total;
-} blommize_stats_ex_t;
+} bloomize_stats_ex_t;
 
 
 const hashset_t to_hashset(const char* const str)
@@ -295,7 +295,7 @@ static inline void checked_add(const char* const ngram, const size_t len, void* 
 static inline void counted_add(const char* const ngram, const size_t len, void* const data)
 {
 	assert(ngram != NULL && data != NULL);
-	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
+	bloomize_stats_ex_t* const d = (bloomize_stats_ex_t*) data;
 
 	if (!bloom_check_str(d->bloom1, ngram, len))
 	{
@@ -314,7 +314,7 @@ static inline void counted_add(const char* const ngram, const size_t len, void* 
 static inline void count(const char* const ngram, const size_t len, void* const data)
 {
 	assert(ngram != NULL && data != NULL);
-	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
+	bloomize_stats_ex_t* const d = (bloomize_stats_ex_t*) data;
 
 	if (!bloom_check_str(d->bloom1, ngram, len))
 	{
@@ -348,7 +348,7 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 		return;                                                                 \
 	}                                                                           \
 	                                                                            \
-	blommize_stats_ex_t data;                                                   \
+	bloomize_stats_ex_t data;                                                   \
 	data.bloom1 = _bloom1_;                                                     \
 	data.bloom2 = _bloom2_;                                                     \
 	data.new = data.uniq = data.total = 0;                                      \
