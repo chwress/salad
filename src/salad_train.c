@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -43,13 +43,13 @@ static inline const int salad_train_callback##X(data_t* data, const size_t n, vo
 		switch (#X[0]) /* This is a static check and will be optimized away */                          \
 		{                                                                                               \
 		case 'b':                                                                                       \
-			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength);                         \
+			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length);                         \
 			break;                                                                                      \
 		case 'w':                                                                                       \
-			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);         \
+			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);         \
 			break;                                                                                      \
 		default:                                                                                        \
-			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngramLength);                         \
+			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngram_length);                         \
 			break;                                                                                      \
 		}                                                                                               \
 	}                                                                                                   \
@@ -64,13 +64,13 @@ static inline const int salad_train_net_callback##X(data_t* data, const size_t n
 	switch (#X[0]) /* This is a static check and will be optimized away */                              \
 	{                                                                                                   \
 	case 'b':                                                                                           \
-		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength);                             \
+		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length);                             \
 		break;                                                                                          \
 	case 'w':                                                                                           \
-		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngramLength, s->delimiter.d);             \
+		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, s->delimiter.d);             \
 		break;                                                                                          \
 	default:                                                                                            \
-		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngramLength);                             \
+		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                             \
 		break;                                                                                          \
 	}                                                                                                   \
 	return EXIT_SUCCESS;                                                                                \
@@ -102,9 +102,9 @@ FN_DATA pick_callback(const model_type_t t, const int use_network)
 	return NULL;
 }
 
-const int salad_train_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
+const int salad_train_stub(const config_t* const c, const data_processor_t* const dp, file_t* const f_in, FILE* const f_out)
 {
-	salad_header("Train salad on", &fIn->meta, c);
+	salad_header("Train salad on", &f_in->meta, c);
 
 	SALAD_T(s1);
 	salad_from_config(&s1, c);
@@ -113,7 +113,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 	{
 		SALAD_T(s2);
 
-		if (salad_from_file_ex(fOut, &s2) == EXIT_FAILURE)
+		if (salad_from_file_ex(f_out, &s2) == EXIT_FAILURE)
 		{
 			error("The provided model cannot be read, hence not updated.");
 			return EXIT_FAILURE;
@@ -129,7 +129,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 			salad_destroy(&s1);
 			s1 = s2;
 		}
-		fseek(fOut, 0, SEEK_SET);
+		fseek(f_out, 0, SEEK_SET);
 
 		if (c->echo_params)
 		{
@@ -137,20 +137,20 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 		}
 	}
 
-	const model_type_t t = to_model_type(s1.asBinary, s1.useWGrams);
+	const model_type_t t = to_model_type(s1.as_binary, s1.use_tokens);
 
 #ifdef USE_NETWORK
 	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)
 	{
-		dp->recv(fIn, pick_callback(t, 1), c->batch_size, &s1);
+		dp->recv(f_in, pick_callback(t, 1), c->batch_size, &s1);
 	}
 	else
 #endif
 	{
-		dp->recv(fIn, pick_callback(t, 0), c->batch_size, &s1);
+		dp->recv(f_in, pick_callback(t, 0), c->batch_size, &s1);
 	}
 
-	const int ret = salad_to_file_ex(&s1, fOut);
+	const int ret = salad_to_file_ex(&s1, f_out);
 	salad_destroy(&s1);
 
 	return ret;

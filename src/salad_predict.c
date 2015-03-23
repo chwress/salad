@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -35,8 +35,8 @@ typedef struct {
 
 	const config_t* const config;
 	float* const scores;
-	FILE* const fOut;
-	double totalTime;
+	FILE* const out;
+	double total_time;
 } predict_t;
 
 
@@ -63,7 +63,7 @@ const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 	// Clock the calculation procedure
 	gettimeofday(&end, NULL);
 	double diff = TO_SEC(end) -TO_SEC(start);
-	x->totalTime += diff;
+	x->total_time += diff;
 
 	// Write scores
 	char buf[0x100];
@@ -72,12 +72,12 @@ const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 	if (x->config->group_input)
 	{
 		group_t* prev = data[0].meta;
-		fputs(TO_STRING(x->scores[0]), x->fOut);
+		fputs(TO_STRING(x->scores[0]), x->out);
 
 		for (size_t j = 1; j < n; j++)
 		{
-			fputs(prev == data[j].meta ? " " : "\n", x->fOut);
-			fputs(TO_STRING(x->scores[j]), x->fOut);
+			fputs(prev == data[j].meta ? " " : "\n", x->out);
+			fputs(TO_STRING(x->scores[j]), x->out);
 			prev = data[j].meta;
 		}
 	}
@@ -86,8 +86,8 @@ const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 	{
 		for (size_t j = 0; j < n; j++)
 		{
-			fputs(TO_STRING(x->scores[j]), x->fOut);
-			fputs("\n", x->fOut);
+			fputs(TO_STRING(x->scores[j]), x->out);
+			fputs("\n", x->out);
 		}
 	}
 	return EXIT_SUCCESS;
@@ -110,12 +110,12 @@ const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
 	if (x->config->group_input)
 	{
 		group_t* prev = data[0].meta;
-		fputs(TO_STRING(x->scores[0]), x->fOut);
+		fputs(TO_STRING(x->scores[0]), x->out);
 
 		for (size_t j = 1; j < n; j++)
 		{
-			fputs(prev == data[j].meta ? " " : "\n", x->fOut);
-			fputs(TO_STRING(x->scores[1]), x->fOut);
+			fputs(prev == data[j].meta ? " " : "\n", x->out);
+			fputs(TO_STRING(x->scores[1]), x->out);
 			prev = data[j].meta;
 		}
 	}
@@ -124,17 +124,17 @@ const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
 	{
 		for (size_t j = 0; j < n;  j++)
 		{
-			fputs(TO_STRING(x->scores[1]), x->fOut);
-			fputs("\n", x->fOut);
+			fputs(TO_STRING(x->scores[1]), x->out);
+			fputs("\n", x->out);
 		}
 	}
 	return EXIT_SUCCESS;
 }
 #endif
 
-const int salad_predict_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
+const int salad_predict_stub(const config_t* const c, const data_processor_t* const dp, file_t* const f_in, FILE* const f_out)
 {
-	salad_header("Predict scores of", &fIn->meta, c);
+	salad_header("Predict scores of", &f_in->meta, c);
 	SALAD_T(good);
 	SALAD_T(bad);
 
@@ -172,7 +172,7 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	if (c->echo_params)
 	{
 		config_t cfg;
-		cfg.ngramLength = good.ngramLength;
+		cfg.ngram_length = good.ngram_length;
 		cfg.filter_size = log2(good_model->bitsize);
 
 		switch (bloomfct_cmp(good_model, HASHSET_SIMPLE, HASHSET_MURMUR))
@@ -193,30 +193,30 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 		free(cfg.delimiter);
 	}
 
-	const model_type_t t = to_model_type(good.asBinary, good.useWGrams);
+	const model_type_t t = to_model_type(good.as_binary, good.use_tokens);
 	FN_ANACHECK anacheck = pick_classifier(t, bad_model == NULL);
 
 	predict_t context = {
 			.fct = anacheck,
-			.param = {good_model, bad_model, good.ngramLength, good.delimiter.d},
+			.param = {good_model, bad_model, good.ngram_length, good.delimiter.d},
 			.config = c,
 			// TODO: we do not know the batch size of the recv function
 			.scores = (float*) calloc(c->batch_size, sizeof(float)),
-			.fOut = fOut,
-			.totalTime = 0.0
+			.out = f_out,
+			.total_time = 0.0
 	};
 
-	dp->recv(fIn, salad_predict_callback, c->batch_size, &context);
+	dp->recv(f_in, salad_predict_callback, c->batch_size, &context);
 	free(context.scores);
 
 #ifdef USE_NETWORK
 	if (c->input_type != NETWORK)
 #endif
 	{
-		info("Net calculation time: %.4f seconds", context.totalTime);
+		info("Net calculation time: %.4f seconds", context.total_time);
 
-		const double size = ((double)fIn->meta.total_size) /(1024*1024 /8);
-		const double throughput = size/ context.totalTime;
+		const double size = ((double)f_in->meta.total_size) /(1024*1024 /8);
+		const double throughput = size/ context.total_time;
 
 		if (!isinf(throughput))
 		{

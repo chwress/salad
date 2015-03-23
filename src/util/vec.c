@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -36,8 +36,8 @@ const dim_t hash(const char* const s, const size_t len)
 	assert(s != NULL && len >= 0);
 
 	// TODO: Make the the number of bits configurable
-	const int numBits = 24;
-	dim_t hashMask = ((long long unsigned) 2 << (numBits - 1)) - 1;
+	const int num_bits = 24;
+	dim_t hashMask = ((long long unsigned) 2 << (num_bits - 1)) - 1;
 
 	// TODO: 0x123457678 is the magic number used in Sally
 	return MurmurHash64B(s, len, 0x12345678) & hashMask;
@@ -56,15 +56,15 @@ const int random_level()
 	}
 
 	while (frand() < P && lvl < MAX_LEVEL)
+	{
 		lvl++;
-
+	}
 	return lvl;
 }
 
 vec_elem_t* make_node(const int level, const dim_t dim, const float value)
 {
 	vec_elem_t* sn = (vec_elem_t*) malloc(sizeof(vec_elem_t));
-
 	sn->forward = (vec_elem_t**) calloc(level + 1, sizeof(vec_elem_t *));
 
 	sn->dim = dim;

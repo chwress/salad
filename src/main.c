@@ -194,7 +194,7 @@ const int usage_train()
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
-	/* --ngram-len   */ DEFAULT_CONFIG.ngramLength,
+	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size);
 	return EXIT_SUCCESS;
 }
@@ -281,7 +281,7 @@ const int usage_inspect()
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
-	/* --ngram-len   */ DEFAULT_CONFIG.ngramLength,
+	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size);
 	return EXIT_SUCCESS;
 }
@@ -447,13 +447,13 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 		case 'n':
 		{
 			fo = TRUE;
-			int ngramLength = atoi(optarg); // TODO: strtol
-			if (ngramLength <= 0)
+			int ngram_length = atoi(optarg); // TODO: strtol
+			if (ngram_length <= 0)
 			{
 				warn("Illegal n-gram length specified.");
-				warn("Defaulting to: %u\n", (unsigned int) config->ngramLength);
+				warn("Defaulting to: %u\n", (unsigned int) config->ngram_length);
 			}
-			else config->ngramLength = ngramLength;
+			else config->ngram_length = ngram_length;
 			break;
 		}
 		case 'd':
@@ -507,7 +507,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 
 	config->transfer_spec = !fo;
 
-	if (config->binary_ngrams && config->ngramLength > MASK_BITSIZE)
+	if (config->binary_ngrams && config->ngram_length > MASK_BITSIZE)
 	{
 		error("When using binary n-grams currently only a maximal");
 		error("length of %u bits is supported.", MASK_BITSIZE);

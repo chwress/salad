@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -176,7 +176,7 @@ const int all_filter_close(file_t* const f);
 
 const int    file_open(file_t* const f, const char* const filename, void *const p);
 const int    file_meta(file_t* const f, const int group_input);
-const size_t file_read(file_t* const f, dataset_t* const ds, const size_t numLines);
+const size_t file_read(file_t* const f, dataset_t* const ds, const size_t num_lines);
 const size_t file_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
 const int    file_close(file_t* const f);
 const int    file_close_ex(file_t* const f, int keep_metadata);
@@ -188,7 +188,7 @@ data_processor_t dp_files   = { .open = NULL, .meta = NULL, .filter = all_filter
 #ifdef USE_ARCHIVES
 const int    archive_open(file_t* const f, const char* const filename, void *const p);
 const int    archive_meta(file_t* const f, const int group_input);
-const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t numFiles);
+const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t num_files);
 const size_t archive_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
 const int    archive_close(file_t* const f);
 const int    archive_close_ex(file_t* const f, int keep_metadata);
@@ -201,7 +201,7 @@ data_processor_t dp_archive = { .open = archive_open, .meta = archive_meta, .fil
 const int    net_open(file_t* const f, const char* const filename, void *const p);
 const int    net_meta(file_t* const f, const int group_input);
 const int    net_filter(file_t* const f, const char* const pattern);
-const size_t net_read(file_t* const f, dataset_t* const ds, const size_t numStreams);
+const size_t net_read(file_t* const f, dataset_t* const ds, const size_t num_streams);
 const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
 const int    net_close(file_t* const f);
 
@@ -540,11 +540,11 @@ const int net_meta(file_t* const f, const int group_input)
 #endif
 
 // READ
-const size_t file_read(file_t* const f, dataset_t* const ds, const size_t numLines)
+const size_t file_read(file_t* const f, dataset_t* const ds, const size_t num_lines)
 {
 	assert(f != NULL);
 	assert(ds != NULL);
-	assert(numLines <= ds->capacity);
+	assert(num_lines <= ds->capacity);
 
 	if (ds->capacity <= 0 || ds->data == NULL)
 	{
@@ -562,7 +562,7 @@ const size_t file_read(file_t* const f, dataset_t* const ds, const size_t numLin
 	char* line = NULL;
 	size_t i = 0, len = 0;
 
-	const size_t n = MIN(numLines, ds->capacity);
+	const size_t n = MIN(num_lines, ds->capacity);
 	while (i < n)
 	{
 		ssize_t read = getline(&line, &len, f->fd);
@@ -615,11 +615,11 @@ group_t* const group_next(metadata_t* const meta, int* const gid, int* const fid
 }
 #endif
 
-const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t numFiles)
+const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t num_files)
 {
 	assert(f != NULL);
 	assert(ds != NULL);
-	assert(numFiles <= ds->capacity);
+	assert(num_files <= ds->capacity);
 
 	if (ds->capacity <= 0 || ds->data == NULL)
 	{
@@ -640,7 +640,7 @@ const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t num
 #endif
 
 	size_t i = 0;
-	const size_t n = MIN(numFiles, ds->capacity);
+	const size_t n = MIN(num_files, ds->capacity);
 	while (i < n)
 	{
 		if (archive_read_next_header(a, &entry) != ARCHIVE_OK)

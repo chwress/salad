@@ -8,19 +8,20 @@
 #define VERSION_STR "0.5.0"
 
 
-/* #undef USE_ARCHIVES */
+#define USE_ARCHIVES
 /* #undef LIBARCHIVE2 */
-/* #undef GROUPED_INPUT */
+#define GROUPED_INPUT
 #define USE_REGEX_FILTER
 
 /* #undef USE_NETWORK */
-/* #undef ALLOW_LIVE_TRAINING */
+#define ALLOW_LIVE_TRAINING
 
 #define HAS_Z_MODIFIER
 /* #undef _XOPEN_SOURCE */
 /* #undef IOTYPE_FILES */
 
-/* #undef USE_COLORS */
-/* #undef TEST_SALAD */
+#define USE_COLORS
+#define TEST_SALAD
+#define TEST_SRC "/home/chwress/Development/chwress/Salad/"
 
 #endif /* SALAD_H_ */

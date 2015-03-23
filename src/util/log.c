@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -48,36 +48,36 @@ int force_stderr = FALSE;
 
 void print_ex(const log_t l, const char* const msg, va_list args)
 {
-	FILE* const fout = (force_stderr || l >= WARNING ? stderr : stdout);
+	FILE* const f = (force_stderr || l >= WARNING ? stderr : stdout);
 
 	switch (l)
 	{
 	case STATUS:
-		fprintf(fout, STATUS_PREFIX " ");
+		fprintf(f, STATUS_PREFIX " ");
 		break;
 
 	case INFO:
-		fprintf(fout, "[I] ");
-		//fprintf(fout, COLOR_Y "[I] "COLOR_X);
+		fprintf(f, "[I] ");
+		//fprintf(f, COLOR_Y "[I] "COLOR_X);
 		break;
 
 	case WARNING:
-		fprintf(fout, "[W] ");
-		//fprintf(fout, COLOR_Y "[W] "COLOR_X);
+		fprintf(f, "[W] ");
+		//fprintf(f, COLOR_Y "[W] "COLOR_X);
 		break;
 
 	case ERROR:
-		fprintf(fout, ERROR_PREFIX " ");
-		//fprintf(fout, COLOR_R "[!] "COLOR_X);
+		fprintf(f, ERROR_PREFIX " ");
+		//fprintf(f, COLOR_R "[!] "COLOR_X);
 		break;
 
 	case FATAL_ERROR:
-		fprintf(fout, "[!!] ");
-		//fprintf(fout, COLOR_R "[!!] "COLOR_X);
+		fprintf(f, "[!!] ");
+		//fprintf(f, COLOR_R "[!!] "COLOR_X);
 		break;
 	}
 	vsnprintf(buf, LOGBUF_LEN, msg, args);
-	fprintf(fout, "%s\n", buf);
+	fprintf(f, "%s\n", buf);
 }
 
 void print(const char* const msg, ...)

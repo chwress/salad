@@ -56,7 +56,7 @@ CTEST_TEARDOWN(bloom)
 
 CTEST2(bloom, create)
 {
-	int INTSIZE = (data->BITSIZE +CHAR_BIT -1)/CHAR_BIT;
+	const int INTSIZE = (data->BITSIZE +CHAR_BIT -1)/CHAR_BIT;
 
 	ASSERT_NOT_NULL(data->b1);
 	ASSERT_EQUAL(NUM_FUNCS, data->b1->nfuncs);

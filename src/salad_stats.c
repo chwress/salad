@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -22,8 +22,8 @@
 
 const int _salad_stats_(const config_t* const c)
 {
-	FILE* const fFilter = fopen(c->bloom, "rb");
-	if (fFilter == NULL)
+	FILE* const f_filter = fopen(c->bloom, "rb");
+	if (f_filter == NULL)
 	{
 		error("Unable to open bloom filter.");
 		return EXIT_FAILURE;
@@ -31,8 +31,8 @@ const int _salad_stats_(const config_t* const c)
 
 	BLOOM* bloom = NULL;
 
-	int ret = fread_model(fFilter, &bloom, NULL, NULL, NULL, NULL);
-	fclose(fFilter);
+	int ret = fread_model(f_filter, &bloom, NULL, NULL, NULL, NULL);
+	fclose(f_filter);
 	if (ret != 0)
 	{
 		error("Corrupt bloom filter file.");

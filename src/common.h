@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -71,7 +71,7 @@ typedef struct
 	int update_model;
 	int transfer_spec; // Transfer the spec of the model to be updated.
 	char* output;
-	size_t ngramLength;
+	size_t ngram_length;
 	char* delimiter;
 	int binary_ngrams;
 	int count;
@@ -95,7 +95,7 @@ static const config_t DEFAULT_CONFIG =
 	.update_model = FALSE,
 	.transfer_spec = FALSE,
 	.output = NULL,
-	.ngramLength = 3,
+	.ngram_length = 3,
 	.delimiter = NULL,
 	.binary_ngrams = FALSE,
 	.count = 0,

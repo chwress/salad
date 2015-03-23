@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -19,7 +19,7 @@
 
 uint32_t sax_hash(const char* const key)
 {
-	uint32_t h=0;
+	uint32_t h = 0;
 	const unsigned char* x = (const unsigned char*) key;
 
 	while(*x)

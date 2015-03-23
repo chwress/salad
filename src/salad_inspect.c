@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -79,7 +79,7 @@ typedef struct {
 	char buf[0x100];
 	bloomize_stats_t* stats;
 	size_t num_uniq;
-	FILE* const fOut;
+	FILE* const out;
 } inspect_t;
 
 const int salad_inspect_callback(data_t* data, const size_t n, void* const usr)
@@ -99,16 +99,16 @@ const int salad_inspect_callback(data_t* data, const size_t n, void* const usr)
 					(SIZE_T) x->stats[i].total,
 					(SIZE_T) data[i].len);
 
-		fwrite(x->buf, sizeof(char), strlen(x->buf), x->fOut);
+		fwrite(x->buf, sizeof(char), strlen(x->buf), x->out);
 		x->num_uniq += x->stats[i].new;
 	}
 	return EXIT_SUCCESS;
 }
 
 
-const int salad_inspect_stub(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut)
+const int salad_inspect_stub(const config_t* const c, const data_processor_t* const dp, file_t* const f_in, FILE* const f_out)
 {
-	salad_header("Inspect", &fIn->meta, c);
+	salad_header("Inspect", &f_in->meta, c);
 	SALAD_T(training);
 
 	if (c->bloom != NULL && salad_from_file_v("training", c->bloom, &training) != EXIT_SUCCESS)
@@ -126,18 +126,18 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 	SALAD_T(cur);
 	salad_from_config(&cur, c);
 
-	const model_type_t t = to_model_type(cur.asBinary, cur.useWGrams);
+	const model_type_t t = to_model_type(cur.as_binary, cur.use_tokens);
 
 	inspect_t context = {
 			.fct = pick_wrapper(t, newBloomFilter),
-			.param = {training.model.x, cur.model.x, cur.ngramLength, cur.delimiter.d},
+			.param = {training.model.x, cur.model.x, cur.ngram_length, cur.delimiter.d},
 			.buf = {0},
 			.stats = (bloomize_stats_t*) calloc(c->batch_size, sizeof(bloomize_stats_t)),
 			.num_uniq = 0,
-			.fOut = fOut
+			.out = f_out
 	};
 
-	dp->recv(fIn, salad_inspect_callback, c->batch_size, &context);
+	dp->recv(f_in, salad_inspect_callback, c->batch_size, &context);
 
 	BLOOM* const cur_model = (BLOOM*) cur.model.x;
 

@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -65,9 +65,9 @@ typedef struct
 {
 	saladmodel_t model; //!< The model to be used by salad.
 
-	size_t ngramLength; //!< The n-gram length.
-	int useWGrams; //!< Whether or not to use world/ token n-grams rather than byte n-grams.
-	int asBinary; //!> Whether or not to use binary n-grams.
+	size_t ngram_length; //!< The n-gram length.
+	int use_tokens; //!< Whether or not to use world/ token n-grams rather than byte n-grams.
+	int as_binary; //!> Whether or not to evaluate n-grams on a binary level.
 	delimiter_t delimiter; //!< The delimiter of the tokens in case token n-grams are used.
 } salad_t;
 
@@ -83,8 +83,9 @@ typedef struct
 
 #define EMPTY_SALAD_OBJECT_INITIALIZER { \
 		.model = {NULL, SALAD_MODEL_NOTSPECIFIED}, \
-		.ngramLength = 0, \
-		.useWGrams = 0, \
+		.ngram_length = 0, \
+		.use_tokens= 0, \
+		.as_binary = 0, \
 		.delimiter = EMPTY_DELIMITER_INITIALIZER \
 }
 

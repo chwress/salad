@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -60,8 +60,8 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 	io_param_t p = { NULL };
 #endif
 
-	file_t fIn;
-	int ret = dp->open(&fIn, c->input, &p);
+	file_t f_in;
+	int ret = dp->open(&f_in, c->input, &p);
 	if (ret != EXIT_SUCCESS)
 	{
 		error("Unable to open input data.");
@@ -72,14 +72,14 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 		return EXIT_FAILURE;
 	}
 
-	ret = dp->filter(&fIn, c->input_filter);
+	ret = dp->filter(&f_in, c->input_filter);
 	if (ret != EXIT_SUCCESS)
 	{
 		error("Unable to compile regular expression for input filtering.");
 		return EXIT_FAILURE;
 	}
 
-	ret = dp->meta(&fIn, c->group_input);
+	ret = dp->meta(&f_in, c->group_input);
 	if (ret != EXIT_SUCCESS)
 	{
 		error("Unable to read meta data.");
@@ -88,21 +88,21 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 
 	const char* const opentype = (c->update_model ? "rb+" : "wb+");
 
-	FILE* const fOut = fopen(c->output, opentype);
-	if (fOut == NULL)
+	FILE* const f_out = fopen(c->output, opentype);
+	if (f_out == NULL)
 	{
 		error("Unable to open/ create output file.");
-		if (fIn.fd != NULL)
+		if (f_in.fd != NULL)
 		{
-			fclose(fIn.fd);
+			fclose(f_in.fd);
 		}
 		return EXIT_FAILURE;
 	}
 
-	const int result = fct(c, dp, &fIn, fOut);
+	const int result = fct(c, dp, &f_in, f_out);
 
-	dp->close(&fIn);
-	fclose(fOut);
+	dp->close(&f_in);
+	fclose(f_out);
 
 	return result;
 }
@@ -133,7 +133,7 @@ void salad_header(const char* const msg, const metadata_t* const meta, const con
 void echo_options(config_t* const config)
 {
 	info("Options:");
-	info(" # n-Gram length: %u", (unsigned int) config->ngramLength);
+	info(" # n-Gram length: %u", (unsigned int) config->ngram_length);
 
 	if (config->binary_ngrams)
 	{
@@ -158,7 +158,7 @@ const int salad_from_config(salad_t* const s, const config_t* const c)
 	salad_set_bloomfilter_ex(s, bloom_init(c->filter_size, c->hash_set));
 	salad_use_binary_ngrams(s, c->binary_ngrams);
 	salad_set_delimiter(s, c->delimiter);
-	salad_set_ngramlength(s, c->ngramLength);
+	salad_set_ngramlength(s, c->ngram_length);
 
 	return EXIT_SUCCESS;
 }

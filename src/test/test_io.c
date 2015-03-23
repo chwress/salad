@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -127,11 +127,11 @@ const int test_read_stub(const char* const filename, const data_processor_t* con
 	ds.n = 0;
 
 	data_t* const data = ds.data;
-	size_t numRead = 0, j = 0;
+	size_t num_read = 0, j = 0;
 	do
 	{
-		numRead = dp->read(&input, &ds, N);
-		ASSERT_TRUE(j +numRead <= ref->n);
+		num_read = dp->read(&input, &ds, N);
+		ASSERT_TRUE(j +num_read <= ref->n);
 		// Do not use dataset_free(.) since we want to reuse the
 		// memory consumed by dataset_t#data
 		for (size_t i = 0; i < ds.n; i++)
@@ -143,7 +143,7 @@ const int test_read_stub(const char* const filename, const data_processor_t* con
 			j++;
 			data_free(&data[i]);
 		}
-	} while (numRead >= N);
+	} while (num_read >= N);
 
 	free(ds.data); // cf. comment above
 	dp->close(&input);

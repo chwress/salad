@@ -136,7 +136,7 @@ const int bloomfct_cmp(BLOOM* const bloom, ...)
 	for (int i = 0; (funcs = va_arg(args, hashfunc_t*)) != NULL; i++)
 	{
 		// 'uint8_t' is promoted to 'int' when passed through '...'
-		uint8_t nfuncs = va_arg(args, int);
+		const uint8_t nfuncs = va_arg(args, int);
 		if (nfuncs != bloom->nfuncs) continue;
 
 		if (bloomfct_equal(bloom, funcs, nfuncs))

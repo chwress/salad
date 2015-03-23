@@ -58,8 +58,8 @@ CTEST_TEARDOWN(salad)
 CTEST2(salad, bloom_init)
 {
 	ASSERT_NOT_NULL(data->x.model.x);
-	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngramLength);
-	ASSERT_EQUAL(data->x.useWGrams, (strlen(DELIMITER) != 0));
+	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngram_length);
+	ASSERT_EQUAL(data->x.use_tokens, (strlen(DELIMITER) != 0));
 	DELIM(delim);
 	to_delimiter_array(DELIMITER, delim);
 	ASSERT_DATA(delim, DELIM_SIZE, data->x.delimiter.d, DELIM_SIZE);
@@ -72,14 +72,14 @@ CTEST(salad, spec_diff)
 
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.useWGrams = (DELIMITER[0] == 0);
+	x.use_tokens = (DELIMITER[0] == 0);
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
-	y.useWGrams = x.useWGrams;
+	y.use_tokens = x.use_tokens;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.asBinary = TRUE;
+	x.as_binary = TRUE;
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
-	y.asBinary = x.asBinary;
+	y.as_binary = x.as_binary;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
 	x.delimiter.d[0] = 1;
@@ -87,9 +87,9 @@ CTEST(salad, spec_diff)
 	y.delimiter.d[0] = 1;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.ngramLength = NGRAM_LENGTH +1;
+	x.ngram_length = NGRAM_LENGTH +1;
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
-	y.ngramLength = x.ngramLength;
+	y.ngram_length = x.ngram_length;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 }
 
@@ -98,7 +98,7 @@ CTEST(salad, spec_diff)
 	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                               \
 	                                                                                               \
 	ASSERT_EQUAL(0, bloom_count(x));                                                               \
-	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngramLength, data->x.delimiter.d); \
+	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, data->x.delimiter.d); \
 	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                         \
 }
 
@@ -151,8 +151,8 @@ CTEST2(salad, bloomizeb_ex)
 
 
 	// larger tests
-	ASSERT_TRUE(data->b1.ngramLength == data->b2.ngramLength);
-	const size_t n = data->b1.ngramLength *8;
+	ASSERT_TRUE(data->b1.ngram_length == data->b2.ngram_length);
+	const size_t n = data->b1.ngram_length *8;
 
 	salad_set_ngramlength(&data->b1, n);
 	salad_set_ngramlength(&data->b2, n);
@@ -175,8 +175,8 @@ CTEST2(salad, bloomize_ex)
 	TEST_BLOOMIZE_EX(, bf);
 
 	// larger tests
-	ASSERT_TRUE(data->b1.ngramLength == data->b2.ngramLength);
-	const size_t n = data->b1.ngramLength;
+	ASSERT_TRUE(data->b1.ngram_length == data->b2.ngram_length);
+	const size_t n = data->b1.ngram_length;
 
 	// TODO: bloomize_ex2
 
@@ -200,8 +200,8 @@ CTEST2(salad, bloomizew_ex)
 	TEST_BLOOMIZE_EX(w, bf);
 
 	// larger tests
-	ASSERT_TRUE(data->b1.ngramLength == data->b2.ngramLength);
-	const size_t n = data->b1.ngramLength;
+	ASSERT_TRUE(data->b1.ngram_length == data->b2.ngram_length);
+	const size_t n = data->b1.ngram_length;
 
 	to_delimiter_array(TOKEN_DELIMITER, data->b1.delimiter.d);
 	to_delimiter_array(TOKEN_DELIMITER, data->b2.delimiter.d);
@@ -229,18 +229,18 @@ CTEST(salad, fileformat_consistency)
 	salad_set_ngramlength(&x, NGRAM_LENGTH);
 
 	BLOOM* const xbloom = GET_BLOOMFILTER(x.model);
-	bloomize_ex(xbloom, TEST_STR1, strlen(TEST_STR1), x.ngramLength);
+	bloomize_ex(xbloom, TEST_STR1, strlen(TEST_STR1), x.ngram_length);
 
-	FILE* const fOut = fopen(TEST_FILE, "wb+");
-	if (fOut == NULL)
+	FILE* const f_out = fopen(TEST_FILE, "wb+");
+	if (f_out == NULL)
 	{
 		salad_destroy(&x);
 		CTEST_ERR("Unable to open test file '%s'.", TEST_FILE);
-		ASSERT_NOT_NULL(fOut);
+		ASSERT_NOT_NULL(f_out);
 	}
 
-	const int n = fwrite_model(fOut, xbloom, x.ngramLength, DELIMITER, x.asBinary);
-	fclose(fOut);
+	const int n = fwrite_model(f_out, xbloom, x.ngram_length, DELIMITER, x.as_binary);
+	fclose(f_out);
 
 	if (n < 0)
 	{
@@ -249,17 +249,17 @@ CTEST(salad, fileformat_consistency)
 		ASSERT_TRUE(n >= 0);
 	}
 
-	FILE* const fIn = fopen(TEST_FILE, "rb");
-	if (fIn == NULL)
+	FILE* const f_in = fopen(TEST_FILE, "rb");
+	if (f_in == NULL)
 	{
 		salad_destroy(&x);
 		CTEST_ERR("Failed to open file.");
-		ASSERT_NOT_NULL(fIn);
+		ASSERT_NOT_NULL(f_in);
 	}
 
 	SALAD_T(y);
-	const int ret = salad_from_file_ex(fIn, &y);
-	fclose(fIn);
+	const int ret = salad_from_file_ex(f_in, &y);
+	fclose(f_in);
 
 	BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
 

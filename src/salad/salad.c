@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -69,7 +69,7 @@ void salad_use_binary_ngrams(salad_t* const s, const int b)
 {
 	assert(s != NULL);
 
-	s->asBinary = (b <= 0 ? FALSE : TRUE);
+	s->as_binary = (b <= 0 ? FALSE : TRUE);
 	salad_set_delimiter(s, s->delimiter.str);
 }
 
@@ -80,15 +80,15 @@ void salad_set_delimiter(salad_t* const s, const char* const d)
 	// TODO: We somehow need to prevent the memory leak in case this
 	// function is called twice, as for instance when this function
 	// is used in combination with salad_use_binary_ngrams(.,.)
-	to_delimiter(d, s->asBinary, &s->delimiter);
-	s->useWGrams = (s->delimiter.str != NULL && s->delimiter.str[0] != 0x00);
+	to_delimiter(d, s->as_binary, &s->delimiter);
+	s->use_tokens = (s->delimiter.str != NULL && s->delimiter.str[0] != 0x00);
 }
 
 void salad_set_ngramlength(salad_t* const s, const size_t n)
 {
 	assert(s != NULL);
 
-	s->ngramLength = n;
+	s->ngram_length = n;
 }
 
 void salad_destroy_data(saladdata_t* const d)
@@ -123,26 +123,26 @@ const int salad_train(salad_t* const s, const saladdata_t* const data, const siz
 	assert(s != NULL && data != NULL);
 	BLOOM* const bloom = GET_BLOOMFILTER(s->model);
 
-	switch (to_model_type(s->asBinary, s->useWGrams))
+	switch (to_model_type(s->as_binary, s->use_tokens))
 	{
 	case BIT_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			bloomizeb_ex(bloom, data[i].buf, data[i].len, s->ngramLength);
+			bloomizeb_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case BYTE_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			bloomize_ex(bloom, data[i].buf, data[i].len, s->ngramLength);
+			bloomize_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case TOKEN_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			bloomizew_ex(bloom, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);
+			bloomizew_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
 		}
 		break;
 
@@ -162,26 +162,26 @@ const int salad_predict_ex(salad_t* const s, const saladdata_t* const data, cons
 		return EXIT_FAILURE;
 	}
 
-	switch (to_model_type(s->asBinary, s->useWGrams))
+	switch (to_model_type(s->as_binary, s->use_tokens))
 	{
 	case BIT_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheckb_ex(bloom, data[i].buf, data[i].len, s->ngramLength);
+			out[i] = anacheckb_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case BYTE_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheck_ex(bloom, data[i].buf, data[i].len, s->ngramLength);
+			out[i] = anacheck_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case TOKEN_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheckw_ex(bloom, data[i].buf, data[i].len, s->ngramLength, s->delimiter.d);
+			out[i] = anacheckw_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
 		}
 		break;
 
@@ -215,15 +215,15 @@ const int salad_spec_diff(const salad_t* const a, const salad_t* const b)
 	return (a->model.type != b->model.type
 			|| strcmp(a->delimiter.str, b->delimiter.str) != 0
 			|| memcmp(a->delimiter.d, b->delimiter.d, 256) != 0
-			|| a->asBinary != b->asBinary
-			|| a->useWGrams != b->useWGrams
-			|| a->ngramLength != b->ngramLength);
+			|| a->as_binary != b->as_binary
+			|| a->use_tokens != b->use_tokens
+			|| a->ngram_length != b->ngram_length);
 }
 
 const int bloom_from_file_ex(FILE* const f, salad_t* const out)
 {
 	BLOOM* bloom = NULL;
-	const int ret = fread_model(f, &bloom, &out->ngramLength, out->delimiter.d, &out->useWGrams, &out->asBinary);
+	const int ret = fread_model(f, &bloom, &out->ngram_length, out->delimiter.d, &out->use_tokens, &out->as_binary);
 	delimiter_array_to_string(out->delimiter.d, &out->delimiter.str);
 
 	if (ret == 0)
@@ -305,6 +305,6 @@ const int salad_to_file_ex(const salad_t* const s, FILE* const f)
 	// TODO: right now there only are bloom filters!
 	BLOOM* const b = GET_BLOOMFILTER(s->model);
 
-	const int n = fwrite_model(f, b, s->ngramLength, s->delimiter.str, s->asBinary);
+	const int n = fwrite_model(f, b, s->ngram_length, s->delimiter.str, s->as_binary);
 	return (n >= 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
