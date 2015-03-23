@@ -15,6 +15,7 @@
  * GNU General Public License for more details.
  */
 
+#include "config.h"
 #include "common.h"
 #include <util/io.h>
 
