@@ -489,7 +489,7 @@ const int archive_meta(file_t* const f, const int group_input)
 					meta->groups = (group_t*) realloc(meta->groups, s);
 				}
 				cur = &meta->groups[meta->num_groups++];
-				STRNDUP(slash -name +1, name, cur->name);
+				STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
 				cur->n = 1;
     		}
     		else
