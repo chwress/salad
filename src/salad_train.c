@@ -76,14 +76,14 @@ static inline const int salad_train_net_callback##X(data_t* data, const size_t n
 	return EXIT_SUCCESS;                                                                                \
 }
 
-TRAINING_CALLBACK(b, data, n, usr);
-TRAINING_NET_CALLBACK(b, data, n, usr);
+TRAINING_CALLBACK(b, data, n, usr)
+TRAINING_NET_CALLBACK(b, data, n, usr)
 
-TRAINING_CALLBACK(, data, n, usr);
-TRAINING_NET_CALLBACK(, data, n, usr);
+TRAINING_CALLBACK(, data, n, usr)
+TRAINING_NET_CALLBACK(, data, n, usr)
 
-TRAINING_CALLBACK(w, data, n, usr);
-TRAINING_NET_CALLBACK(w, data, n, usr);
+TRAINING_CALLBACK(w, data, n, usr)
+TRAINING_NET_CALLBACK(w, data, n, usr)
 
 
 FN_DATA pick_callback(const model_type_t t, const int use_network)
