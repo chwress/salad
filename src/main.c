@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -177,12 +177,11 @@ const int usage_train()
 	"\n"
 	"Feature options:\n"
 	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
-	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
+	"  -d,  --ngram-delim <delim>  Set delimiters for the use of word/ token n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
-	"       --binary               Indicates to use binary n-grams. This modifier\n"
-	"                              also changes how the n-gram delimiter (-d) is\n"
-	"                              interpreted. If set it is handled as binary string\n"
-	"                              and limited the characters '0' & '1'.\n"
+	"       --binary               Indicates to use bit n-grams rather than byte\n"
+	"                              or token n-grams and consequently, disables the\n"
+	"                              --ngram-delim option.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
@@ -265,12 +264,11 @@ const int usage_inspect()
 	"\n"
 	"Feature options:\n"
 	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
-	"  -d,  --ngram-delim <delim>  Set delimiters for the use of words n-grams.\n"
+	"  -d,  --ngram-delim <delim>  Set delimiters for the use of word/ token n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
-	"       --binary               Indicates to use binary n-grams. This modifier\n"
-	"                              also changes how the n-gram delimiter (-d) is\n"
-	"                              interpreted. If set it is handled as binary string\n"
-	"                              and limited the characters '0' & '1'.\n"
+	"       --binary               Indicates to use bit n-grams rather than byte\n"
+	"                              or token n-grams and consequently, disables the\n"
+	"                              --ngram-delim option.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
 	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
@@ -305,7 +303,7 @@ const int usage_stats()
 const int version()
 {
 	print("Letter Salad %s - A Content Anomaly Detector Based on n-Grams\n"
-	    "Copyright (c) 2012-2014 Christian Wressnegger (christian@mlsec.org)\n",
+	    "Copyright (c) 2012-2015 Christian Wressnegger (christian@mlsec.org)\n",
 	    VERSION_STR);
 
 	return EXIT_SUCCESS;

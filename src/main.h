@@ -2,7 +2,7 @@
  * @class hidden_copyright
  * \n
  *
- * Copyright (c) 2012-2014, Christian Wressnegger\n
+ * Copyright (c) 2012-2015, Christian Wressnegger\n
  * All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -44,8 +44,8 @@
  *
  * \b Salad extends the original method Anagram in different ways: First, the
  * tool does not only operate on n-grams of bytes, but is also capable of
- * comparing n-grams over words and tokens. Second, \b Salad implements a
- * 2-class version of the detector that enables discriminating strings of two
+ * comparing n-grams over bits or words and tokens. Second, \b Salad implements
+ * a 2-class version of the detector that enables discriminating strings of two
  * types, cf. \ref salad-predict "salad-predict"(1) for more details. Finally,
  * the tool features a build-in inspection and statistic mode that can help to
  * analyze the learned Bloom filter and its predictions, cf. \ref salad-inspect
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]);
  * detector is here represented as Bloom filter of a specific <em>size</em>
  * that gets populated by the extracted n-grams. The <em>length</em> of the
  * n-gram is indicated by the variable n. For the type of n-gram it is
- * possible to choose between byte and word n-grams indicated by the
+ * possible to choose between bit, byte and token n-grams indicated by the
  * <em>n-gram delimiter</em>.
  * Thereby \b Salad implements the general bag-of-words model.
  *
@@ -242,8 +242,12 @@ int main(int argc, char* argv[]);
  * Set length of n-grams (Default: 3).
  *
  * @par -d, --ngram-delim &lt;delim&gt;
- * Set delimiters for the use of words n-grams. If omitted or empty byte
- * n-grams are used.
+ * Set delimiters for the use of word/ token n-grams. If omitted or empty
+ * byte n-grams are used.
+ *
+ * @par     --binary
+ * Indicates to use bit n-grams rather than byte or token n-grams and
+ * consequently, disables the --ngram-delim option.
  *
  * @par -s, --filter-size &lt;num&gt;
  * Set the size of the bloom filter as bits of the index (Default: 24).
@@ -420,8 +424,12 @@ const int _salad_stats_(const config_t* const c);
  * Set length of n-grams (Default: 3).
  *
  * @par -d, --ngram-delim &lt;delim&gt;
- * Set delimiters for the use of words n-grams. If omitted or empty byte
- * n-grams are used.
+ * Set delimiters for the use of word/ token n-grams. If omitted or empty
+ * byte n-grams are used.
+ *
+ * @par     --binary
+ * Indicates to use bit n-grams rather than byte or token n-grams and
+ * consequently, disables the --ngram-delim option.
  *
  * @par -s, --filter-size &lt;num&gt;
  * Set the size of the bloom filter as bits of the index (Default: 24).
