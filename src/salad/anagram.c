@@ -272,61 +272,61 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 // n-grams
 // generic implementations
 
-static inline void simple_add(const char* const wgram, const size_t len, void* const data)
+static inline void simple_add(const char* const ngram, const size_t len, void* const data)
 {
-	assert(wgram != NULL && data != NULL);
+	assert(ngram != NULL && data != NULL);
 	bloomize_t* const d = (bloomize_t*) data;
 
-	bloom_add_str(d->bloom, wgram, len);
+	bloom_add_str(d->bloom, ngram, len);
 }
 
-static inline void checked_add(const char* const wgram, const size_t len, void* const data)
+static inline void checked_add(const char* const ngram, const size_t len, void* const data)
 {
-	assert(wgram != NULL && data != NULL);
+	assert(ngram != NULL && data != NULL);
 	bloomize_t* const d = (bloomize_t*) data;
 
-    const dim_t dim = hash(wgram, len);
+    const dim_t dim = hash(ngram, len);
     if (vec_get(d->weights, dim) > 0.0)
     {
-		bloom_add_str(d->bloom, wgram, len);
+		bloom_add_str(d->bloom, ngram, len);
     }
 }
 
-static inline void counted_add(const char* const wgram, const size_t len, void* const data)
+static inline void counted_add(const char* const ngram, const size_t len, void* const data)
 {
-	assert(wgram != NULL && data != NULL);
+	assert(ngram != NULL && data != NULL);
 	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
 
-	if (!bloom_check_str(d->bloom1, wgram, len))
+	if (!bloom_check_str(d->bloom1, ngram, len))
 	{
 		d->new++;
 	}
-	if (!bloom_check_str(d->bloom2, wgram, len))
+	if (!bloom_check_str(d->bloom2, ngram, len))
 	{
 		d->uniq++;
 	}
 	d->total++;
 
-	bloom_add_str(d->bloom1, wgram, len);
-	bloom_add_str(d->bloom2, wgram, len);
+	bloom_add_str(d->bloom1, ngram, len);
+	bloom_add_str(d->bloom2, ngram, len);
 }
 
-static inline void count(const char* const wgram, const size_t len, void* const data)
+static inline void count(const char* const ngram, const size_t len, void* const data)
 {
-	assert(wgram != NULL && data != NULL);
+	assert(ngram != NULL && data != NULL);
 	blommize_stats_ex_t* const d = (blommize_stats_ex_t*) data;
 
-	if (!bloom_check_str(d->bloom1, wgram, len))
+	if (!bloom_check_str(d->bloom1, ngram, len))
 	{
 		d->new++;
 	}
-	if (!bloom_check_str(d->bloom2, wgram, len))
+	if (!bloom_check_str(d->bloom2, ngram, len))
 	{
 		d->uniq++;
 	}
 	d->total++;
 
-	bloom_add_str(d->bloom2, wgram, len);
+	bloom_add_str(d->bloom2, ngram, len);
 }
 
 typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void* const data);
@@ -636,12 +636,12 @@ typedef struct
 
 } anacheck_t;
 
-void check(const char* const wgram, const size_t len, void* const data)
+void check(const char* const ngram, const size_t len, void* const data)
 {
-	assert(wgram != NULL && data != NULL);
+	assert(ngram != NULL && data != NULL);
 	anacheck_t* const d = (anacheck_t*) data;
 
-	d->numKnown += bloom_check_str(d->bloom, wgram, len);
+	d->numKnown += bloom_check_str(d->bloom, ngram, len);
 	d->numNGrams++;
 }
 
