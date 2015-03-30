@@ -22,6 +22,6 @@
 
 #define USE_COLORS
 #define TEST_SALAD
-#define TEST_SRC "/home/chwress/Development/chwress/Salad/"
+/* #undef TEST_SRC */
 
 #endif /* SALAD_H_ */

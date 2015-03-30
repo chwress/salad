@@ -135,6 +135,9 @@ void assert_false(int real, const char* caller, int line);
 void assert_fail(const char* caller, int line);
 #define ASSERT_FAIL() assert_fail(__FILE__, __LINE__)
 
+
+extern const char* my_name;
+
 #ifdef CTEST_MAIN
 
 #include <setjmp.h>
@@ -156,6 +159,7 @@ static char* ctest_errormsg;
 static char ctest_errorbuffer[MSG_SIZE];
 static jmp_buf ctest_err;
 static const char* suite_name;
+const char* my_name;
 
 #ifdef WIN32
 #undef USE_COLORS
@@ -368,6 +372,8 @@ int ctest_main(int argc, const char *argv[])
     static int num_skip = 0;
     static int index = 1;
     static filter_func filter = suite_all;
+
+    my_name = argv[0];
 
     if (argc == 2) {
         suite_name = argv[1];

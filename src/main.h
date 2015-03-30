@@ -124,7 +124,6 @@
 
 #include <stdlib.h>
 
-
 /**
  * @page salad A Content Anomaly Detector Based on n-Grams
  *

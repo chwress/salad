@@ -31,6 +31,8 @@
 #include <util/io.h>
 #include <util/log.h>
 
+const char* salad_filename;
+
 
 #define MAIN_OPTION_STR "i:f:b:w:o:t:n:d:r:vh"
 
@@ -669,6 +671,22 @@ const saladstate_t parse_stats_options(int argc, char* argv[], config_t* const c
 }
 
 
+const saladstate_t parse_dbg_options(int argc, char* argv[], config_t* const config)
+{
+	assert(argv != NULL);
+	assert(config != NULL);
+
+	int option;
+	if ((option = getopt_long(argc, argv, STATS_OPTION_STR, stats_longopts, NULL)) != -1)
+	{
+		fprintf(stderr, "invalid option -- '%c'\n", option);
+		fprintf(stderr, "dbg mode does not take any arguments\n");
+		return SALAD_EXIT;
+	}
+	return SALAD_RUN;
+}
+
+
 const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
 {
 	assert(argv != NULL);
@@ -691,7 +709,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
 		case INSPECT:  return parse_inspect_options(argc, argv, config);
 		case STATS:    return parse_stats_options(argc, argv, config);
 #ifdef TEST_SALAD
-		case DBG:      return SALAD_RUN;
+		case DBG:      return parse_dbg_options(argc, argv, config);
 #endif
 		default:
 			error("Unknown mode '%s'.", argv[1]);
@@ -720,6 +738,8 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
 
 int main(int argc, char* argv[])
 {
+	salad_filename = argv[0];
+
 	config_t config;
 	switch (parse_options(argc, argv, &config))
 	{

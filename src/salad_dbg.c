@@ -20,9 +20,11 @@
 #define CTEST_MAIN
 #include "test/ctest.h"
 
+extern const char* salad_filename;
+
 const int _salad_dbg_(const config_t* const c)
 {
-	const char* prog[] = { "salad_dbg" };
+	const char* prog[] = { salad_filename };
 	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
