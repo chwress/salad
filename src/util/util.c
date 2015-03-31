@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <errno.h>
 #include <ctype.h>
+#include <strings.h>
 
 
 #ifndef IOTYPE_FILES
@@ -92,6 +93,78 @@ const size_t inline_decode(char* s, const size_t len)
 	}
 	s[j] = 0x00;
 	return j;
+}
+
+const int starts_with(const char* const s, const char* const prefix)
+{
+	assert(s != NULL && prefix != NULL);
+	return (strstr(s, prefix) == s);
+}
+
+const size_t count_char(const char* const s, const char ch)
+{
+	const char* x = s -1;
+	size_t c = 0;
+
+	while (*(++x) != 0x00)
+	{
+		if (*x == ch)
+		{
+			c += 1;
+		}
+	}
+	return c;
+}
+
+char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt)
+{
+	assert(sep != NULL && strs != NULL);
+
+	static const size_t BUF_SIZE = 100;
+	char buf[BUF_SIZE];
+
+	size_t fmt_size = 0;
+	char* format_string = "%s%s";
+
+	if (fmt != NULL)
+	{
+		snprintf(buf, BUF_SIZE, fmt, "");
+		fmt_size = strlen(buf);
+
+		snprintf(buf, BUF_SIZE, "%%s%s", fmt);
+		format_string = buf;
+	}
+
+
+	size_t size = (prefix != NULL ? strlen(prefix) : 0);
+	size_t num_strings = 0;
+	for (const char** x = strs; *x != NULL; x++)
+	{
+		size += strlen(*x) +fmt_size;
+		num_strings++;
+	}
+	size += (num_strings - 1) * strlen(sep);
+
+	char* const out = (char*) malloc(sizeof(char) * (size +1));
+	if (out == NULL || size == 0)
+	{
+		return NULL;
+	}
+
+	sprintf(out, format_string, (prefix != NULL ? prefix : ""), *strs);
+	char* y = strchr(out, 0x00);
+
+	for (const char** x = strs +1; *x != NULL; x++)
+	{
+		sprintf(y, format_string, sep, *x);
+		y = strchr(y, 0x00);
+	}
+	return out;
+}
+
+char* const join(const char* const sep, const char** strs)
+{
+	return join_ex(NULL, sep, strs, NULL);
 }
 
 char* const fread_str(FILE* const f)

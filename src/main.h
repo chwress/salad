@@ -24,6 +24,7 @@
 #define MAIN_H_
 
 #include "common.h"
+#include "test/common.h"
 
 /**
  * @class hidden_intro
@@ -447,6 +448,41 @@ const int _salad_stats_(const config_t* const c);
  * \copydoc hidden_copyright
  */
 const int _salad_inspect_(const config_t* const c);
-const int _salad_dbg_(const config_t* const c);
+
+/**
+ * @page salad-inspect Inspection mode of Salad
+ *
+ * @section SYNOPSIS
+ *
+ * salad inspect [options]
+ *
+ * @section DESCRIPTION
+ *
+ * Performs a detailed inspection of the n-grams that would be extracted in the
+ * course of processing the data using salad-train and the model
+ * generated thereby. Specifically the following four values are extracted
+ * for each sample:
+ * - The number of new/ unseen n-grams
+ * - The number of unique n-grams
+ * - The total number of n-grams
+ * - The length of the sample in number of bytes
+ *
+ * This in turn can be used to make a point how well and if anomaly detection is
+ * suitable for this particular data set or classification might be the better
+ * choice in this setting.
+ *
+ * @section OPTIONS
+ *
+ * @subsection sec_ioops Test Options:
+ * @par -m, --no-memcheck
+ * Disable the memcheck (using valgrind).
+ *
+ * @par -h, --help
+ * Print the help screen.
+ *
+ * @section sec_copyright COPYRIGHT
+ * \copydoc hidden_copyright
+ */
+const int _salad_dbg_(const test_config_t* const c);
 
 #endif /* MAIN_H_ */

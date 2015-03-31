@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -36,6 +36,10 @@
 
 const int cmp(const char* const s, ...);
 const size_t inline_decode(char* s, const size_t len);
+const int starts_with(const char* const s, const char* const prefix);
+const size_t count_char(const char* const s, const char ch);
+char* const join(const char* const sep, const char** strs);
+char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt);
 
 #ifdef IOTYPE_FILES
 char* load_file(char* path, char* name, unsigned int* size);

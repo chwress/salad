@@ -17,6 +17,8 @@
 
 #include "config.h"
 #include "common.h"
+#include "ctest.h"
+
 #include <util/io.h>
 
 #ifndef TEST_SRC

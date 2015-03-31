@@ -16,6 +16,8 @@
  */
 
 #include "common.h"
+#include "ctest.h"
+
 #include <salad/anagram.h>
 #include <util/util.h>
 

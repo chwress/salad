@@ -22,9 +22,20 @@
 #ifndef TESTS_COMMON_H_
 #define TESTS_COMMON_H_
 
-#include "ctest.h"
-
 #include <util/util.h>
+
+
+typedef struct
+{
+	int disable_memcheck;
+	char* test_suite;
+} test_config_t;
+
+static const test_config_t DEFAULT_TEST_CONFIG =
+{
+	.disable_memcheck = FALSE,
+	.test_suite = NULL
+};
 
 
 static const uint8_t NUM_FUNCS = 3;

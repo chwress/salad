@@ -136,6 +136,21 @@ static struct option stats_longopts[] = {
 };
 
 
+#ifdef TEST_SALAD
+#define DBG_OPTION_STR "s:mh"
+
+static struct option dbg_longopts[] = {
+	// I/O options
+	{ "suite",          required_argument, NULL, 's' },
+	{ "no-memcheck",    no_argument, NULL, 'm' },
+
+	// Generic options
+	{ "help",           no_argument, NULL, 'h' },
+	{ NULL,             0, NULL, 0 }
+};
+#endif
+
+
 const int usage_main()
 {
 	print("Usage: salad [<mode>] [options]\n"
@@ -300,6 +315,22 @@ const int usage_stats()
 	"  -h,  --help                 Print this help screen.\n");
 	return EXIT_SUCCESS;
 }
+
+
+#ifdef TEST_SALAD
+const int usage_dbg()
+{
+	print("Usage: salad dbg [options]\n"
+	"\n"
+	"Test options:\n"
+	"  -s,  --suite <str>          The test suite to execute.\n"
+	"  -m,  --no-memcheck          Disable the memcheck (using valgrind).\n"
+	"\n"
+	"Generic options:\n"
+	"  -h,  --help                 Print this help screen.\n");
+	return EXIT_SUCCESS;
+}
+#endif
 
 
 const int version()
@@ -670,27 +701,46 @@ const saladstate_t parse_stats_options(int argc, char* argv[], config_t* const c
 	return SALAD_RUN;
 }
 
-
-const saladstate_t parse_dbg_options(int argc, char* argv[], config_t* const config)
+#ifdef TEST_SALAD
+const saladstate_t parse_dbg_options(int argc, char* argv[], test_config_t* const config)
 {
 	assert(argv != NULL);
 	assert(config != NULL);
 
 	int option;
-	if ((option = getopt_long(argc, argv, STATS_OPTION_STR, stats_longopts, NULL)) != -1)
+	while ((option = getopt_long(argc, argv, DBG_OPTION_STR, dbg_longopts, NULL)) != -1)
 	{
-		fprintf(stderr, "invalid option -- '%c'\n", option);
-		fprintf(stderr, "dbg mode does not take any arguments\n");
-		return SALAD_EXIT;
+		switch (option)
+		{
+		case 's':
+			config->test_suite = optarg;
+			break;
+
+		case 'm':
+			config->disable_memcheck = TRUE;
+			break;
+
+		case '?':
+		case 'h':
+			return SALAD_HELP_DBG;
+
+		default:
+			// In order to catch program argument that correspond to
+			// features that were excluded at compile time.
+			fprintf(stderr, "invalid option -- '%c'\n", option);
+			return SALAD_HELP_DBG;
+		}
 	}
 	return SALAD_RUN;
 }
+#endif
 
 
-const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
+const saladstate_t parse_options(int argc, char* argv[], config_t* const config, test_config_t* const test_config)
 {
 	assert(argv != NULL);
 	assert(config != NULL);
+	assert(test_config != NULL);
 
 	if (argc <= 1)
 	{
@@ -698,6 +748,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
 	}
 
 	*config = DEFAULT_CONFIG;
+	*test_config = DEFAULT_TEST_CONFIG;
 
 	if (*argv[1] != '-')
 	{
@@ -709,7 +760,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config)
 		case INSPECT:  return parse_inspect_options(argc, argv, config);
 		case STATS:    return parse_stats_options(argc, argv, config);
 #ifdef TEST_SALAD
-		case DBG:      return parse_dbg_options(argc, argv, config);
+		case DBG:      return parse_dbg_options(argc, argv, test_config);
 #endif
 		default:
 			error("Unknown mode '%s'.", argv[1]);
@@ -741,7 +792,9 @@ int main(int argc, char* argv[])
 	salad_filename = argv[0];
 
 	config_t config;
-	switch (parse_options(argc, argv, &config))
+	test_config_t test_config;
+
+	switch (parse_options(argc, argv, &config, &test_config))
 	{
 	case SALAD_EXIT:         return bye(EXIT_FAILURE);
 	case SALAD_HELP:         return usage_main();
@@ -749,6 +802,7 @@ int main(int argc, char* argv[])
 	case SALAD_HELP_PREDICT: return usage_predict();
 	case SALAD_HELP_INSPECT: return usage_inspect();
 	case SALAD_HELP_STATS:   return usage_stats();
+	case SALAD_HELP_DBG:     return usage_dbg();
 	case SALAD_VERSION:      return version();
 	default: break;
 	}
@@ -782,7 +836,7 @@ int main(int argc, char* argv[])
 		break;
 #ifdef TEST_SALAD
 	case DBG:
-		ret = _salad_dbg_(&config);
+		ret = _salad_dbg_(&test_config);
 		break;
 #endif
 

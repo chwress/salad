@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -22,9 +22,22 @@
 
 extern const char* salad_filename;
 
-const int _salad_dbg_(const config_t* const c)
+const int _salad_dbg_(const test_config_t* const c)
 {
-	const char* prog[] = { salad_filename };
-	return (ctest_main(1, prog) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	assert(c != NULL);
+
+	const char* argv[] = { salad_filename, NULL, NULL };
+
+	if (c->test_suite != NULL)
+	{
+		argv[1] = c->test_suite;
+	}
+
+	if (c->disable_memcheck)
+	{
+		argv[2] = "valgrind";
+	}
+
+	return (ctest_main(3, argv) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 

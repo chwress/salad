@@ -16,9 +16,12 @@
  */
 
 
-#include "common.h"
 #include "config.h"
+#include "common.h"
+#include "ctest.h"
+
 #include "util/getline.h"
+#include "util/colors.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -43,6 +46,9 @@ CTEST_DATA(main)
 {
 	char cmd[CMD_LENGTH];
 	size_t initial_length;
+
+	const char* log;
+	const char* out;
 };
 
 CTEST_SETUP(main)
@@ -69,12 +75,15 @@ CTEST_SETUP(main)
 		}
 		fclose(f);
 	}
+
+	data->log = TEST_LOG;
+	data->out = TEST_OUT;
 }
 
 CTEST_TEARDOWN(main)
 {
-	remove(TEST_OUT);
-	remove(TEST_LOG);
+	remove(data->log);
+	remove(data->out);
 }
 
 static void RESET(const struct main_data* const d)
@@ -114,9 +123,11 @@ static void ADD_PARAM(struct main_data* const d, const char* const parg, const c
 	va_end(args);
 }
 
-static char* const read_log()
+static char* const read_log_ex(const struct main_data* const d, char* const prefix)
 {
-	FILE* f = fopen(TEST_LOG, "r");
+	assert(d != NULL);
+
+	FILE* f = fopen(d->log, "r");
 	if (f == NULL)
 	{
 		return NULL;
@@ -126,11 +137,12 @@ static char* const read_log()
 	long int size = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	char* log = malloc(sizeof(char) * size);
-	if (log == NULL)
+	char* log = malloc(sizeof(char) * (size +1));
+	if (log == NULL || size == 0)
 	{
 		return NULL;
 	}
+	log[0] = 0x00;
 
 	char* const x = log;
 	char* line = NULL;
@@ -139,34 +151,42 @@ static char* const read_log()
 	while (size > 0)
 	{
 		const ssize_t read = getline(&line, &len, f);
-		if (read < 0) break;
+		if (read < 0)
+		{
+			break;
+		}
 
 		const size_t s = MIN(size, read);
-		if (s > 0)
+		if (s > 0 && (prefix == NULL || starts_with(line, prefix)))
 		{
-			memcpy(log, line, s);
+			memcpy(log, line, s +1);
 
 			// Fix potential NULL bytes
-			char* y = strchr(log, 0x00);
-			while (y -log < s)
+			for (char* y = log; y -log < s; y++)
 			{
-				y[0] = ' ';
-				y = strchr(++y, 0x00);
+				if (*y == 0x00) *y = ' ';
 			}
 
 			log += s;
 			size -= s;
 		}
 	}
+	free(line);
+
 	fclose(f);
 	return x;
+}
+
+static char* const read_log(const struct main_data* const d)
+{
+	return read_log_ex(d, NULL);
 }
 
 static const int EXEC_EX(const struct main_data* const d)
 {
 	assert(d != NULL);
 	char cmd[CMD_LENGTH +100];
-	snprintf(cmd, CMD_LENGTH +100, " %s > " TEST_LOG " 2>&1", d->cmd);
+	snprintf(cmd, CMD_LENGTH +100, " %s > %s 2>&1", d->cmd, d->log);
 
 	return WEXITSTATUS(system(cmd));
 }
@@ -176,7 +196,7 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	const int ret = EXEC_EX(d);
 	if (ret != expected_return_value)
 	{
-		FILE* f = fopen(TEST_LOG, "r");
+		FILE* f = fopen(d->log, "r");
 		if (f != NULL)
 		{
 			char* line = NULL;
@@ -194,6 +214,7 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 				}
 				CTEST_ERR("%s", line);
 			}
+			free(line);
 			fclose(f);
 		}
 	}
@@ -201,69 +222,78 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	return ret;
 }
 
-static void FIND_IN_LOG(const char* const needle)
+static void FIND_IN_LOG(const struct main_data* const d, const char* const needle)
 {
-	char* const log = read_log();
-	ASSERT_NOT_NULL(strstr(log, needle));
+	char* const log = read_log(d);
+	char* const x = strstr(log, needle);
 	free(log);
+
+	ASSERT_NOT_NULL(x);
+}
+
+static const char* SALAD_MODES[] = {
+		"train", "predict", "inspect", "stats", "dbg", NULL
+};
+
+
+CTEST2(main, modes)
+{
+	SET_MODE(data, "mlsec");
+	EXEC(1, data);
+	FIND_IN_LOG(data, "Unknown mode 'mlsec'");
+
+	SET_MODE(data, "train");
+	EXEC(1, data);
+	FIND_IN_LOG(data, "No input file");
 }
 
 // Test salad's modes (train, predict, inspect, ...)
 CTEST2(main, help)
 {
+	char* const possible_modes = join_ex("<mode> may be one of ", ", ", SALAD_MODES, "'%s'");
+
 	ADD_PARAM(data, "--help", "");
 	EXEC(0, data);
+	char* const log = read_log(data);
+	ASSERT_NOT_NULL(strstr(log, "Usage: salad [<mode>] [options]"));
+	ASSERT_NOT_NULL(strstr(log, possible_modes));
+	free(log);
+	free(possible_modes);
 
-	SET_MODE(data, "train");
-	ADD_PARAM(data, "--help", "");
-	EXEC(0, data);
+	for (const char** x = SALAD_MODES; *x != NULL; x++)
+	{
+		char str[100];
+		snprintf(str, 100, "Usage: salad %s [options]", *x);
 
-	SET_MODE(data, "predict");
-	ADD_PARAM(data, "--help", "");
-	EXEC(0, data);
-
-	SET_MODE(data, "inspect");
-	ADD_PARAM(data, "--help", "");
-	EXEC(0, data);
-
-	SET_MODE(data, "dbg");
-	ADD_PARAM(data, "--help", "");
-	EXEC(1, data);
+		SET_MODE(data, *x);
+		ADD_PARAM(data, "--help", "");
+		EXEC(0, data);
+		FIND_IN_LOG(data, str);
+	}
 }
 
 CTEST2(main, train)
 {
 	SET_MODE(data, "train");
-	ADD_PARAM(data, "--help", "");
-	EXEC(0, data);
-
-
-	SET_MODE(data, "train");
-	EXEC(1, data);
-	FIND_IN_LOG("No input file");
-
-
-	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	EXEC(1, data);
-	FIND_IN_LOG("No output file");
+	FIND_IN_LOG(data, "No output file");
 
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT "-4KmR19beV");
-	ADD_PARAM(data, "-o", TEST_OUT);
+	ADD_PARAM(data, "-o", data->out);
 	EXEC(1, data);
-	FIND_IN_LOG("Unable to open input");
-
+	FIND_IN_LOG(data, "Unable to open input");
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
-	ADD_PARAM(data, "-o", TEST_OUT);
+	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
-	FIND_IN_LOG("(lines mode)");
+	FIND_IN_LOG(data, "(lines mode)");
 
 
-	char* input_modes[] = {
+	const char* input_modes[] = {
 			"lines",
 			"files",
 #ifdef USE_ARCHIVES
@@ -278,28 +308,43 @@ CTEST2(main, train)
 			NULL
 	};
 
-	for (char** x = input_modes; *x != NULL; x++)
+	for (const char** x = input_modes; *x != NULL; x++)
 	{
-		SET_MODE(data, "train");
-		ADD_PARAM(data, "-i", TEST_INPUT);
-		ADD_PARAM(data, "-f", *x);
-		ADD_PARAM(data, "-o", TEST_OUT);
-		EXEC_EX(data);
-
 		char str[100];
 		snprintf(str, 100, "(%s mode)", *x);
 
-		char* const log = read_log();
-		ASSERT_NOT_NULL(strstr(log, str));
-		free(log);
+		SET_MODE(data, "train");
+		ADD_PARAM(data, "-i", TEST_INPUT "-4KmR19beV");
+		ADD_PARAM(data, "-f", *x);
+		ADD_PARAM(data, "-o", data->out);
+		EXEC(1, data);
+		FIND_IN_LOG(data, str);
 	}
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "-f", "files");
-	ADD_PARAM(data, "-o", TEST_OUT);
+	ADD_PARAM(data, "-o", data->out);
 	EXEC(1, data);
-	FIND_IN_LOG("'files' is not yet implemented");
+	FIND_IN_LOG(data, "'files' is not yet implemented");
+
+
+	SET_MODE(data, "train");
+	ADD_PARAM(data, "-i", TEST_INPUT);
+	ADD_PARAM(data, "-o", data->out);
+	ADD_PARAM(data, "-e", "");
+	EXEC(0, data);
+
+	char* const log = read_log_ex(data, "[I] ");
+	ASSERT_EQUAL(1 +3, count_char(log, '\n'));
+	ASSERT_NOT_NULL(strstr(log, "n-Gram length: 3"));
+	ASSERT_NOT_NULL(strstr(log, "Filter size: 24"));
+	ASSERT_NOT_NULL(strstr(log, "Hash set: simple"));
+	free(log);
+
+	ADD_PARAM(data, "--help", "");
+	EXEC(0, data);
+	FIND_IN_LOG(data, "Usage: salad train [options]");
 }
 
 CTEST2(main, train_bgrams)
@@ -307,20 +352,43 @@ CTEST2(main, train_bgrams)
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "--binary", "");
-	ADD_PARAM(data, "-o", TEST_OUT);
+	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
+
+	CTEST_LOG("Not yet implemented");
 }
 
 CTEST2(main, train_ngrams)
 {
+	CTEST_LOG("Not yet implemented");
 }
 
 CTEST2(main, train_wgrams)
 {
+	CTEST_LOG("Not yet implemented");
 }
-
 
 CTEST(main, cleanup)
 {
 	remove(TEST_INPUT);
+}
+
+
+CTEST(valgrind, memcheck)
+{
+	struct main_data d;
+	d.log = TEST_LOG "-memcheck";
+	d.out = TEST_OUT "-memcheck";
+
+	snprintf(d.cmd, CMD_LENGTH, "valgrind --tool=memcheck");
+	if (EXEC_EX(&d) == 127)
+	{
+		CTEST_LOG("valgrind not installed... ");
+	}
+	else
+	{
+		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck %s dbg -m", my_name);
+		EXEC(0, &d);
+		FIND_IN_LOG(&d, "All heap blocks were freed -- no leaks are possible");
+	}
 }
