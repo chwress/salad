@@ -146,6 +146,7 @@ extern const char* my_name;
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+#include <inttypes.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -398,11 +399,28 @@ static void *find_symbol(struct ctest *test, const char *fname)
         //fprintf(stderr, ">>>> ERROR: %s\n", dlerror());
     }
     // returns NULL on error
-    
+
     free(symbol_name);
     return symbol;
 }
 #endif
+
+#ifdef CTEST_SEGFAULT
+#include <signal.h>
+static void sighandler(int signum)
+{
+	char msg[128];
+	sprintf(msg, "[SIGNAL %d: %s]", signum, sys_siglist[signum]);
+	color_print(ANSI_BRED, msg);
+	fflush(stdout);
+
+	/* "Unregister" the signal handler and send the signal back to the process
+	 * so it can terminate as expected */
+	signal(signum, SIG_DFL);
+	kill(getpid(), signum);
+}
+#endif
+
 
 int ctest_main(int argc, const char *argv[])
 {
@@ -414,6 +432,11 @@ int ctest_main(int argc, const char *argv[])
     static filter_func filter = suite_filter;
 
     my_name = argv[0];
+
+#ifdef CTEST_SEGFAULT
+    signal(SIGSEGV, sighandler);
+#endif
+
 
     if (argc >= 2) {
         suite_name = argv[1];
@@ -497,7 +520,7 @@ int ctest_main(int argc, const char *argv[])
 
     const char* color = (num_fail) ? ANSI_BRED : ANSI_GREEN;
     char results[80];
-    sprintf(results, "RESULTS: %d tests (%d ok, %d failed, %d skipped) ran in %lld ms", total, num_ok, num_fail, num_skip, (long long int)(t2 - t1)/1000);
+    sprintf(results, "RESULTS: %d tests (%d ok, %d failed, %d skipped) ran in %"PRIu64" ms", total, num_ok, num_fail, num_skip, (t2 - t1)/1000);
     color_print(color, results);
     return num_fail;
 }
