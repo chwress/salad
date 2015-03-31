@@ -17,27 +17,11 @@
 
 #include "log.h"
 #include "util.h"
+#include "colors.h"
 
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WIN32
-#undef USE_COLORS
-#endif
-
-#ifdef USE_COLORS
-// TODO: Those are basically taken from test/ctest.h
-// We might think about unifying those definitions
-#define COLOR_G       "\033[0;32m"
-#define COLOR_Y       "\033[0;33m"
-#define COLOR_R       "\033[01;31m"
-#define COLOR_X       "\033[0m"
-#else
-#define COLOR_G       ""
-#define COLOR_Y       ""
-#define COLOR_R       ""
-#define COLOR_X       ""
-#endif
 
 #define LOGBUF_LEN 0x1000
 static char buf[LOGBUF_LEN];
