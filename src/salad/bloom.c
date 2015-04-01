@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "bloom.h"
+#include "../util/util.h"
 
 #define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= (0x80>>((n)%CHAR_BIT)))
 #define GETBIT(a, n)  ((a)[(n)/CHAR_BIT] & (0x80>>((n)%CHAR_BIT)))
@@ -248,6 +249,33 @@ const int bloom_compare(BLOOM* const a, BLOOM* const b)
 	}
 
 	return memcmp(a->a, b->a, a->size);
+}
+
+void bloom_print(BLOOM* const bloom)
+{
+	bloom_print_ex(stdout, bloom);
+}
+
+void bloom_print_ex(FILE* const f, BLOOM* const bloom)
+{
+	assert(f != NULL && bloom != NULL);
+
+	fprintf(f, "Size:    \t %" Z "\n", bloom->size);
+	fprintf(f, "Bit-Size:\t %" Z "\n", bloom->bitsize);
+	fprintf(f, "Data:\n");
+
+	int i = 0, j = 0;
+	for (; i < bloom->size; i++)
+	{
+		if (j++ >= 16)
+		{
+			fprintf(f, "\n");
+			j = 0;
+		}
+		fprintf(f, "%02X ", bloom->a[i]);
+	}
+
+	fprintf(f, "\n");
 }
 
 const int bloom_to_file(BLOOM* const bloom, FILE* const f)

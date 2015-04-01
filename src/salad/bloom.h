@@ -57,6 +57,8 @@ const int bloom_check_str(BLOOM* const bloom, const char *s, const size_t len);
 const int bloom_check_num(BLOOM* const bloom, const bitgram_t num);
 const size_t bloom_count(BLOOM* const bloom);
 const int bloom_compare(BLOOM* const a, BLOOM* const b);
+void bloom_print(BLOOM* const bloom);
+void bloom_print_ex(FILE* const f, BLOOM* const bloom);
 
 const int bloom_to_file(BLOOM* const bloom, FILE* const f);
 
