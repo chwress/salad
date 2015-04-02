@@ -18,8 +18,22 @@
 #include "common.h"
 #include "ctest.h"
 
+#include <stdlib.h>
 #include <string.h>
 
+
+CTEST(util, cmp)
+{
+	#define STRS "ABCD", "¼ pounder", "what's that?", "\"§ate%37nh"
+	char* strs[] = { STRS, NULL, "missing" };
+
+	char** x = strs;
+	for (int i = 0; *x != NULL; x++, i++)
+	{
+		ASSERT_EQUAL(i, cmp(*x, STRS, NULL));
+	}
+	ASSERT_EQUAL(-1, cmp(*++x, STRS, NULL));
+}
 
 CTEST(util, inline_decode)
 {
@@ -48,6 +62,74 @@ CTEST(util, inline_decode)
 		inline_decode(strs[i], strlen(strs[i]));
 		ASSERT_STR(strs[i +1], strs[i]);
 	}
+}
+
+CTEST(util, starts_with)
+{
+	#define STR "¼ pounder with cheese"
+
+	char str0[] = STR;
+	char str1[] = STR "!";
+
+	ASSERT_FALSE(starts_with(str0, str1));
+	ASSERT_TRUE (starts_with(str0, str0));
+
+	str1[strlen(str0) -7] = 0x00;
+	ASSERT_TRUE (starts_with(str0, str1));
+
+	str1[1] = 0x00;
+	ASSERT_TRUE (starts_with(str0, str1));
+
+	ASSERT_TRUE (starts_with(str0, ""));
+	ASSERT_TRUE (starts_with(STR, str0));
+
+	ASSERT_TRUE (starts_with("", ""));
+	ASSERT_FALSE(starts_with("", "a"));
+}
+
+CTEST(util, count_char)
+{
+	char str[] = "1/4 pounder with cheese";
+	ASSERT_EQUAL(1, count_char(str, '1'));
+	ASSERT_EQUAL(3, count_char(str, ' '));
+	ASSERT_EQUAL(4, count_char(str, 'e'));
+	ASSERT_EQUAL(1, count_char(str, 'o'));
+	ASSERT_EQUAL(0, count_char(str, 'a'));
+	ASSERT_EQUAL(0, count_char(str, 0x00));
+}
+
+#define TEST_JOIN_EX(exp, prefix, sep, strs, fmt)       \
+{                                                       \
+	char* const out = join_ex(prefix, sep, strs, fmt);  \
+	ASSERT_EQUAL(0, strcmp(out, exp));                  \
+	free(out);                                          \
+}
+
+CTEST(util, join_ex)
+{
+	const char* strs[] = {
+		"The", "quick", "brown", "fox", "jumps", "over", "the", "lazy", "dog", NULL
+	};
+
+	TEST_JOIN_EX("Thequickbrownfoxjumpsoverthelazydog", NULL, "", strs, NULL);
+	TEST_JOIN_EX("The quick brown fox jumps over the lazy dog", NULL, " ", strs, NULL);
+	TEST_JOIN_EX("The  quick  brown  fox  jumps  over  the  lazy  dog", NULL, "  ", strs, NULL);
+
+	TEST_JOIN_EX(" The  quick  brown  fox  jumps  over  the  lazy  dog ", NULL, "", strs, " %s ");
+	TEST_JOIN_EX("x x x x x x x x x", NULL, " ", strs, "x");
+
+	TEST_JOIN_EX("", NULL, "", strs, "");
+
+	strs[1] = NULL;
+	TEST_JOIN_EX("The", NULL, "-", strs, NULL);
+	TEST_JOIN_EX("The", "", "-", strs, NULL);
+	TEST_JOIN_EX("The", "\x00TEST ", "-", strs, NULL);
+	TEST_JOIN_EX("TEST The", "TEST ", "-", strs, NULL);
+
+	strs[0] = NULL;
+	TEST_JOIN_EX("", NULL, "-", strs, NULL);
+	TEST_JOIN_EX("", NULL, "-", strs, "asdf");
+	TEST_JOIN_EX("TEST ", "TEST ", "-", strs, NULL);
 }
 
 CTEST(util, memcmp_bytes)
