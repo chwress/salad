@@ -875,7 +875,7 @@ const int archive_close_ex(file_t* const f, int keep_metadata)
 		metadata_free(&f->meta);
 		all_filter_close(f);
 	}
-	return EXIT_SUCCESS;
+	return file_close(f);
 }
 
 const int archive_close(file_t* const f)
