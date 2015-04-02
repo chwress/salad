@@ -103,6 +103,8 @@ const int starts_with(const char* const s, const char* const prefix)
 
 const size_t count_char(const char* const s, const char ch)
 {
+	assert(s != NULL);
+
 	const char* x = s -1;
 	size_t c = 0;
 
@@ -143,12 +145,28 @@ char* const join_ex(const char* const prefix, const char* const sep, const char*
 		size += strlen(*x) +fmt_size;
 		num_strings++;
 	}
-	size += (num_strings - 1) * strlen(sep);
+
+	if (num_strings > 0)
+	{
+		size += (num_strings -1) * strlen(sep);
+	}
 
 	char* const out = (char*) malloc(sizeof(char) * (size +1));
-	if (out == NULL || size == 0)
+	if (out == NULL)
 	{
 		return NULL;
+	}
+
+	if (size <= 0)
+	{
+		out[size] = 0x00;
+		return out;
+	}
+
+	if (num_strings <= 0)
+	{
+		strcpy(out, prefix);
+		return out;
 	}
 
 	sprintf(out, format_string, (prefix != NULL ? prefix : ""), *strs);
