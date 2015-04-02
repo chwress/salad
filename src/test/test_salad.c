@@ -41,13 +41,13 @@ CTEST_SETUP(salad)
 	salad_set_delimiter(&data->x, DELIMITER);
 	salad_set_ngramlength(&data->x, NGRAM_LENGTH);
 
-	salad_set_bloomfilter_ex(&data->b1, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
-	salad_set_delimiter(&data->b1, DELIMITER);
-	salad_set_ngramlength(&data->b1, NGRAM_LENGTH);
-
-	salad_set_bloomfilter_ex(&data->b2, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
-	salad_set_delimiter(&data->b2, DELIMITER);
-	salad_set_ngramlength(&data->b2, NGRAM_LENGTH);
+	salad_t* y[] = { &data->b1, &data->b2, NULL };
+	for (salad_t** x = y; *x != NULL; x++)
+	{
+		salad_set_bloomfilter_ex(*x, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
+		salad_set_delimiter(*x, DELIMITER);
+		salad_set_ngramlength(*x, NGRAM_LENGTH);
+	}
 }
 
 CTEST_TEARDOWN(salad)
@@ -56,6 +56,13 @@ CTEST_TEARDOWN(salad)
 	salad_destroy(&data->b1);
 	salad_destroy(&data->b2);
 }
+
+
+static const int bloom_compare_bytes(BLOOM* const a, BLOOM* const b)
+{
+	return memcmp_bytes(a->a, b->a, a->size);
+}
+
 
 CTEST2(salad, bloom_init)
 {
@@ -95,13 +102,13 @@ CTEST(salad, spec_diff)
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 }
 
-#define TEST_BLOOMIZE_EX(X, bf)                                                                    \
-{	                                                                                               \
-	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                               \
-	                                                                                               \
-	ASSERT_EQUAL(0, bloom_count(x));                                                               \
-	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, data->x.delimiter.d); \
-	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                         \
+#define TEST_BLOOMIZE_EX(X, bf)                                                                      \
+{	                                                                                                 \
+	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                                 \
+	                                                                                                 \
+	ASSERT_EQUAL(0, bloom_count(x));                                                                 \
+	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, data->x.delimiter.d);  \
+	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                           \
 }
 
 typedef struct {
@@ -115,27 +122,33 @@ void TEST_BLOOMIZE_COUNT_EX(const char X, salad_t* const s1, const count_exp_t e
 	BLOOM* const b2 = GET_BLOOMFILTER(s2->model);
 
 	bloomize_stats_t stats;
+	// Adds TEST_STR1 to b1
 	BLOOMIZE_EX(X, b1, TEST_STR1, strlen(TEST_STR1), n, s1->delimiter.d);
+
+	// Clears b2, adds TEST_STR1 to both
 	BLOOMIZE_EX3(X, b1, b2, TEST_STR1, strlen(TEST_STR1), n, s1->delimiter.d, &stats);
 	ASSERT_EQUAL(0, bloom_compare(b1, b2));
 	ASSERT_EQUAL(0, stats.new);
 	ASSERT_EQUAL(exp1.uniq, stats.uniq);
 	ASSERT_EQUAL(exp1.total, stats.total);
 
+	// Clears b2, adds TEST_STR2 to b2 only
 	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
 	ASSERT_NOT_EQUAL(0, bloom_compare(b1, b2));
 	ASSERT_EQUAL(new, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
 	ASSERT_EQUAL(exp2.total, stats.total);
 
+	// Clears b2, adds TEST_STR2 to both
 	BLOOMIZE_EX3(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
-	ASSERT_EQUAL((X == 'w' ? 1024 : 0), bloom_compare(b1, b2));
+	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
 	ASSERT_EQUAL(new, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
 	ASSERT_EQUAL(exp2.total, stats.total);
 
+	// Clears b2, adds TEST_STR2 to b2 only
 	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
-	ASSERT_EQUAL((X == 'w' ? 1024 : 0), bloom_compare(b1, b2));
+	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
 	ASSERT_EQUAL(0, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
 	ASSERT_EQUAL(exp2.total, stats.total);
