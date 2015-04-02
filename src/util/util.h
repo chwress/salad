@@ -40,6 +40,7 @@ const int starts_with(const char* const s, const char* const prefix);
 const size_t count_char(const char* const s, const char ch);
 char* const join(const char* const sep, const char** strs);
 char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt);
+const int memcmp_bytes(const void* const a, const void* const b, const size_t n);
 
 #ifdef IOTYPE_FILES
 char* load_file(char* path, char* name, unsigned int* size);

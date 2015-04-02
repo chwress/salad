@@ -167,6 +167,17 @@ char* const join(const char* const sep, const char** strs)
 	return join_ex(NULL, sep, strs, NULL);
 }
 
+const int memcmp_bytes(const void* const a, const void* const b, const size_t n)
+{
+	const uint8_t* A = ((const uint8_t*) a) -1;
+	const uint8_t* B = ((const uint8_t*) b) -1;
+
+	const uint8_t* const END = a +n;
+
+	while (A < END -1 && *++A == *++B);
+	return *A - *B;
+}
+
 char* const fread_str(FILE* const f)
 {
 	size_t n = 2;

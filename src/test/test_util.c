@@ -49,3 +49,48 @@ CTEST(util, inline_decode)
 		ASSERT_STR(strs[i +1], strs[i]);
 	}
 }
+
+CTEST(util, memcmp_bytes)
+{
+	static const size_t size = 100;
+	uint8_t a[size], b[size], c[size];
+
+	memset(&a, 0x00, sizeof(uint8_t) *size);
+	memset(&b, 0x00, sizeof(uint8_t) *size);
+	memset(&c, 0xFF, sizeof(uint8_t) *size);
+
+
+	ASSERT_EQUAL(0, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+	ASSERT_NOT_EQUAL(0, memcmp_bytes(&a, &c, sizeof(uint8_t) *size));
+
+
+	b[size -1] = 1;
+	ASSERT_EQUAL(-1, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+	a[size -1] = 2;
+	ASSERT_EQUAL(1, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+
+	a[42] = 0xFF;
+	ASSERT_EQUAL(0xFF, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+	b[23] = 0xFF;
+	ASSERT_EQUAL(-0xFF, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+
+	a[0] = 1;
+	ASSERT_EQUAL(1, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+	b[0] = 2;
+	ASSERT_EQUAL(-1, memcmp_bytes(&a, &b, sizeof(uint8_t) *size));
+
+
+	memset(&a, 0xFF, sizeof(uint8_t) *(size -2));
+	ASSERT_EQUAL(-0xFF, memcmp_bytes(&a, &c, sizeof(uint8_t) *(size -1)));
+
+	a[size -2] = 0xFF;
+	ASSERT_EQUAL(0, memcmp_bytes(&a, &c, sizeof(uint8_t) *(size -1)));
+
+	a[size -1] = 0xFF;
+	ASSERT_EQUAL(0, memcmp_bytes(&a, &c, sizeof(uint8_t) *size));
+}
