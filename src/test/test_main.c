@@ -222,13 +222,13 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	return ret;
 }
 
-static void FIND_IN_LOG(const struct main_data* const d, const char* const needle)
-{
-	char* const log = read_log(d);
-	char* const x = strstr(log, needle);
-	free(log);
-
-	ASSERT_NOT_NULL(x);
+#define FIND_IN_LOG(d, needle)               \
+{                                            \
+	char* const log = read_log(d);           \
+	char* const x = strstr(log, needle);     \
+	free(log);                               \
+	                                         \
+	ASSERT_NOT_NULL(x);                      \
 }
 
 static const char* SALAD_MODES[] = {
@@ -387,7 +387,7 @@ CTEST(valgrind, memcheck)
 	}
 	else
 	{
-		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck %s dbg -m", my_name);
+		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all %s dbg -m", my_name);
 		EXEC(0, &d);
 		FIND_IN_LOG(&d, "All heap blocks were freed -- no leaks are possible");
 	}
