@@ -22,8 +22,12 @@
 #ifndef SALAD_ANAGRAM_EX_H_
 #define SALAD_ANAGRAM_EX_H_
 
-// macros for the generic use of the bloomize functions
-
+/**
+ * A generic macro for the call of the bloomize<X>_ex<Y> functions.
+ * The checks for X and Y are completely static and can be resolved
+ * at compilation time. Hence, they will be optimized away and do
+ * not influence runtime badly.
+ */
 #define BLOOMIZE_EX_(Y, X, bloom1, bloom2, str, len, n, delim, weights, stats)        \
 {	                                                                                  \
 	BLOOM* const _bloom1_ = bloom1;                                                   \
@@ -35,10 +39,10 @@
 	const vec_t* const _weights_ = weights;                                           \
 	bloomize_stats_t* const _stats_ = stats;                                          \
 	                                                                                  \
-	switch (X)  /* This is a static check and will be optimized away */               \
+	switch (X)                                                                        \
 	{                                                                                 \
 	case 'b':                                                                         \
-		switch (Y)  /* This is a static check and will be optimized away */           \
+		switch (Y)                                                                    \
 		{	                                                                          \
 		case 2:                                                                       \
 			bloomizeb_ex2(_bloom1_, _str_, _len_, _n_, _weights_);                    \
@@ -55,7 +59,7 @@
 		}	                                                                          \
 		break;                                                                        \
 	case 'w':                                                                         \
-		switch (Y)  /* This is a static check and will be optimized away */           \
+		switch (Y)                                                                    \
 		{	                                                                          \
 		case 2:                                                                       \
 			bloomizew_ex2(_bloom1_, _str_, _len_, _n_, _delim_, _weights_);           \
@@ -72,7 +76,7 @@
 		}	                                                                          \
 		break;                                                                        \
 	default:                                                                          \
-		switch (Y)  /* This is a static check and will be optimized away */           \
+		switch (Y)                                                                    \
 		{	                                                                          \
 		case 2:                                                                       \
 			bloomize_ex2(_bloom1_, _str_, _len_, _n_, _weights_);                     \
@@ -90,26 +94,33 @@
 	}                                                                                 \
 }
 
+/**
+ * A generic macro for the call of the bloomize<X>_ex functions.
+ */
 #define BLOOMIZE_EX(X, bloom, str, len, n, delim)                                     \
 {	                                                                                  \
 	BLOOMIZE_EX_(1, X, bloom, NULL, str, len, n, delim, NULL, NULL);                  \
 }
 
-#define BLOOMIZE_EX(X, bloom, str, len, n, delim)                                     \
-{	                                                                                  \
-	BLOOMIZE_EX_(1, X, bloom, NULL, str, len, n, delim, NULL, NULL);                  \
-}
-
+/**
+ * A generic macro for the call of the bloomize<X>_ex2 functions.
+ */
 #define BLOOMIZE_EX2(X, bloom, str, len, n, delim, weights)                           \
 {	                                                                                  \
 	BLOOMIZE_EX_(2, X, bloom, NULL, str, len, n, delim, weights, NULL);               \
 }
 
+/**
+ * A generic macro for the call of the bloomize<X>_ex3 functions.
+ */
 #define BLOOMIZE_EX3(X, bloom, bloom2, str, len, n, delim, stats)                     \
 {	                                                                                  \
 	BLOOMIZE_EX_(3, X, bloom, bloom2, str, len, n, delim, NULL, stats);               \
 }
 
+/**
+ * A generic macro for the call of the bloomize<X>_ex4 functions.
+ */
 #define BLOOMIZE_EX4(X, bloom, bloom2, str, len, n, delim, stats)                     \
 {	                                                                                  \
 	BLOOMIZE_EX_(4, X, bloom, bloom2, str, len, n, delim, NULL, stats);               \
