@@ -820,7 +820,9 @@ int main(int argc, char* argv[])
 	case SALAD_HELP_PREDICT: return usage_predict();
 	case SALAD_HELP_INSPECT: return usage_inspect();
 	case SALAD_HELP_STATS:   return usage_stats();
+#ifdef TEST_SALAD
 	case SALAD_HELP_DBG:     return usage_dbg();
+#endif
 	case SALAD_VERSION:      return version();
 	default: break;
 	}
