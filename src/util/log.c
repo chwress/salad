@@ -22,17 +22,31 @@
 #include <stdio.h>
 #include <string.h>
 
+int log_level = STATUS;
 
 #define LOGBUF_LEN 0x1000
 static char buf[LOGBUF_LEN];
 
 int force_stderr = FALSE;
-#define STATUS_PREFIX "[*]"
-#define  ERROR_PREFIX "[!]"
+#define  STATUS_PREFIX "[*]"
+#define    INFO_PREFIX "[I]"
+#define WARNING_PREFIX "[W]"
+#define   ERROR_PREFIX "[!]"
+#define  FATERR_PREFIX "[!!]"
 
-void print_ex(const log_t l, const char* const msg, va_list args)
+void vprint_ex(const log_t l, const char* const color, const char* const msg, va_list args)
 {
+	if (log_level > l)
+	{
+		return;
+	}
+
 	FILE* const f = (force_stderr || l >= WARNING ? stderr : stdout);
+
+	if (color != NULL)
+	{
+		fprintf(f, "%s", color);
+	}
 
 	switch (l)
 	{
@@ -41,43 +55,55 @@ void print_ex(const log_t l, const char* const msg, va_list args)
 		break;
 
 	case INFO:
-		fprintf(f, "[I] ");
-		//fprintf(f, COLOR_Y "[I] "COLOR_X);
+		fprintf(f, INFO_PREFIX " ");
 		break;
 
 	case WARNING:
-		fprintf(f, "[W] ");
-		//fprintf(f, COLOR_Y "[W] "COLOR_X);
+		fprintf(f, WARNING_PREFIX " ");
 		break;
 
 	case ERROR:
 		fprintf(f, ERROR_PREFIX " ");
-		//fprintf(f, COLOR_R "[!] "COLOR_X);
 		break;
 
 	case FATAL_ERROR:
-		fprintf(f, "[!!] ");
-		//fprintf(f, COLOR_R "[!!] "COLOR_X);
+		fprintf(f, FATERR_PREFIX " ");
 		break;
 	}
 	vsnprintf(buf, LOGBUF_LEN, msg, args);
 	fprintf(f, "%s\n", buf);
+
+	if (color != NULL)
+	{
+		fprintf(f, COLOR_X);
+	}
+}
+
+void print_ex(const log_t l, const char* const color, const char* const msg, ...)
+{
+	va_list args;
+	va_start(args, msg);
+	vprint_ex(l, color, msg, args);
+	va_end(args);
 }
 
 void print(const char* const msg, ...)
 {
-	va_list args;
-	va_start(args, msg);
-	vsnprintf(buf, LOGBUF_LEN, msg, args);
-	fprintf(stdout, "%s\n", buf);
-	va_end(args);
+	if (log_level <= INFO)
+	{
+		va_list args;
+		va_start(args, msg);
+		vsnprintf(buf, LOGBUF_LEN, msg, args);
+		fprintf(stdout, "%s\n", buf);
+		va_end(args);
+	}
 }
 
 void status(const char* const msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	print_ex(STATUS, msg, args);
+	vprint_ex(STATUS, NULL, msg, args);
 	va_end(args);
 }
 
@@ -85,7 +111,7 @@ void info(const char* const msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	print_ex(INFO, msg, args);
+	vprint_ex(INFO, NULL, msg, args);
 	va_end(args);
 }
 
@@ -93,7 +119,7 @@ void warn(const char* const msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	print_ex(WARNING, msg, args);
+	vprint_ex(WARNING, NULL, msg, args);
 	va_end(args);
 }
 
@@ -101,7 +127,7 @@ void error(const char* const msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	print_ex(ERROR, msg, args);
+	vprint_ex(ERROR, NULL, msg, args);
 	va_end(args);
 }
 
@@ -109,7 +135,7 @@ void fatal(const char* const msg, ...)
 {
 	va_list args;
 	va_start(args, msg);
-	print_ex(FATAL_ERROR, msg, args);
+	vprint_ex(FATAL_ERROR, NULL, msg, args);
 	va_end(args);
 }
 
@@ -128,7 +154,11 @@ static struct {
 
 void progress(const size_t cur, const size_t total)
 {
-	if (total <= 0) return;
+	if (log_level > INFO || total <= 0)
+	{
+		return;
+	}
+
 	assert(cur <= total);
 
 	char bar[BAR.length +1];
@@ -189,6 +219,11 @@ void hourglass(uint8_t* const state, const size_t c)
 
 void hourglass_ex(uint8_t* const state)
 {
+	if (log_level > INFO)
+	{
+		return;
+	}
+
 	// Are wever gonna use
 	static int reset = FALSE;
 
@@ -218,11 +253,11 @@ const int bye_ex(const int ec, const char* const msg)
 	static const char* const s = "Bye!";
 	if (ec == EXIT_SUCCESS)
 	{
-		print(COLOR_G STATUS_PREFIX" %s" COLOR_X, msg == NULL ? s : msg);
+		print_ex(STATUS, COLOR_G, "%s", msg == NULL ? s : msg);
 	}
 	else
 	{
-		print(COLOR_R ERROR_PREFIX " %s" COLOR_X, s);
+		print_ex(ERROR, COLOR_R, "%s", s);
 	}
 	return ec;
 }

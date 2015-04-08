@@ -28,7 +28,8 @@
 
 typedef enum {STATUS = 0, INFO, WARNING, ERROR, FATAL_ERROR} log_t;
 
-void print_ex(const log_t l, const char* const msg, va_list args);
+void print_ex(const log_t l, const char* const color, const char* const msg, ...);
+void vprint_ex(const log_t l, const char* const color, const char* const msg, va_list args);
 
 void print(const char* const msg, ...);
 void status(const char* const msg, ...);
