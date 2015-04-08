@@ -602,8 +602,8 @@ void bloomizew_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const s
 typedef struct
 {
 	BLOOM* bloom;
-	unsigned int numKnown;
-	unsigned int numNGrams;
+	unsigned int num_known;
+	unsigned int num_ngrams;
 
 } anacheck_t;
 
@@ -612,25 +612,25 @@ static inline void check(const char* const ngram, const size_t len, void* const 
 	assert(ngram != NULL && data != NULL);
 	anacheck_t* const d = (anacheck_t*) data;
 
-	d->numKnown += bloom_check_str(d->bloom, ngram, len);
-	d->numNGrams++;
+	d->num_known += bloom_check_str(d->bloom, ngram, len);
+	d->num_ngrams++;
 }
 
-#define ANACHECK(X, bloom, input, len, n, delim)                       \
-{	                                                                   \
-	BLOOM* const _bloom_ = bloom;                                      \
-	const char* const _input_ = input;                                 \
-	const size_t _len_ = len;                                          \
-	const size_t _n_ = n;                                              \
-	const delimiter_array_t _delim_ = delim;                           \
-	                                                                   \
-	anacheck_t data;                                                   \
-	data.bloom = _bloom_;                                              \
-	data.numKnown = 0;                                                 \
-	data.numNGrams = 0;                                                \
-	                                                                   \
-	extract_##X##grams(_input_, _len_, _n_, _delim_, check, &data);    \
-	return ((double) (data.numNGrams -data.numKnown))/ data.numNGrams; \
+#define ANACHECK(X, bloom, input, len, n, delim)                          \
+{	                                                                      \
+	BLOOM* const _bloom_ = bloom;                                         \
+	const char* const _input_ = input;                                    \
+	const size_t _len_ = len;                                             \
+	const size_t _n_ = n;                                                 \
+	const delimiter_array_t _delim_ = delim;                              \
+	                                                                      \
+	anacheck_t data;                                                      \
+	data.bloom = _bloom_;                                                 \
+	data.num_known = 0;                                                   \
+	data.num_ngrams = 0;                                                  \
+	                                                                      \
+	extract_##X##grams(_input_, _len_, _n_, _delim_, check, &data);       \
+	return ((double) (data.num_ngrams -data.num_known))/ data.num_ngrams; \
 }
 
 #define GOOD 0
@@ -641,31 +641,31 @@ static inline void check2(const char* const ngram, const size_t len, void* const
 	assert(ngram != NULL && data != NULL);
 	anacheck_t* const d = (anacheck_t*) data;
 
-	d[GOOD].numKnown += bloom_check_str(d[GOOD].bloom, ngram, len);
-	d[BAD ].numKnown += bloom_check_str(d[BAD ].bloom, ngram, len);
-	d[BAD ].numNGrams++;
+	d[GOOD].num_known += bloom_check_str(d[GOOD].bloom, ngram, len);
+	d[BAD ].num_known += bloom_check_str(d[BAD ].bloom, ngram, len);
+	d[BAD ].num_ngrams++;
 }
 
-#define ANACHECK2(X, bloom, bbloom, input, len, n, delim)                            \
-{	                                                                                 \
-	BLOOM* const _bloom_ = bloom;                                                    \
-	BLOOM* const _bbloom_ = bbloom;                                                  \
-	const char* const _input_ = input;                                               \
-	const size_t _len_ = len;                                                        \
-	const size_t _n_ = n;                                                            \
-	const delimiter_array_t _delim_ = delim;                                         \
-	                                                                                 \
-	anacheck_t data[2];                                                              \
-	data[GOOD].bloom = _bloom_;                                                      \
-	data[GOOD].numKnown = 0;                                                         \
-	data[GOOD].numNGrams = 0;                                                        \
-	                                                                                 \
-	data[BAD].bloom = _bbloom_;                                                      \
-	data[BAD].numKnown = 0;                                                          \
-	data[BAD].numNGrams = 0;                                                         \
-	                                                                                 \
-	extract_##X##grams(_input_, _len_, _n_, _delim_, check2, &data);                 \
-	return (((double)data[BAD].numKnown) -data[GOOD].numKnown)/ data[BAD].numNGrams; \
+#define ANACHECK2(X, bloom, bbloom, input, len, n, delim)                               \
+{	                                                                                    \
+	BLOOM* const _bloom_ = bloom;                                                       \
+	BLOOM* const _bbloom_ = bbloom;                                                     \
+	const char* const _input_ = input;                                                  \
+	const size_t _len_ = len;                                                           \
+	const size_t _n_ = n;                                                               \
+	const delimiter_array_t _delim_ = delim;                                            \
+	                                                                                    \
+	anacheck_t data[2];                                                                 \
+	data[GOOD].bloom = _bloom_;                                                         \
+	data[GOOD].num_known = 0;                                                           \
+	data[GOOD].num_ngrams = 0;                                                          \
+	                                                                                    \
+	data[BAD].bloom = _bbloom_;                                                         \
+	data[BAD].num_known = 0;                                                            \
+	data[BAD].num_ngrams = 0;                                                           \
+	                                                                                    \
+	extract_##X##grams(_input_, _len_, _n_, _delim_, check2, &data);                    \
+	return (((double)data[BAD].num_known) -data[GOOD].num_known)/ data[BAD].num_ngrams; \
 }
 
 // bit n-grams
