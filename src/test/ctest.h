@@ -211,7 +211,7 @@ inline static void vprint_errormsg(const char* const fmt, va_list ap) {
     }
     else
     {
-    	const size_t s = (ctest_errorsize <= size ? 0 : ctest_errorsize -size);
+    	const size_t s = (ctest_errorsize <= size ? size -ctest_errorsize : size);
     	// ..therefore the ctest_errorsize may overflow at this point!
 		ctest_errorsize -= s;
 		ctest_errormsg += s;
