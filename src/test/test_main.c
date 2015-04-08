@@ -217,6 +217,8 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 			free(line);
 			fclose(f);
 		}
+		remove(d->log);
+		remove(d->out);
 	}
 	ASSERT_EQUAL(expected_return_value, ret);
 	return ret;
@@ -228,6 +230,10 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	char* const x = strstr(log, needle);     \
 	free(log);                               \
 	                                         \
+	if (x == NULL)                           \
+	{	                                     \
+		remove((d)->log);                    \
+	}	                                     \
 	ASSERT_NOT_NULL(x);                      \
 }
 
@@ -389,6 +395,8 @@ CTEST(valgrind, memcheck)
 	{
 		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all %s dbg -m", my_name);
 		EXEC(0, &d);
+		remove(d.out);
 		FIND_IN_LOG(&d, "All heap blocks were freed -- no leaks are possible");
+		remove(d.log);
 	}
 }

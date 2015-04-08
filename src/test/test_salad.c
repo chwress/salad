@@ -260,6 +260,7 @@ CTEST(salad, fileformat_consistency)
 	if (n < 0)
 	{
 		salad_destroy(&x);
+		remove(TEST_FILE);
 		CTEST_ERR("Failed while writing the model.");
 		ASSERT_TRUE(n >= 0);
 	}
@@ -268,6 +269,7 @@ CTEST(salad, fileformat_consistency)
 	if (f_in == NULL)
 	{
 		salad_destroy(&x);
+		remove(TEST_FILE);
 		CTEST_ERR("Failed to open file.");
 		ASSERT_NOT_NULL(f_in);
 	}
@@ -275,6 +277,7 @@ CTEST(salad, fileformat_consistency)
 	SALAD_T(y);
 	const int ret = salad_from_file_ex(f_in, &y);
 	fclose(f_in);
+	remove(TEST_FILE);
 
 	BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
 
