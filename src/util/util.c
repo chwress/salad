@@ -190,7 +190,7 @@ const int memcmp_bytes(const void* const a, const void* const b, const size_t n)
 	const uint8_t* A = ((const uint8_t*) a) -1;
 	const uint8_t* B = ((const uint8_t*) b) -1;
 
-	const uint8_t* const END = a +n;
+	const uint8_t* const END = ((const uint8_t*) a) +n;
 
 	while (A < END -1 && *++A == *++B);
 	return *A - *B;
