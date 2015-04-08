@@ -259,6 +259,9 @@ int main(int argc, char* argv[]);
  * @par -e, --echo-params
  * Echo used parameters and settings.
  *
+ * @par -q, --quiet
+ * Suppress all output but warning and errors.
+ *
  * @par -h, --help
  * Print the help screen.
  *
@@ -329,6 +332,9 @@ const int _salad_train_(const config_t* const c);
  * @subsection sec_genericops Generic Options:
  * @par -e, --echo-params
  * Echo used parameters and settings.
+ *
+ * @par -q, --quiet
+ * Suppress all output but warning and errors.
  *
  * @par -h, --help
  * Print the help screen.

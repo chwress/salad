@@ -32,6 +32,7 @@
 #include <util/log.h>
 
 const char* salad_filename;
+extern int log_level;
 
 
 #define MAIN_OPTION_STR "i:f:b:w:o:t:n:d:r:vh"
@@ -44,7 +45,7 @@ static struct option main_longopts[] = {
 };
 
 
-#define TRAIN_OPTION_STR "i:f:p:uo:n:d:s:eh"
+#define TRAIN_OPTION_STR "i:f:p:uo:n:d:s:eqh"
 #define OPTION_INPUTFILTER 1000
 #define OPTION_BATCHSIZE   1001
 #define OPTION_HASHSET     1002
@@ -69,12 +70,13 @@ static struct option train_longopts[] = {
 
 	// Generic options
 	{ "echo-params",    no_argument, NULL, 'e' },
+	{ "quiet",          no_argument, NULL, 'q' },
 	{ "help",           no_argument, NULL, 'h' },
 	{ NULL,             0, NULL, 0 }
 };
 
 
-#define PREDICT_OPTION_STR "i:f:gp:o:b:r:eh"
+#define PREDICT_OPTION_STR "i:f:gp:o:b:r:eqh"
 #define OPTION_BBLOOM    1003
 
 static struct option predict_longopts[] = {
@@ -93,12 +95,13 @@ static struct option predict_longopts[] = {
 
 	// Generic options
 	{ "echo-params",    no_argument, NULL, 'e' },
+	{ "quiet",          no_argument, NULL, 'q' },
 	{ "help",           no_argument, NULL, 'h' },
 	{ NULL,             0, NULL, 0 }
 };
 
 
-#define INSPECT_OPTION_STR "i:f:p:b:o:n:d:s:eh"
+#define INSPECT_OPTION_STR "i:f:p:b:o:n:d:s:eqh"
 
 static struct option inspect_longopts[] = {
 	// I/O options
@@ -119,6 +122,7 @@ static struct option inspect_longopts[] = {
 
 	// Generic options
 	{ "echo-params",    no_argument, NULL, 'e' },
+	{ "quiet",          no_argument, NULL, 'q' },
 	{ "help",           no_argument, NULL, 'h' },
 	{ NULL,             0, NULL, 0 }
 };
@@ -206,6 +210,7 @@ const int usage_train()
 	"\n"
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
+	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
 	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
 #ifdef USE_NETWORK
@@ -248,6 +253,7 @@ const int usage_predict()
 	"\n"
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
+	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
 	/* --batch-size  */  DEFAULT_CONFIG.batch_size
 #ifdef USE_NETWORK
@@ -526,8 +532,13 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			config->echo_params = TRUE;
 			break;
 
+		case 'q':
+			log_level = WARNING;
+			break;
+
 		case '?':
 		case 'h':
+			log_level = STATUS;
 			return SALAD_HELP_TRAIN;
 
 		default:
@@ -637,8 +648,13 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 			config->echo_params = TRUE;
 			break;
 
+		case 'q':
+			log_level = WARNING;
+			break;
+
 		case '?':
 		case 'h':
+			log_level = STATUS;
 			return SALAD_HELP_PREDICT;
 
 		default:
@@ -683,6 +699,7 @@ const saladstate_t parse_stats_options(int argc, char* argv[], config_t* const c
 
 		case '?':
 		case 'h':
+			log_level = STATUS;
 			return SALAD_HELP_STATS;
 
 		default:
@@ -790,6 +807,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config,
 int main(int argc, char* argv[])
 {
 	salad_filename = argv[0];
+	log_level = STATUS;
 
 	config_t config;
 	test_config_t test_config;
