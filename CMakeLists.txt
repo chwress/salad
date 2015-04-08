@@ -16,11 +16,17 @@ set(${TARGETNAME}_VERSION_PATCH 0)
 set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.${${TARGETNAME}_VERSION_PATCH}")
 
 
-# dependencies
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	set(USE_REGEX_DEFAULT "ON")
+else ()
+	set(USE_REGEX_DEFAULT "OFF")
+endif ()
 
+
+# dependencies
 option(USE_ARCHIVES  "Enable support for loading archives (requires libarchive)" OFF)
 option(USE_REGEX_FILTER
-             "Enable support for grouped inputs (only for archives)" ON)
+             "Enable support for grouped inputs (only for archives)" ${USE_REGEX_DEFAULT})
 option(GROUPED_INPUT "Enable support for grouped inputs (only for archives)" ON)
 option(USE_NETWORK   "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(ALLOW_LIVE_TRAINING
