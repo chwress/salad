@@ -30,7 +30,7 @@ const char* const input_files = TEST_SRC"res/testing/http/";
 const char* const input_archive = TEST_SRC"res/testing/http.tar.gz";
 const char* const input_networkdump = TEST_SRC"res/testing/http.cap";
 
-const char* const input_ref[] = {
+const char* const INPUT_REF[] = {
 	TEST_SRC"res/testing/ref/http.0",
 	TEST_SRC"res/testing/ref/http.1",
 	NULL
@@ -78,28 +78,35 @@ CTEST_SETUP(io)
 	data->network = to_dataprocssor(NETWORK);
 #endif
 
+	size_t num_refs = 0;
+	for (int i = 0; INPUT_REF[i] != NULL; i++) num_refs++;
+	data->ref.expected = (data_t*) calloc(num_refs, sizeof(data_t));
 	data->ref.n = 0;
-	for (int i = 0; input_ref[i] != NULL; i++) data->ref.n++;
-	data->ref.expected = (data_t*) calloc(data->ref.n, sizeof(data_t));
 
-	for (int i = 0; i < data->ref.n; i++)
+	for (int i = 0; i < num_refs; i++)
 	{
-		FILE* const f = fopen(input_ref[i], "rb");
+		FILE* const f = fopen(INPUT_REF[i], "rb");
 		if (f == NULL)
 		{
-			CTEST_ERR("Cannot read reference file '%s'", input_ref[i]);
+			testdata_free(&data->ref);
+			CTEST_ERR("Cannot read reference file '%s'", INPUT_REF[i]);
 			ASSERT_FAIL();
 		}
 		fseek(f, 0, SEEK_END);
 		size_t n = (size_t) ftell(f);
 		data->ref.expected[i].len = n;
 		data->ref.expected[i].buf = (char*) calloc(n, sizeof(data_t));
+		data->ref.n++;
 
 		fseek(f, 0, SEEK_SET);
 		n = fread(data->ref.expected[i].buf, 1, data->ref.expected[i].len, f);
 		fclose(f);
 
-		ASSERT_EQUAL(data->ref.expected[i].len, n);
+		if (data->ref.expected[i].len != n)
+		{
+			testdata_free(&data->ref);
+			ASSERT_EQUAL(data->ref.expected[i].len, n);
+		}
 	}
 }
 
