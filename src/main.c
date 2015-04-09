@@ -27,6 +27,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <ctype.h>
+#include <limits.h>
 
 
 const char* salad_filename;
@@ -430,6 +431,8 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 	assert(argv != NULL);
 	assert(config != NULL);
 
+	char* end; // For parsing numbers with strto*
+
 	int option, bs = FALSE, fo = FALSE;
 	while ((option = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
 	{
@@ -449,7 +452,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 
 		case OPTION_BATCHSIZE:
 		{
-			int batch_size = atoi(optarg); // TODO: strtol
+			const long long int batch_size = strtoll(optarg, &end, 10);
 			if (batch_size <= 0)
 			{
 				warn("Illegal batch size specified.\n");
@@ -460,7 +463,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			else
 			{
 				bs = TRUE;
-				config->batch_size = batch_size;
+				config->batch_size = MIN(SIZE_MAX, batch_size);
 			}
 			break;
 		}
@@ -484,13 +487,13 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 		case 'n':
 		{
 			fo = TRUE;
-			int ngram_length = atoi(optarg); // TODO: strtol
+			const long long int ngram_length = strtoll(optarg, &end, 10);
 			if (ngram_length <= 0)
 			{
 				warn("Illegal n-gram length specified.");
-				warn("Defaulting to: %u\n", (unsigned int) config->ngram_length);
+				warn("Defaulting to: %"Z"\n", (SIZE_T) config->ngram_length);
 			}
-			else config->ngram_length = ngram_length;
+			else config->ngram_length = MIN(SIZE_MAX, ngram_length);
 			break;
 		}
 		case 'd':
@@ -505,13 +508,13 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 		case 's':
 		{
 			fo = TRUE;
-			int filter_size = atoi(optarg); // TODO: strtol
+			const long long int filter_size = strtoll(optarg, &end, 10);
 			if (filter_size <= 0)
 			{
 				warn("Illegal filter size specified.");
 				warn("Defaulting to: %u\n", (unsigned int) config->filter_size);
 			}
-			else config->filter_size = filter_size;
+			else config->filter_size = MIN(UINT_MAX, filter_size);
 			break;
 		}
 		case OPTION_HASHSET:
@@ -582,6 +585,8 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 	assert(argv != NULL);
 	assert(config != NULL);
 
+	char* end; // For parsing numbers with strto*
+
 	int option, bs = FALSE;
 	while ((option = getopt_long(argc, argv, PREDICT_OPTION_STR, predict_longopts, NULL)) != -1)
 	{
@@ -601,18 +606,18 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 
 		case OPTION_BATCHSIZE:
 		{
-			int batch_size = atoi(optarg); // TODO: strtol
+			const long long int batch_size = strtoll(optarg, &end, 10);
 			if (batch_size <= 0)
 			{
 				warn("Illegal batch size specified.");
 				// This is not true in case of network data as input. Therefore,
 				// we simply suppress this output at this point.
-				// warn("Defaulting to: %u\n", (unsigned int) config->batch_size);
+				// warn("Defaulting to: %"Z"\n", (SIZE_T) config->batch_size);
 			}
 			else
 			{
 				bs = TRUE;
-				config->batch_size = batch_size;
+				config->batch_size = MIN(SIZE_MAX, batch_size);
 			}
 			break;
 		}
