@@ -15,8 +15,6 @@
  * GNU General Public License for more details.
  */
 
-#include "anagram.h"
-
 #include <util/util.h>
 
 #include <assert.h>
@@ -26,8 +24,12 @@
 #include <string.h>
 
 #include "salad.h"
+#include "classify.h"
+#include "anagram.h"
 #include "util.h"
-#include "bloom.h"
+#include "io.h"
+
+#include <container/bloom.h>
 
 
 void salad_init(salad_t* const s)

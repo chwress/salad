@@ -17,6 +17,7 @@
 
 #include "main.h"
 #include <salad/salad.h>
+#include <salad/classify.h>
 #include <salad/anagram.h>
 #include <salad/util.h>
 #include <util/log.h>

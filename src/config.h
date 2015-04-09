@@ -8,20 +8,19 @@
 #define VERSION_STR "0.5.0"
 
 
-#define USE_ARCHIVES
+/* #undef USE_ARCHIVES */
 /* #undef LIBARCHIVE2 */
-#define GROUPED_INPUT
+/* #undef GROUPED_INPUT */
 #define USE_REGEX_FILTER
 
 /* #undef USE_NETWORK */
-#define ALLOW_LIVE_TRAINING
+/* #undef ALLOW_LIVE_TRAINING */
 
 #define HAS_Z_MODIFIER
 /* #undef _XOPEN_SOURCE */
 /* #undef IOTYPE_FILES */
 
 #define USE_COLORS
-#define TEST_SALAD
-/* #undef TEST_SRC */
+/* #undef TEST_SALAD */
 
 #endif /* SALAD_H_ */

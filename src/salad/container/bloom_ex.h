@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -16,22 +16,22 @@
  */
 
 /**
+ * @file
+ *
  * Based on the implementation at http://en.literateprograms.org/Bloom_filter_(C)
  */
 
-#ifndef SALAD_BLOOM_H__
-#define SALAD_BLOOM_H__
+#ifndef SALAD_CONTAINER_BLOOM_EX_H__
+#define SALAD_CONTAINER_BLOOM_EX_H__
 
 #include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
 
-#include "common.h"
-
 typedef unsigned int hash_t;
+
 typedef hash_t (*hashfunc_t)(const char* const, const size_t n);
-typedef hash_t (*hashfunc_num_t)(const bitgram_t, const size_t n);
 
 typedef struct {
 	size_t bitsize; ///< The number of bit used by the bloom filter
@@ -52,9 +52,9 @@ BLOOM* const bloom_create_from_file_ex(FILE* const f, hashfunc_t* const funcs, c
 void bloom_clear(BLOOM* const bloom);
 void bloom_destroy(BLOOM* const bloom);
 void bloom_add_str(BLOOM* const bloom, const char *s, const size_t len);
-void bloom_add_num(BLOOM* const bloom, const bitgram_t num);
+void bloom_add_num(BLOOM* const bloom, const size_t num);
 const int bloom_check_str(BLOOM* const bloom, const char *s, const size_t len);
-const int bloom_check_num(BLOOM* const bloom, const bitgram_t num);
+const int bloom_check_num(BLOOM* const bloom, const size_t num);
 const size_t bloom_count(BLOOM* const bloom);
 const int bloom_compare(BLOOM* const a, BLOOM* const b);
 void bloom_print(BLOOM* const bloom);
@@ -62,4 +62,4 @@ void bloom_print_ex(FILE* const f, BLOOM* const bloom);
 
 const int bloom_to_file(BLOOM* const bloom, FILE* const f);
 
-#endif /* SALAD_BLOOM_H_ */
+#endif /* SALAD_CONTAINER_BLOOM_EX_H__ */

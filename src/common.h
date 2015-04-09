@@ -29,7 +29,7 @@
 #endif
 
 #include <salad/salad.h>
-#include <salad/anagram.h>
+#include <salad/container/common.h>
 #include <util/util.h>
 #include <util/io.h>
 

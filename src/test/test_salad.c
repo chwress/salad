@@ -20,6 +20,9 @@
 
 #include <salad/salad.h>
 #include <salad/anagram.h>
+#include <salad/io.h>
+
+#include <container/bloom.h>
 
 #include <string.h>
 #include <limits.h>

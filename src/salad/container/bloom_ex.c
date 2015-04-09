@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "bloom.h"
+#include "bloom_ex.h"
 #include "../util/util.h"
 
 #define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= (0x80>>((n)%CHAR_BIT)))
@@ -172,13 +172,13 @@ void bloom_add_str(BLOOM* const bloom, const char* s, const size_t len)
 	}
 }
 
-void bloom_add_num(BLOOM* const bloom, const bitgram_t num)
+void bloom_add_num(BLOOM* const bloom, const size_t num)
 {
 	assert(bloom != NULL);
 
 	for(size_t n = 0; n < bloom->nfuncs; ++n)
 	{
-		unsigned int h = bloom->funcs[n]((char*) &num, BITGRAM_SIZE) % bloom->bitsize;
+		unsigned int h = bloom->funcs[n]((char*) &num, sizeof(size_t)) % bloom->bitsize;
 		SETBIT(bloom->a, h);
 	}
 }
@@ -203,9 +203,9 @@ const int bloom_check_str(BLOOM* const bloom, const char* s, const size_t len)
 	return bloom_check(bloom, s, len);
 }
 
-const int bloom_check_num(BLOOM* const bloom, const bitgram_t num)
+const int bloom_check_num(BLOOM* const bloom, const size_t num)
 {
-	return bloom_check(bloom, (const char*) &num, BITGRAM_SIZE);
+	return bloom_check(bloom, (const char*) &num, sizeof(size_t));
 }
 
 /**

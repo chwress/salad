@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -24,13 +24,11 @@
 
 #include "common.h"
 #include "salad.h"
-#include "anagram.h"
 
+#include <container/common.h>
 
 void salad_set_bloomfilter_ex(salad_t* const s, BLOOM* const b);
 
-
-#include "bloom.h"
 
 #define GET_BLOOMFILTER(model) \
 	(BLOOM*) model.x; \
@@ -45,6 +43,12 @@ void salad_set_bloomfilter_ex(salad_t* const s, BLOOM* const b);
 }
 
 
+typedef struct {
+	BLOOM* const bloom1; // e.g. good content filter
+	BLOOM* const bloom2; // e.g. bad content filter
+	const size_t n;      // n-gram length
+	const delimiter_array_t delim;
+} bloom_param_t;
 
 
 #endif /* SALAD_UTIL_H_ */

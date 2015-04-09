@@ -15,32 +15,17 @@
  * GNU General Public License for more details.
  */
 
-#include "main.h"
+/**
+ * @file
+ */
 
-#include <salad/salad.h>
-#include <salad/io.h>
-#include <util/log.h>
+#ifndef SALAD_CONTAINER_IO_H_
+#define SALAD_CONTAINER_IO_H_
 
-const int _salad_stats_(const config_t* const c)
-{
-	FILE* const f_filter = fopen(c->bloom, "rb");
-	if (f_filter == NULL)
-	{
-		error("Unable to open bloom filter.");
-		return EXIT_FAILURE;
-	}
+#include "bloom.h"
 
-	BLOOM* bloom = NULL;
+const int fwrite_hashspec(FILE* const f, BLOOM* const bloom);
+const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* const nfuncs);
 
-	int ret = fread_model(f_filter, &bloom, NULL, NULL, NULL, NULL);
-	fclose(f_filter);
-	if (ret != 0)
-	{
-		error("Corrupt bloom filter file.");
-		return EXIT_FAILURE;
-	}
 
-	const size_t set = bloom_count(bloom);
-	status("Saturation: %.3f%%", (((double)set)/ ((double)bloom->bitsize))*100);
-	return EXIT_SUCCESS;
-}
+#endif /* SALAD_CONTAINER_IO_H_ */

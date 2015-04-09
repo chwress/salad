@@ -17,7 +17,7 @@
 
 #include "main.h"
 #include <salad/salad.h>
-#include <salad/anagram.h>
+#include <salad/classify.h>
 #include <salad/util.h>
 
 #include <sys/time.h>
@@ -30,7 +30,7 @@
 
 
 typedef struct {
-	FN_ANACHECK fct;
+	FN_CLASSIFIER fct;
 	bloom_param_t param;
 
 	const config_t* const config;
@@ -194,7 +194,7 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	}
 
 	const model_type_t t = to_model_type(good.as_binary, good.use_tokens);
-	FN_ANACHECK anacheck = pick_classifier(t, bad_model == NULL);
+	FN_CLASSIFIER anacheck = pick_classifier(t, bad_model == NULL);
 
 	predict_t context = {
 			.fct = anacheck,

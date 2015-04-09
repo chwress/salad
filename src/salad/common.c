@@ -24,6 +24,11 @@
 
 #include <util/util.h>
 
+
+const int BITGRAM_SIZE = sizeof(bitgram_t);
+const int BITGRAM_BITSIZE = sizeof(bitgram_t) * 8;
+const int MASK_BITSIZE = sizeof(ngram_mask_t) * 8 -7;
+
 const char* const to_delimiter(const char* const str, const int bit_ngrams, delimiter_t* const out)
 {
 	assert(out != NULL);
