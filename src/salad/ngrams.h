@@ -33,7 +33,7 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 
 
 // bit n-grams
-static inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
+inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
 {
 	const ngram_mask_t mask = ((ngram_mask_t) -1) >> (int) MAX(BITGRAM_BITSIZE -n, 0);
 
@@ -60,14 +60,14 @@ static inline void extract_bitgrams(const char* const str, const size_t len, con
 	}
 }
 
-static inline void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
+inline void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
 {
 	extract_bitgrams(str, len, n, fct, data);
 }
 
 
 // byte or character n-grams
-static inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data)
+inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data)
 {
 	const char* x = str;
     for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
@@ -76,14 +76,14 @@ static inline void extract_bytegrams(const char* const str, const size_t len, co
     }
 }
 
-static inline void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data)
+inline void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data)
 {
 	extract_bytegrams(str, len, n, fct, data);
 }
 
 
 // token or word n-grams
-static inline const int pick_delimiterchar(const delimiter_array_t delim)
+inline const int pick_delimiterchar(const delimiter_array_t delim)
 {
 	for (size_t i = 0; i < 256; i++)
 	{
@@ -95,7 +95,7 @@ static inline const int pick_delimiterchar(const delimiter_array_t delim)
 	return -1;
 }
 
-static inline char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch)
+inline char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch)
 {
 	assert(str != NULL && *str != NULL && len != NULL);
 
@@ -128,7 +128,7 @@ static inline char* const uniquify(const char** const str, size_t* const len, co
     return s;
 }
 
-static inline void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
+inline void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
 {
 	int ch = pick_delimiterchar(delim);
 

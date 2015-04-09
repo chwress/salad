@@ -15,21 +15,21 @@
  * GNU General Public License for more details.
  */
 
+#include "salad.h"
+
+#include "analyze.h"
+#include "classify.h"
+#include "util.h"
+#include "io.h"
+
 #include <util/util.h>
+#include <container/bloom.h>
 
 #include <assert.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "salad.h"
-#include "classify.h"
-#include "anagram.h"
-#include "util.h"
-#include "io.h"
-
-#include <container/bloom.h>
 
 
 void salad_init(salad_t* const s)
@@ -125,6 +125,7 @@ const int salad_train(salad_t* const s, const saladdata_t* const data, const siz
 	assert(s != NULL && data != NULL);
 	BLOOM* const bloom = GET_BLOOMFILTER(s->model);
 
+	// TODO: Let's check whether we can optimize away the function calls
 	switch (to_model_type(s->as_binary, s->use_tokens))
 	{
 	case BIT_NGRAM:
@@ -164,26 +165,27 @@ const int salad_predict_ex(salad_t* const s, const saladdata_t* const data, cons
 		return EXIT_FAILURE;
 	}
 
+	// TODO: Let's check whether we can optimize away the function calls
 	switch (to_model_type(s->as_binary, s->use_tokens))
 	{
 	case BIT_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheckb_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
+			out[i] = classify_1class_b_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case BYTE_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheck_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
+			out[i] = classify_1class_ex(bloom, data[i].buf, data[i].len, s->ngram_length);
 		}
 		break;
 
 	case TOKEN_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = anacheckw_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
+			out[i] = classify_1class_w_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
 		}
 		break;
 

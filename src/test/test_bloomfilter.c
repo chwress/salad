@@ -15,10 +15,11 @@
  * GNU General Public License for more details.
  */
 
+
 #include "common.h"
 #include "ctest.h"
 
-#include <salad/anagram.h>
+#include <container/bloom.h>
 #include <util/util.h>
 
 #include <string.h>

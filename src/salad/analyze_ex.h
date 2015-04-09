@@ -19,8 +19,8 @@
  * @file
  */
 
-#ifndef SALAD_ANAGRAM_EX_H_
-#define SALAD_ANAGRAM_EX_H_
+#ifndef SALAD_ANALYZE_EX_H_
+#define SALAD_ANALYZE_EX_H_
 
 /**
  * A generic macro for the call of the bloomize<X>_ex<Y> functions.
@@ -126,4 +126,4 @@
 	BLOOMIZE_EX_(4, X, bloom, bloom2, str, len, n, delim, NULL, stats);               \
 }
 
-#endif /* SALAD_ANAGRAM_EX_H_ */
+#endif /* SALAD_ANALYZE_EX_H_ */

@@ -1,6 +1,6 @@
 /*
  * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2014, Christian Wressnegger
+ * Copyright (c) 2012-2015, Christian Wressnegger
  * --
  * This file is part of Letter Salad or Salad for short.
  *
@@ -16,9 +16,6 @@
  */
 
 #include "util.h"
-#include "anagram.h"
-
-#include "salad.h"
 
 #include <assert.h>
 

@@ -194,10 +194,9 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	}
 
 	const model_type_t t = to_model_type(good.as_binary, good.use_tokens);
-	FN_CLASSIFIER anacheck = pick_classifier(t, bad_model == NULL);
 
 	predict_t context = {
-			.fct = anacheck,
+			.fct = pick_classifier(t, bad_model == NULL),
 			.param = {good_model, bad_model, good.ngram_length, good.delimiter.d},
 			.config = c,
 			// TODO: we do not know the batch size of the recv function

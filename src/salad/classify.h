@@ -32,14 +32,14 @@ const model_type_t to_model_type(const int as_binary, const int use_tokens);
 
 typedef const double (*FN_CLASSIFIER)(bloom_param_t* const p, const char* const input, const size_t len);
 
-const double anacheckb_ex (BLOOM* const bloom, const char* const input, const size_t len, const size_t n);
-const double anacheckb_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n);
+const double classify_1class_b_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n);
+const double classify_2class_b_ex(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n);
 
-const double anacheck_ex (BLOOM* const bloom, const char* const input, const size_t len, const size_t n);
-const double anacheck_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n);
+const double classify_1class_ex  (BLOOM* const bloom, const char* const input, const size_t len, const size_t n);
+const double classify_2class_ex  (BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n);
 
-const double anacheckw_ex (BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim);
-const double anacheckw_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim);
+const double classify_1class_w_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim);
+const double classify_2class_w_ex(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim);
 
 
 FN_CLASSIFIER pick_classifier(const model_type_t t, const int anomaly_detection);

@@ -19,7 +19,7 @@
 #include "ctest.h"
 
 #include <salad/salad.h>
-#include <salad/anagram.h>
+#include <salad/analyze.h>
 #include <salad/io.h>
 
 #include <container/bloom.h>
@@ -239,7 +239,7 @@ CTEST2(salad, bloomizew_ex)
 
 CTEST(salad, fileformat_consistency)
 {
-	char* TEST_FILE = "test.ana";
+	char* TEST_FILE = "test.out";
 
 	SALAD_T(x);
 	salad_set_bloomfilter_ex(&x, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));

@@ -24,9 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLength, const char* const delimiter, const int asBinary)
+const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_length, const char* const delimiter, const int as_binary)
 {
-	const uint8_t b = (asBinary ? 1 : 0);
+	const uint8_t b = (as_binary ? 1 : 0);
 	if (fwrite(&b, sizeof(uint8_t), 1, f) != 1) return -1;
 
 	const char* const x = (delimiter == NULL ? "" : delimiter);
@@ -35,7 +35,7 @@ const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLeng
 	int m, l;
 	if (fwrite(x, sizeof(char), n +1, f) != n +1) return -1;
 
-	if (fwrite(&ngramLength, sizeof(size_t), 1, f) != 1) return -1;
+	if (fwrite(&ngram_length, sizeof(size_t), 1, f) != 1) return -1;
 
 	if ((m = fwrite_hashspec(f, bloom)) < 0) return -1;
 
@@ -44,23 +44,23 @@ const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngramLeng
 	return sizeof(uint8_t) + (n+1)*sizeof(char) +sizeof(size_t) +m +l;
 }
 
-const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLength, delimiter_array_t delim, int* const useWGrams, int* const asBinary)
+const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary)
 {
 	assert(f != NULL && bloom != NULL);
 
 	uint8_t cdummy;
 	size_t n1 = fread(&cdummy, sizeof(uint8_t), 1, f);
-	if (asBinary != NULL) *asBinary = cdummy;
+	if (as_binary != NULL) *as_binary = cdummy;
 
 
-	if (useWGrams != NULL) *useWGrams = 0;
+	if (use_wgrams != NULL) *use_wgrams = 0;
 
 	char* const delimiter = fread_str(f);
 	if (delimiter != NULL)
 	{
 		if (delimiter[0] != 0x00)
 		{
-			if (useWGrams != NULL) *useWGrams = 1;
+			if (use_wgrams != NULL) *use_wgrams = 1;
 			if (delim != NULL) to_delimiter_array(delimiter, delim);
 		}
 		free(delimiter);
@@ -68,13 +68,13 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngramLen
 
 	// n-gram length
 	size_t dummy;
-	size_t* const _ngramLength = (ngramLength == NULL ? &dummy : ngramLength);
+	size_t* const _ngram_length = (ngram_length == NULL ? &dummy : ngram_length);
 
-	*_ngramLength = 0;
-	size_t n2 = fread(_ngramLength, sizeof(size_t), 1, f);
+	*_ngram_length = 0;
+	size_t n2 = fread(_ngram_length, sizeof(size_t), 1, f);
 
 	// The actual bloom filter values
 	*bloom = bloom_init_from_file(f);
 
-	return (n1 <= 0 || n2 <= 0 || *_ngramLength <= 0 || *bloom == NULL ? -1 : 0);
+	return (n1 <= 0 || n2 <= 0 || *_ngram_length <= 0 || *bloom == NULL ? -1 : 0);
 }

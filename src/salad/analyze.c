@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  */
 
-#include "anagram.h"
+#include "analyze.h"
 
 #include "ngrams.h"
 
@@ -62,9 +62,7 @@ BLOOM* const bloomizew(const char* str, const size_t len, const size_t n, const 
 }
 
 
-// n-grams
-// generic implementations
-
+// generic callback implementations
 static inline void simple_add(const char* const ngram, const size_t len, void* const data)
 {
 	assert(ngram != NULL && data != NULL);
@@ -163,9 +161,6 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 }
 
 // bit n-grams
-void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data);
-void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);
-
 void bloomizeb_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
 {
 	bloomize_t data;
@@ -196,9 +191,6 @@ void bloomizeb_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const s
 
 
 // byte or character n-grams
-void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data);
-void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data);
-
 void bloomize_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n)
 {
 	bloomize_t data;
@@ -231,10 +223,6 @@ void bloomize_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const st
 
 
 // token or word n-grams
-//const int pick_delimiterchar(const delimiter_array_t delim);
-//char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch);
-//void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);
-
 void bloomizew_ex(BLOOM* const bloom, const char* const str, const size_t len, const size_t n, const delimiter_array_t delim)
 {
 	bloomize_t data;

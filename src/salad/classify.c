@@ -42,18 +42,18 @@ typedef struct
 	unsigned int num_known;
 	unsigned int num_ngrams;
 
-} anacheck_t;
+} check_t;
 
 static inline void check(const char* const ngram, const size_t len, void* const data)
 {
 	assert(ngram != NULL && data != NULL);
-	anacheck_t* const d = (anacheck_t*) data;
+	check_t* const d = (check_t*) data;
 
 	d->num_known += bloom_check_str(d->bloom, ngram, len);
 	d->num_ngrams++;
 }
 
-#define ANACHECK(X, bloom, input, len, n, delim)                          \
+#define CLASSIFY_1CLASS(X, bloom, input, len, n, delim)                   \
 {	                                                                      \
 	BLOOM* const _bloom_ = bloom;                                         \
 	const char* const _input_ = input;                                    \
@@ -61,7 +61,7 @@ static inline void check(const char* const ngram, const size_t len, void* const 
 	const size_t _n_ = n;                                                 \
 	const delimiter_array_t _delim_ = delim;                              \
 	                                                                      \
-	anacheck_t data;                                                      \
+	check_t data;                                                         \
 	data.bloom = _bloom_;                                                 \
 	data.num_known = 0;                                                   \
 	data.num_ngrams = 0;                                                  \
@@ -76,14 +76,14 @@ static inline void check(const char* const ngram, const size_t len, void* const 
 static inline void check2(const char* const ngram, const size_t len, void* const data)
 {
 	assert(ngram != NULL && data != NULL);
-	anacheck_t* const d = (anacheck_t*) data;
+	check_t* const d = (check_t*) data;
 
 	d[GOOD].num_known += bloom_check_str(d[GOOD].bloom, ngram, len);
 	d[BAD ].num_known += bloom_check_str(d[BAD ].bloom, ngram, len);
 	d[BAD ].num_ngrams++;
 }
 
-#define ANACHECK2(X, bloom, bbloom, input, len, n, delim)                               \
+#define CLASSIFY_2CLASS(X, bloom, bbloom, input, len, n, delim)                         \
 {	                                                                                    \
 	BLOOM* const _bloom_ = bloom;                                                       \
 	BLOOM* const _bbloom_ = bbloom;                                                     \
@@ -92,7 +92,7 @@ static inline void check2(const char* const ngram, const size_t len, void* const
 	const size_t _n_ = n;                                                               \
 	const delimiter_array_t _delim_ = delim;                                            \
 	                                                                                    \
-	anacheck_t data[2];                                                                 \
+	check_t data[2];                                                                    \
 	data[GOOD].bloom = _bloom_;                                                         \
 	data[GOOD].num_known = 0;                                                           \
 	data[GOOD].num_ngrams = 0;                                                          \
@@ -106,66 +106,66 @@ static inline void check2(const char* const ngram, const size_t len, void* const
 }
 
 // bit n-grams
-const double anacheckb_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
+const double classify_1class_b_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
 {
-	ANACHECK(b, bloom, input, len, n, NO_DELIMITER);
+	CLASSIFY_1CLASS(b, bloom, input, len, n, NO_DELIMITER);
 }
 
-const double anacheckb_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_1class_b(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheckb_ex(p->bloom1, input, len, p->n);
+	return classify_1class_b_ex(p->bloom1, input, len, p->n);
 }
 
-const double anacheckb_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
+const double classify_2class_b_ex(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
 {
-	ANACHECK2(b, bloom, bbloom, input, len, n, NO_DELIMITER);
+	CLASSIFY_2CLASS(b, bloom, bbloom, input, len, n, NO_DELIMITER);
 }
 
-const double anacheckb_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_2class_b(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheckb_ex2(p->bloom1, p->bloom2, input, len, p->n);
+	return classify_2class_b_ex(p->bloom1, p->bloom2, input, len, p->n);
 }
 
 // byte n-grams
-const double anacheck_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
+const double classify_1class_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n)
 {
-	ANACHECK(n, bloom, input, len, n, NO_DELIMITER);
+	CLASSIFY_1CLASS(n, bloom, input, len, n, NO_DELIMITER);
 }
 
-const double anacheck_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_1class(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheck_ex(p->bloom1, input, len, p->n);
+	return classify_1class_ex(p->bloom1, input, len, p->n);
 }
 
-const double anacheck_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
+const double classify_2class_ex(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n)
 {
-	ANACHECK2(n, bloom, bbloom, input, len, n, NO_DELIMITER);
+	CLASSIFY_2CLASS(n, bloom, bbloom, input, len, n, NO_DELIMITER);
 }
 
-const double anacheck_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_2class(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheck_ex2(p->bloom1, p->bloom2, input, len, p->n);
+	return classify_2class_ex(p->bloom1, p->bloom2, input, len, p->n);
 }
 
 // token/ word n-grams
-const double anacheckw_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
+const double classify_1class_w_ex(BLOOM* const bloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
 {
-	ANACHECK(w, bloom, input, len, n, delim);
+	CLASSIFY_1CLASS(w, bloom, input, len, n, delim);
 }
 
-const double anacheckw_ex_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_1class_w(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheckw_ex(p->bloom1, input, len, p->n, p->delim);
+	return classify_1class_w_ex(p->bloom1, input, len, p->n, p->delim);
 }
 
-const double anacheckw_ex2(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
+const double classify_2class_w_ex(BLOOM* const bloom, BLOOM* const bbloom, const char* const input, const size_t len, const size_t n, const delimiter_array_t delim)
 {
-	ANACHECK2(w, bloom, bbloom, input, len, n, delim);
+	CLASSIFY_2CLASS(w, bloom, bbloom, input, len, n, delim);
 }
 
-const double anacheckw_ex2_wrapper(bloom_param_t* const p, const char* const input, const size_t len)
+const double classify_2class_w(bloom_param_t* const p, const char* const input, const size_t len)
 {
-	return anacheckw_ex2(p->bloom1, p->bloom2, input, len, p->n, p->delim);
+	return classify_2class_w_ex(p->bloom1, p->bloom2, input, len, p->n, p->delim);
 }
 
 
@@ -175,13 +175,13 @@ FN_CLASSIFIER pick_classifier(const model_type_t t, const int anomaly_detection)
 	switch (t)
 	{
 	case BIT_NGRAM:
-		return (anomaly_detection ? anacheckb_ex_wrapper : anacheckb_ex2_wrapper);
+		return (anomaly_detection ? classify_1class_b : classify_2class_b);
 
 	case BYTE_NGRAM:
-		return (anomaly_detection ? anacheck_ex_wrapper  : anacheck_ex2_wrapper );
+		return (anomaly_detection ? classify_1class  : classify_2class );
 
 	case TOKEN_NGRAM:
-		return (anomaly_detection ? anacheckw_ex_wrapper : anacheckw_ex2_wrapper);
+		return (anomaly_detection ? classify_1class_w : classify_2class_w);
 	}
 	return NULL;
 }

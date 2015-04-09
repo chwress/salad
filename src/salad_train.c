@@ -18,7 +18,7 @@
 #include "main.h"
 
 #include <salad/salad.h>
-#include <salad/anagram.h>
+#include <salad/analyze.h>
 #include <salad/classify.h>
 #include <salad/util.h>
 
@@ -44,13 +44,13 @@ static inline const int salad_train_callback##X(data_t* data, const size_t n, vo
 		switch (#X[0]) /* This is a static check and will be optimized away */                          \
 		{                                                                                               \
 		case 'b':                                                                                       \
-			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length);                         \
+			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
 			break;                                                                                      \
 		case 'w':                                                                                       \
-			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);         \
+			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);        \
 			break;                                                                                      \
 		default:                                                                                        \
-			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngram_length);                         \
+			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
 			break;                                                                                      \
 		}                                                                                               \
 	}                                                                                                   \
@@ -65,10 +65,10 @@ static inline const int salad_train_net_callback##X(data_t* data, const size_t n
 	switch (#X[0]) /* This is a static check and will be optimized away */                              \
 	{                                                                                                   \
 	case 'b':                                                                                           \
-		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length);                             \
+		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
 		break;                                                                                          \
 	case 'w':                                                                                           \
-		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, s->delimiter.d);             \
+		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, s->delimiter.d);            \
 		break;                                                                                          \
 	default:                                                                                            \
 		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                             \

@@ -15,21 +15,19 @@
  * GNU General Public License for more details.
  */
 
+#include "main.h"
 
 #include <salad/salad.h>
-#include <salad/anagram.h>
+#include <salad/util.h>
+#include <util/vec.h>
+#include <util/io.h>
+#include <util/log.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <getopt.h>
 #include <ctype.h>
 
-#include "main.h"
-
-#include <salad/util.h>
-#include <util/vec.h>
-#include <util/io.h>
-#include <util/log.h>
 
 const char* salad_filename;
 extern int log_level;

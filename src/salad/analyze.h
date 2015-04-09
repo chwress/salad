@@ -19,8 +19,8 @@
  * @file
  */
 
-#ifndef SALAD_ANAGRAM_H_
-#define SALAD_ANAGRAM_H_
+#ifndef SALAD_ANALYZE_H_
+#define SALAD_ANALYZE_H_
 
 #include "common.h"
 #include "util.h"
@@ -242,7 +242,7 @@ void bloomizew_ex4(BLOOM* const bloom1, BLOOM* const bloom2, const char* const s
 
 
 // macros for the generic use of the bloomize functions
-#include "anagram_ex.h"
+#include "analyze_ex.h"
 
 
-#endif /* SALAD_ANAGRAM_H_ */
+#endif /* SALAD_ANALYZE_H_ */
