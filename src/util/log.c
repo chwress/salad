@@ -75,7 +75,7 @@ void vprint_ex(const log_t l, const char* const color, const char* const msg, va
 
 	if (color != NULL)
 	{
-		fprintf(f, COLOR_X);
+		fprintf(f, "%s", COLOR_X);
 	}
 }
 
