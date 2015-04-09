@@ -32,6 +32,7 @@ endif ()
 set(SALAD_DIR "../../")
 set(SOURCE_DIR "./")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SALAD_DIR}/src")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 
 set(CONFIG_DIR "${SALAD_DIR}/src")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h)
@@ -40,8 +41,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CUR
 #code
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
-file(GLOB sources "${SRC}/*.c" "${SRC}/../util/*.c")
-file(GLOB headers "${SRC}/*.h" "${SRC}/../util/*.h")
+file(GLOB sources "${SRC}/*.c" "${SRC}/container/*.c" "${SRC}/../util/*.c")
+file(GLOB headers "${SRC}/*.h" "${SRC}/container/*.h" "${SRC}/../util/*.h")
 
 source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})

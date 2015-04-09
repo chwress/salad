@@ -105,8 +105,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CUR
 #code
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
-file(GLOB sources "${SRC}/*.c" "${SRC}/util/*.c" "${SRC}/salad/*.c")
-file(GLOB headers "${SRC}/*.h" "${SRC}/util/*.h" "${SRC}/salad/*.h")
+file(GLOB sources "${SRC}/*.c" "${SRC}/util/*.c" "${SRC}/salad/*.c" "${SRC}/salad/container/*.c")
+file(GLOB headers "${SRC}/*.h" "${SRC}/util/*.h" "${SRC}/salad/*.h" "${SRC}/salad/container/*.h")
 
 if (TEST_SALAD)
 	file(GLOB test_sources "${SRC}/test/*.c")
