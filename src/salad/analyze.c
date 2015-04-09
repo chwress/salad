@@ -128,8 +128,6 @@ static inline void count(const char* const ngram, const size_t len, void* const 
 	((bloomize_stats_ex_t*) data)->total++;
 }
 
-typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void* const data);
-
 
 #define BLOOMIZE_DUAL(X, bloom1, _bloom2, str, len, n, delim, out, fct)         \
 {                                                                               \
