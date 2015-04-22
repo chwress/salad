@@ -7,20 +7,8 @@
  */
 #define VERSION_STR "@VERSION_STR@"
 
-
-#cmakedefine USE_ARCHIVES
-#cmakedefine LIBARCHIVE2
-#cmakedefine GROUPED_INPUT
-#cmakedefine USE_REGEX_FILTER
-
-#cmakedefine USE_NETWORK
 #cmakedefine ALLOW_LIVE_TRAINING
 
-#cmakedefine HAS_Z_MODIFIER
-#cmakedefine _XOPEN_SOURCE @_XOPEN_SOURCE@	/* getline, strdup */
-/* #undef IOTYPE_FILES */
-
-#cmakedefine USE_COLORS
 #cmakedefine TEST_SALAD
 @TEST_RESOURCES@
 #endif /* CONFIG_H_ */

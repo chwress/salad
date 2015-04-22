@@ -18,18 +18,18 @@
 #include "common.h"
 #include "ctest.h"
 
-#include <salad/salad.h>
 #include <salad/analyze.h>
 #include <salad/io.h>
+#include <salad/salad.h>
+#include <salad/util.h>
 
 #include <container/bloom.h>
 
 #include <string.h>
 #include <limits.h>
 
-#include <config.h>
-#include <salad/util.h>
 
+#include "config.h"
 
 CTEST_DATA(salad)
 {

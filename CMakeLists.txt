@@ -28,12 +28,7 @@ endif ()
 
 # CONFIGURATION
 
-option(USE_ARCHIVES        "Enable support for loading archives (requires libarchive)" OFF)
-option(USE_REGEX_FILTER    "Enable support for grouped inputs (only for archives)" ${USE_REGEX_DEFAULT})
-option(GROUPED_INPUT       "Enable support for grouped inputs (only for archives)" ON)
-option(USE_NETWORK         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(ALLOW_LIVE_TRAINING "Enable support for reading data from network interfaces (requires libnids)" OFF)
-option(USE_COLORS          "Enable the use of colors for salad's output" ON)
 option(TEST_SALAD          "Enable the ability to run the integrated unit tests" OFF)
 
 set(STRICT TRUE)
