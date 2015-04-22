@@ -45,8 +45,9 @@ if (_XOPEN_SOURCE_7)
 endif ()
 
 
-set(SOURCE_DIR "./")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}/config.h)
+set(SOURCE_DIR "src/")
+set(INCLUDE_DIR "include/")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${INCLUDE_DIR}/config.h)
 
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
@@ -55,8 +56,9 @@ get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 # CODE
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
+set(INC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
 file(GLOB sources "${SRC}/*.c")
-file(GLOB headers "${SRC}/*.h")
+file(GLOB headers "${SRC}/*.h" "${INC}/*.h")
 
 if (_XOPEN_SOURCE_7)
 	list(REMOVE_ITEM sources "${SRC}/getline.c")
@@ -75,7 +77,8 @@ add_library("${TARGETNAME}" ${headers} ${sources})
 set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/${INCLUDE_DIR}")
 
 
 
@@ -161,13 +164,13 @@ endif ()
 # INSTALL
 
 get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../"
-                      "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../")
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/"
+                      "${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/")
 configure_file(${PROJECTNAME}-config.cmake.in
                "${PROJECT_BINARY_DIR}/${PROJECTNAME}-config.cmake"
                @ONLY)
 
-set(CONF_INCLUDE_DIRS "\${\${LIBNAME}_CMAKE_DIR}/include")
+set(CONF_INCLUDE_DIRS "\${\${LIBNAME}_CMAKE_DIR}/${INCLUDE_DIR}")
 configure_file(${PROJECTNAME}-config.cmake.in
                "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${PROJECTNAME}-config.cmake"
                @ONLY)

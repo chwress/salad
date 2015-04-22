@@ -15,9 +15,9 @@
  * GNU General Public License for more details.
  */
 
-#include "log.h"
-#include "util.h"
-#include "colors.h"
+#include "util/log.h"
+#include "util/util.h"
+#include "util/colors.h"
 
 #include <stdio.h>
 #include <string.h>

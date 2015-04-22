@@ -22,8 +22,6 @@
 #ifndef UTIL_VEC_H_
 #define UTIL_VEC_H_
 
-#include <config.h>
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -27,7 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "getline.h"
+#include "util/getline.h"
 #ifndef _GNU_SOURCE
 
 #include <errno.h>

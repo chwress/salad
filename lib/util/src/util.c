@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  */
 
-#include "util.h"
+#include "util/util.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

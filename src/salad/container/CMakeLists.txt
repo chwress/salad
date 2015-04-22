@@ -46,7 +46,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CUR
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
 add_subdirectory(
-	"${BASE_SOURCE_DIR}/src/util"
+	"${BASE_SOURCE_DIR}/lib/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
 )
 

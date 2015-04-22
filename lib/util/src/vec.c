@@ -15,7 +15,10 @@
  * GNU General Public License for more details.
  */
 
-#include "getline.h"
+#include "util/getline.h"
+#include "util/vec.h"
+#include "util/util.h"
+#include "util/murmur.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,9 +26,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "vec.h"
-#include "util.h"
-#include "murmur.h"
 
 #define P 0.5
 #define MAX_LEVEL 6

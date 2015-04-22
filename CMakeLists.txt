@@ -53,9 +53,13 @@ if (TEST_SALAD)
 endif ()
 
 set(SOURCE_DIR "src/")
+set(INCLUDE_DIR "${SOURCE_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}/config.h)
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/util")
+add_subdirectory(
+	"${CMAKE_CURRENT_SOURCE_DIR}/lib/util"
+	"${CMAKE_CURRENT_BINARY_DIR}/util"
+)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/salad")
 
 

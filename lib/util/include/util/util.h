@@ -22,7 +22,7 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
-#include <config.h>
+#include "config.h"
 
 #include <assert.h>
 #include <stdint.h>

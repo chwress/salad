@@ -14,4 +14,5 @@
 /* #undef IOTYPE_FILES */
 
 #cmakedefine USE_COLORS
+
 #endif /* UTIL_CONFIG_H_ */

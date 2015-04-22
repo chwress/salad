@@ -43,15 +43,16 @@ find_veggiebed(BASE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 find_veggiebed(BASE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(SOURCE_DIR ".")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
+set(INCLUDE_DIR "${SOURCE_DIR}")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}")
 
-set(CONFIG_DIR "${SOURCE_DIR}")
+set(CONFIG_DIR "${INCLUDE_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/config.h)
 
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
 add_subdirectory(
-	"${BASE_SOURCE_DIR}/src/util"
+	"${BASE_SOURCE_DIR}/lib/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
 )
 

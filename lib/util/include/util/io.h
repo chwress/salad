@@ -22,7 +22,7 @@
 #ifndef UTIL_IO_H_
 #define UTIL_IO_H_
 
-#include <config.h>
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

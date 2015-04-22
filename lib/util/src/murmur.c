@@ -4,7 +4,9 @@
  * The same caveats as 32-bit MurmurHash2 apply here - beware of alignment 
  * and endian-ness issues if used across multiple platforms.
  */
-#include "murmur.h"
+
+#include "util/murmur.h"
+
 #include <stdint.h>
 
 uint32_t MurmurHash2(const void *key, int32_t len, uint32_t seed)

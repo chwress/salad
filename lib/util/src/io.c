@@ -15,10 +15,10 @@
  * GNU General Public License for more details.
  */
 
-#include "io.h"
-#include "util.h"
-#include "log.h"
-#include "getline.h"
+#include "util/io.h"
+#include "util/util.h"
+#include "util/log.h"
+#include "util/getline.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -26,7 +26,7 @@
 #include <stddef.h>
 #include <unistd.h>
 
-#include <config.h>
+#include "config.h"
 
 #ifdef USE_REGEX_FILTER
 #include <regex.h>
