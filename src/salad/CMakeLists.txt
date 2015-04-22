@@ -38,17 +38,9 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(HAS_Z_MODIFIER FALSE) 
 endif ()
 
-
-function(find_veggiebed var base)
-	set(DIR "${base}")
-	while (NOT EXISTS "${DIR}/CHANGELOG")
-		set(DIR "${DIR}/..")
-	endwhile ()
-	set("${var}" "${DIR}" PARENT_SCOPE)
-endfunction ()
-
-find_veggiebed(SALAD_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-find_veggiebed(SALAD_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+include(VegetableBed.cmake)
+find_veggiebed(BASE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+find_veggiebed(BASE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(SOURCE_DIR ".")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
@@ -59,7 +51,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CUR
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
 add_subdirectory(
-	"${SALAD_SOURCE_DIR}/src/util"
+	"${BASE_SOURCE_DIR}/src/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
 )
 
@@ -152,11 +144,11 @@ endif ()
 
 if (DOXYGEN_FOUND)
 	set(DOXYGEN_FILE_PATTERN "salad.h common.h")
-	configure_file(${SALAD_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
+	configure_file(${BASE_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target("${PROJECTNAME}_doc"
-		${DOXYGEN_EXECUTABLE} ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile
-		WORKING_DIRECTORY ${SALAD_SOURCE_DIR}/${DOC_DIR}
+		${DOXYGEN_EXECUTABLE} ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile
+		WORKING_DIRECTORY ${BASE_SOURCE_DIR}/${DOC_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 	set_target_properties("${PROJECTNAME}_doc" PROPERTIES OUTPUT_NAME "doc")
 endif ()
@@ -168,8 +160,8 @@ set(SALAD_VENDOR "mlsec.org")
 set(SALAD_AUTHOR "Christian Wressnegger")
 set(SALAD_URL    "http://mlsec.org/salad")
 set(SALAD_MAIL   "christian@mlsec.org")
-set(SALAD_ICON "${SALAD_SOURCE_DIR}/res/logo/lettuce.ico")
-set(SALAD_TOPBAR "${SALAD_SOURCE_DIR}/res/logo/topbar.bmp")
+set(SALAD_ICON "${BASE_SOURCE_DIR}/res/logo/lettuce.ico")
+set(SALAD_TOPBAR "${BASE_SOURCE_DIR}/res/logo/topbar.bmp")
 
 if (${CMAKE_VERSION} VERSION_GREATER 2.8.7)
 	include(InstallRequiredSystemLibraries)
@@ -257,7 +249,7 @@ install(TARGETS ${TARGETNAME} RUNTIME DESTINATION bin LIBRARY DESTINATION lib AR
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/salad.h" "${CMAKE_CURRENT_SOURCE_DIR}/common.h" DESTINATION "include/salad")
 
 if (UNIX)
-	install(DIRECTORY ${SALAD_SOURCE_DIR}/${PROJECTNAME}/man/
+	install(DIRECTORY ${BASE_SOURCE_DIR}/${PROJECTNAME}/man/
 		DESTINATION share/man
 		FILES_MATCHING PATTERN "salad.h.1")
 endif ()

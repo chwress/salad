@@ -33,17 +33,9 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(HAS_Z_MODIFIER FALSE) 
 endif ()
 
-
-function(find_veggiebed var base)
-	set(DIR "${base}")
-	while (NOT EXISTS "${DIR}/CHANGELOG")
-		set(DIR "${DIR}/..")
-	endwhile ()
-	set("${var}" "${DIR}" PARENT_SCOPE)
-endfunction ()
-
-find_veggiebed(SALAD_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-find_veggiebed(SALAD_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+include(VegetableBed.cmake)
+find_veggiebed(BASE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+find_veggiebed(BASE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(SOURCE_DIR ".")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
@@ -54,7 +46,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CUR
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
 add_subdirectory(
-	"${SALAD_SOURCE_DIR}/src/util"
+	"${BASE_SOURCE_DIR}/src/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
 )
 
@@ -126,11 +118,11 @@ endif ()
 
 if (DOXYGEN_FOUND)
 	set(DOXYGEN_FILE_PATTERN "bloom.h bloom_ex.h hash.h")
-	configure_file(${SALAD_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
+	configure_file(${BASE_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target("${PROJECTNAME}_doc"
-		${DOXYGEN_EXECUTABLE} ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile
-		WORKING_DIRECTORY ${SALAD_SOURCE_DIR}/${DOC_DIR}
+		${DOXYGEN_EXECUTABLE} ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile
+		WORKING_DIRECTORY ${BASE_SOURCE_DIR}/${DOC_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 	set_target_properties("${PROJECTNAME}_doc" PROPERTIES OUTPUT_NAME "doc")
 endif ()
@@ -157,7 +149,7 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/bloom.h"
         DESTINATION "include/foodstoragebox")
 
 if (UNIX)
-	install(DIRECTORY ${SALAD_SOURCE_DIR}/${DOC_DIR}/${PROJECTNAME}/man/
+	install(DIRECTORY ${BASE_SOURCE_DIR}/${DOC_DIR}/${PROJECTNAME}/man/
 		DESTINATION share/man
 		FILES_MATCHING PATTERN "bloom.h.1" PATTERN "bloom_ex.h.1" PATTERN "hash.h.1")
 endif ()

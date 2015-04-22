@@ -1,0 +1,7 @@
+function(find_veggiebed var base)
+	set(DIR "${base}")
+	while (NOT EXISTS "${DIR}/VegetableBed.cmake")
+		set(DIR "${DIR}/..")
+	endwhile ()
+	set("${var}" "${DIR}" PARENT_SCOPE)
+endfunction ()
