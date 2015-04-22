@@ -15,13 +15,15 @@
  * GNU General Public License for more details.
  */
 
+#include "bloom_ex.h"
+
 #include <limits.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 
-#include "bloom_ex.h"
-#include "../util/util.h"
+#include <util/util.h>
+
 
 #define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= (0x80>>((n)%CHAR_BIT)))
 #define GETBIT(a, n)  ((a)[(n)/CHAR_BIT] & (0x80>>((n)%CHAR_BIT)))
@@ -260,8 +262,8 @@ void bloom_print_ex(FILE* const f, BLOOM* const bloom)
 {
 	assert(f != NULL && bloom != NULL);
 
-	fprintf(f, "Size:    \t %" Z "\n", bloom->size);
-	fprintf(f, "Bit-Size:\t %" Z "\n", bloom->bitsize);
+	fprintf(f, "Size:    \t %" Z "\n", (SIZE_T) bloom->size);
+	fprintf(f, "Bit-Size:\t %" Z "\n", (SIZE_T) bloom->bitsize);
 	fprintf(f, "Data:\n");
 
 	int i = 0, j = 0;

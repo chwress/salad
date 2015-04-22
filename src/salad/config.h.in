@@ -1,0 +1,10 @@
+#ifndef SALAD_CONFIG_H_
+#define SALAD_CONFIG_H_
+
+/**
+ * @class hidden_version
+ * \version @VERSION_STR@
+ */
+#define VERSION_STR "@VERSION_STR@"
+
+#endif /* SALAD_CONFIG_H_ */

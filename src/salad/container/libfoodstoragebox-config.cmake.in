@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set(LIBNAME @OUTPUTNAME@)
 set(PACKAGENAME @PROJECTNAME@)
-message(STATUS "Found ${PACKAGENAME}: Using ${PACKAGENAME}-config.cmake")
+message(STATUS "Found ${PACKAGENAME}: Using ${PACKAGENAME}.cmake")
 
 get_filename_component(${PACKAGENAME}_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 

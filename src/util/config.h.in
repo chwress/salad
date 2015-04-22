@@ -1,12 +1,5 @@
-#ifndef CONFIG_H_
-#define CONFIG_H_
-
-/**
- * @class hidden_version
- * \version @VERSION_STR@
- */
-#define VERSION_STR "@VERSION_STR@"
-
+#ifndef UTIL_CONFIG_H_
+#define UTIL_CONFIG_H_
 
 #cmakedefine USE_ARCHIVES
 #cmakedefine LIBARCHIVE2
@@ -21,6 +14,4 @@
 /* #undef IOTYPE_FILES */
 
 #cmakedefine USE_COLORS
-#cmakedefine TEST_SALAD
-@TEST_RESOURCES@
-#endif /* CONFIG_H_ */
+#endif /* UTIL_CONFIG_H_ */

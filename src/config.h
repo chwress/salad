@@ -8,9 +8,9 @@
 #define VERSION_STR "0.5.0"
 
 
-#define USE_ARCHIVES
+/* #undef USE_ARCHIVES */
 /* #undef LIBARCHIVE2 */
-/* #undef GROUPED_INPUT */
+#define GROUPED_INPUT
 #define USE_REGEX_FILTER
 
 /* #undef USE_NETWORK */
@@ -21,6 +21,6 @@
 /* #undef IOTYPE_FILES */
 
 #define USE_COLORS
-#define TEST_SALAD
+/* #undef TEST_SALAD */
 
 #endif /* SALAD_H_ */

@@ -1,105 +1,175 @@
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 if (COMMAND cmake_policy)
-  cmake_policy(SET CMP0009 NEW)
+	cmake_policy(SET CMP0009 NEW)
+	cmake_policy(SET CMP0011 NEW)
 endif ()
 
-set(TARGETNAME salad)
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
+set(OUTPUTNAME "salad")
+set(PROJECTNAME "lib${OUTPUTNAME}")
 set(TAGLINE "Salad - A Content Anomaly Detector based on n-Grams")
-set(PROJECTNAME lib${TARGETNAME})
+
 project(${PROJECTNAME} C)
+set(TARGETNAME "${PROJECTNAME}_target")
 
 set(${TARGETNAME}_VERSION_MAJOR 0)
 set(${TARGETNAME}_VERSION_MINOR 5)
 set(${TARGETNAME}_VERSION_PATCH 0)
 
+if (TARGET ${TARGETNAME})
+	return()
+endif ()
+
 
 set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.${${TARGETNAME}_VERSION_PATCH}")
 
 
-# dependencies
 
-option(_GNU_SOURCE   "Enable GNU extensions" OFF)
+# CONFIGURATION
 
 set(STRICT TRUE)
+set(FSB_AS_DEPENDENCY FALSE)
 
 
 set(HAS_Z_MODIFIER TRUE)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(HAS_Z_MODIFIER FALSE) 
+	set(HAS_Z_MODIFIER FALSE) 
 endif ()
 
 
-set(SALAD_DIR "../../")
-set(SOURCE_DIR "./")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SALAD_DIR}/src")
+function(find_veggiebed var base)
+	set(DIR "${base}")
+	while (NOT EXISTS "${DIR}/CHANGELOG")
+		set(DIR "${DIR}/..")
+	endwhile ()
+	set("${var}" "${DIR}" PARENT_SCOPE)
+endfunction ()
+
+find_veggiebed(SALAD_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+find_veggiebed(SALAD_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+
+set(SOURCE_DIR ".")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 
-set(CONFIG_DIR "${SALAD_DIR}/src")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h)
+set(CONFIG_DIR "${SOURCE_DIR}")
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${CONFIG_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${CONFIG_DIR}/config.h)
+
+get_directory_property(HAS_PARENT PARENT_DIRECTORY)
+
+add_subdirectory(
+	"${SALAD_SOURCE_DIR}/src/util"
+	"${CMAKE_CURRENT_BINARY_DIR}/util"
+)
+
+if (FSB_AS_DEPENDENCY)
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/container")
+endif ()
 
 
-#code
+
+# CODE
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
-file(GLOB sources "${SRC}/*.c" "${SRC}/container/*.c" "${SRC}/../util/*.c")
-file(GLOB headers "${SRC}/*.h" "${SRC}/container/*.h" "${SRC}/../util/*.h")
+if (FSB_AS_DEPENDENCY)
+	file(GLOB sources "${SRC}/*.c")
+	file(GLOB headers "${SRC}/*.h")
+else ()
+	file(GLOB sources "${SRC}/*.c" "${SRC}/container/*.c")
+	file(GLOB headers "${SRC}/*.h" "${SRC}/container*.h")
+endif ()
 
 source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+if (HAS_PARENT)
+	set(${PROJECTNAME}_DIR "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
+endif ()
+
+add_library("${TARGETNAME}" ${headers} ${sources})
+# ATTENTION: This messes with the library dependencies!
+set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
+
+
+
+# DEPENDENCIES
+
+# libfootstoragebox
+if (FSB_AS_DEPENDENCY)
+	find_package(libfoodstoragebox REQUIRED)
+
+	include_directories("${libfoodstoragebox_INCLUDE_DIRS}")
+	target_link_libraries(${TARGETNAME} ${libfoodstoragebox_LIBRARIES})
+	add_dependencies("${TARGETNAME}" "${libfoodstoragebox_TARGET}")
+endif ()
+
+# libutil
+find_package(libutil REQUIRED)
+
+include_directories("${libutil_INCLUDE_DIRS}")
+target_link_libraries(${TARGETNAME} ${libutil_LIBRARIES})
+add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
+
+
+# libm
+if (CMAKE_COMPILER_IS_GNUCC)
+	find_library(M_LIB m)
+	if (M_LIB)
+		target_link_libraries(${TARGETNAME} ${M_LIB})
+	endif ()
+endif ()
+
+
+
+# FLAGS
 
 if (NOT MSVC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -O3")
-    if (STRICT)
-    	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic")
-    else ()
-    	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U__STRICT_ANSI__")
-    endif ()
-endif ()
-
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-add_library(${TARGETNAME} ${headers} ${sources})
-
-if (CMAKE_COMPILER_IS_GNUCC)
-    find_library(M_LIB m)
-    if (M_LIB)
-        target_link_libraries(${TARGETNAME} ${M_LIB})
-    endif ()
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=c99 -O3")
+	if (STRICT)
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pedantic")
+	else ()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -U__STRICT_ANSI__")
+	endif ()
 endif ()
 
 
-# documentation
 
-set(DOC_DIR "${SALAD_DIR}/doc/")
+# DOCUMENTATION
+
+set(DOC_DIR "doc/")
 
 find_package(Doxygen)
 if (${DOXYGEN_VERSION})
-    string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+)(.[0-9]+)" "\\1" DOXYGEN_VERSION_ ${DOXYGEN_VERSION}) 
+	string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+)(.[0-9]+)" "\\1" DOXYGEN_VERSION_ ${DOXYGEN_VERSION}) 
 
-    if (${DOXYGEN_VERSION_} STREQUAL "1.8.3")
-        message(STATUS "Doxygen-${DOXYGEN_VERSION} contains a bug that breaks the generation of Salad's documentation. Sorry, no can do!")
-        unset(DOXYGEN_FOUND)
-    endif ()
+	if (${DOXYGEN_VERSION_} STREQUAL "1.8.3")
+		message(STATUS "Doxygen-${DOXYGEN_VERSION} contains a bug that breaks the generation of Salad's documentation. Sorry, no can do!")
+		unset(DOXYGEN_FOUND)
+	endif ()
 endif ()
 
 if (DOXYGEN_FOUND)
-    set(DOXYGEN_FILE_PATTERN "salad.h common.h")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile @ONLY)
-    add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}
-        COMMENT "Generating API documentation with Doxygen" VERBATIM)
+	set(DOXYGEN_FILE_PATTERN "salad.h common.h")
+	configure_file(${SALAD_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
+
+	add_custom_target("${PROJECTNAME}_doc"
+		${DOXYGEN_EXECUTABLE} ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile
+		WORKING_DIRECTORY ${SALAD_SOURCE_DIR}/${DOC_DIR}
+		COMMENT "Generating API documentation with Doxygen" VERBATIM)
+	set_target_properties("${PROJECTNAME}_doc" PROPERTIES OUTPUT_NAME "doc")
 endif ()
 
 
-# packaging
+# PACKAGING
 
 set(SALAD_VENDOR "mlsec.org")
 set(SALAD_AUTHOR "Christian Wressnegger")
 set(SALAD_URL    "http://mlsec.org/salad")
 set(SALAD_MAIL   "christian@mlsec.org")
-set(SALAD_ICON "${CMAKE_CURRENT_SOURCE_DIR}/${SALAD_DIR}/res/logo/lettuce.ico")
-set(SALAD_TOPBAR "${CMAKE_CURRENT_SOURCE_DIR}/${SALAD_DIR}/res/logo/topbar.bmp")
+set(SALAD_ICON "${SALAD_SOURCE_DIR}/res/logo/lettuce.ico")
+set(SALAD_TOPBAR "${SALAD_SOURCE_DIR}/res/logo/topbar.bmp")
 
 if (${CMAKE_VERSION} VERSION_GREATER 2.8.7)
 	include(InstallRequiredSystemLibraries)
@@ -169,10 +239,11 @@ if (${CMAKE_VERSION} VERSION_GREATER 2.8.7)
 endif ()
 
 
-# install
+# INSTALL
 
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}"
-                      "${PROJECT_BINARY_DIR}/${SOURCE_DIR}")
+get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
+set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../"
+                      "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../")
 configure_file(${PROJECTNAME}-config.cmake.in
                "${PROJECT_BINARY_DIR}/${PROJECTNAME}-config.cmake"
                @ONLY)
@@ -186,7 +257,7 @@ install(TARGETS ${TARGETNAME} RUNTIME DESTINATION bin LIBRARY DESTINATION lib AR
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/salad.h" "${CMAKE_CURRENT_SOURCE_DIR}/common.h" DESTINATION "include/salad")
 
 if (UNIX)
-	install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/${PROJECTNAME}/man/
+	install(DIRECTORY ${SALAD_SOURCE_DIR}/${PROJECTNAME}/man/
 		DESTINATION share/man
 		FILES_MATCHING PATTERN "salad.h.1")
 endif ()
