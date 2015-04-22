@@ -17,7 +17,7 @@
 
 
 #include "common.h"
-#include "ctest.h"
+#include <ctest.h>
 
 #include "util/getline.h"
 #include "util/colors.h"

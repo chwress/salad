@@ -16,7 +16,7 @@
  */
 
 #include "common.h"
-#include "ctest.h"
+#include <ctest.h>
 
 #include <util/io.h>
 

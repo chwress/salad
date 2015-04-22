@@ -18,7 +18,7 @@
 #include "main.h"
 
 #define CTEST_MAIN
-#include "test/ctest.h"
+#include <ctest.h>
 
 extern const char* salad_filename;
 

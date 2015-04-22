@@ -16,7 +16,7 @@
  */
 
 #include "common.h"
-#include "ctest.h"
+#include <ctest.h>
 
 #include <stdlib.h>
 #include <string.h>

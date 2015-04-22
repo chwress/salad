@@ -55,6 +55,10 @@ add_subdirectory(
 	"${CMAKE_CURRENT_SOURCE_DIR}/lib/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
 )
+add_subdirectory(
+	"${CMAKE_CURRENT_SOURCE_DIR}/lib/ctest"
+	"${CMAKE_CURRENT_BINARY_DIR}/ctest"
+)
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/salad")
 
 
@@ -103,6 +107,11 @@ find_package(libutil REQUIRED)
 include_directories("${libutil_INCLUDE_DIRS}")
 target_link_libraries("${TARGETNAME}" "${libutil_LIBRARIES}")
 add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
+
+# ctest
+find_package(ctest REQUIRED)
+include_directories("${ctest_INCLUDE_DIRS}")
+message(STATUS "---: ${ctest_INCLUDE_DIRS}")
 
 # libarchive
 if (USE_ARCHIVES)

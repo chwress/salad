@@ -16,6 +16,6 @@
  */
 
 #include "common.h"
-#include "ctest.h"
+#include <ctest.h>
 
 // Test sparse vector implementation

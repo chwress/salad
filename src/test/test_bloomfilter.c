@@ -17,7 +17,7 @@
 
 
 #include "common.h"
-#include "ctest.h"
+#include <ctest.h>
 
 #include <container/bloom.h>
 #include <util/util.h>
