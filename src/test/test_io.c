@@ -15,11 +15,12 @@
  * GNU General Public License for more details.
  */
 
-#include "config.h"
 #include "common.h"
 #include "ctest.h"
 
 #include <util/io.h>
+
+#include "config.h"
 
 #ifndef TEST_SRC
 #define TEST_SRC "./"

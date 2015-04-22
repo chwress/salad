@@ -7,7 +7,4 @@
  */
 #define VERSION_STR "@VERSION_STR@"
 
-
-#cmakedefine HAS_Z_MODIFIER
-
 #endif /* SALAD_CONTAINER_CONFIG_H_ */

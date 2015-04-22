@@ -16,7 +16,6 @@
  */
 
 
-#include "config.h"
 #include "common.h"
 #include "ctest.h"
 
@@ -31,6 +30,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include <strings.h>
+
+#include "config.h"
 
 #define CMD_LENGTH 4096
 

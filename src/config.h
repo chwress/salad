@@ -23,4 +23,4 @@
 #define USE_COLORS
 /* #undef TEST_SALAD */
 
-#endif /* SALAD_H_ */
+#endif /* CONFIG_H_ */

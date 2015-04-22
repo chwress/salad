@@ -22,6 +22,7 @@
 #include <util/vec.h>
 #include <util/io.h>
 #include <util/log.h>
+#include <util/util.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -29,6 +30,7 @@
 #include <ctype.h>
 #include <limits.h>
 
+#include "common.h"
 
 const char* salad_filename;
 extern int log_level;
@@ -385,7 +387,7 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 		}
 		else
 #endif
-#ifdef GROUPED_INPUT
+#if defined(GROUPED_INPUT) && defined(USE_ARCHIVE)
 		if (config->input_type == ARCHIVE && config->group_input)
 		{
 			status("Input: %s (%s mode - grouped)",
