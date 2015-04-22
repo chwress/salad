@@ -27,7 +27,7 @@ option(GROUPED_INPUT       "Enable support for grouped inputs (only for archives
 option(USE_NETWORK         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(ALLOW_LIVE_TRAINING "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(_XOPEN_SOURCE_7     "Enable X/Open 7 extendions (incorporating POSIX 2008)" OFF)
-option(USE_COLORS          "Enable the use of colors for salad's output" ON)
+option(USE_COLORS          "Enable the use of colors for console output" ON)
 
 
 set(HAS_Z_MODIFIER TRUE)
