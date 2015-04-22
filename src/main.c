@@ -387,8 +387,15 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 		}
 		else
 #endif
-#if defined(GROUPED_INPUT) && defined(USE_ARCHIVE)
-		if (config->input_type == ARCHIVE && config->group_input)
+#ifdef GROUPED_INPUT
+#ifdef USE_ARCHIVE
+		if (config->input_type != ARCHIVE)
+#endif
+		{
+			warn("Unable to group data on this type of input");
+			config->group_input = FALSE;
+		}
+		if (config->group_input)
 		{
 			status("Input: %s (%s mode - grouped)",
 					config->input, iomode_to_string(config->input_type));
