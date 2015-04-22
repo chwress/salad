@@ -125,7 +125,7 @@ if (${DOXYGEN_VERSION})
 endif ()
 
 if (DOXYGEN_FOUND)
-	set(DOXYGEN_FILE_PATTERN "bloom.h bloom_ex.h")
+	set(DOXYGEN_FILE_PATTERN "bloom.h bloom_ex.h hash.h")
 	configure_file(${SALAD_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${SALAD_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target("${PROJECTNAME}_doc"
@@ -151,11 +151,14 @@ configure_file(${PROJECTNAME}-config.cmake.in
                @ONLY)
 
 install(TARGETS ${TARGETNAME} RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/bloom.h" "${CMAKE_CURRENT_SOURCE_DIR}/bloom_ex.h" DESTINATION "include/foodstoragebox")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/bloom.h"
+              "${CMAKE_CURRENT_SOURCE_DIR}/bloom_ex.h"
+              "${CMAKE_CURRENT_SOURCE_DIR}/hash.h"
+        DESTINATION "include/foodstoragebox")
 
 if (UNIX)
 	install(DIRECTORY ${SALAD_SOURCE_DIR}/${DOC_DIR}/${PROJECTNAME}/man/
 		DESTINATION share/man
-		FILES_MATCHING PATTERN "bloom.h.1" PATTERN "bloom_ex.h.1")
+		FILES_MATCHING PATTERN "bloom.h.1" PATTERN "bloom_ex.h.1" PATTERN "hash.h.1")
 endif ()
 
