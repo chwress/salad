@@ -7,7 +7,6 @@
 #define USE_REGEX_FILTER
 
 /* #undef USE_NETWORK */
-/* #undef ALLOW_LIVE_TRAINING */
 
 #define HAS_Z_MODIFIER
 /* #undef _XOPEN_SOURCE */
