@@ -28,11 +28,6 @@ set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.$
 
 set(STRICT TRUE)
 
-set(HAS_Z_MODIFIER TRUE)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_Z_MODIFIER FALSE) 
-endif ()
-
 include(VegetableBed.cmake)
 find_veggiebed(BASE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 find_veggiebed(BASE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
@@ -69,6 +64,7 @@ endif ()
 add_library("${TARGETNAME}" STATIC ${headers} ${sources})
 # ATTENTION: This messes with the library dependencies!
 set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
+
 
 
 # DEPENDENCIES

@@ -18,12 +18,6 @@ set(${TARGETNAME}_VERSION_PATCH 0)
 
 set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.${${TARGETNAME}_VERSION_PATCH}")
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-	set(USE_REGEX_DEFAULT "ON")
-else ()
-	set(USE_REGEX_DEFAULT "OFF")
-endif ()
-
 
 
 # CONFIGURATION
@@ -32,11 +26,6 @@ option(ALLOW_LIVE_TRAINING "Enable support for reading data from network interfa
 option(TEST_SALAD          "Enable the ability to run the integrated unit tests" OFF)
 
 set(STRICT TRUE)
-
-set(HAS_Z_MODIFIER TRUE)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_Z_MODIFIER FALSE) 
-endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
 	set(TEST_SALAD TRUE)
@@ -111,7 +100,6 @@ add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
 # ctest
 find_package(ctest REQUIRED)
 include_directories("${ctest_INCLUDE_DIRS}")
-message(STATUS "---: ${ctest_INCLUDE_DIRS}")
 
 # libarchive
 if (USE_ARCHIVES)
@@ -157,9 +145,7 @@ endif (USE_NETWORK)
 
 
 # regex stuff
-set(HAS_Z_MODIFIER TRUE)
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_Z_MODIFIER FALSE)
 	if (USE_REGEX_FILTER)
 		message(STATUS "Right now it is not possible to use the regex filter on Windows")
 		set(USE_REGEX_FILTER FALSE)
