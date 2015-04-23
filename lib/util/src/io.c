@@ -26,7 +26,7 @@
 #include <stddef.h>
 #include <unistd.h>
 
-#include "config.h"
+#include "util/config.h"
 
 #ifdef USE_REGEX_FILTER
 #include <regex.h>
