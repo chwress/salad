@@ -101,6 +101,8 @@ const float frand();
 #define FALSE 0
 #define TRUE  1
 
+#define UNUSED(x) (void)(x)
+
 #ifdef HAS_Z_MODIFIER
 	#define Z "zu"
 	#define SIZE_T size_t
