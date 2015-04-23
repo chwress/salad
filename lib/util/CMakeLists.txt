@@ -21,12 +21,18 @@ endif ()
 
 # CONFIGURATION
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+	set(USE_REGEX_DEFAULT "ON")
+else ()
+	set(USE_REGEX_DEFAULT "OFF")
+endif ()
+
 option(USE_ARCHIVES        "Enable support for loading archives (requires libarchive)" OFF)
 option(USE_REGEX_FILTER    "Enable support for grouped inputs (only for archives)" ${USE_REGEX_DEFAULT})
 option(GROUPED_INPUT       "Enable support for grouped inputs (only for archives)" ON)
 option(USE_NETWORK         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(ALLOW_LIVE_TRAINING "Enable support for reading data from network interfaces (requires libnids)" OFF)
-option(_XOPEN_SOURCE_7     "Enable X/Open 7 extendions (incorporating POSIX 2008)" OFF)
+option(_XOPEN_SOURCE_7     "Enable X/Open 7 extensions (incorporating POSIX 2008)" OFF)
 option(USE_COLORS          "Enable the use of colors for console output" ON)
 
 
