@@ -53,12 +53,12 @@ typedef enum
  */
 typedef struct
 {
-	void* x; //!< The domain-specifc data structure of the model.
+	void* x; //!< The domain-specific data structure of the model.
 	saladmodel_type_t type; //!< The type identifier of the model.
 } saladmodel_t;
 
 /**
- * The common object defining models and its general parametrization/
+ * The common object defining models and its general parameterization/
  * specification as used by salad.
  */
 typedef struct

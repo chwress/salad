@@ -206,7 +206,7 @@ int main(int argc, char* argv[]);
  *
  * @par -f, --input-format &lt;fmt&gt;
  * Sets the format of input. This option might be one of 'lines', 'files',
- * 'archive', 'network' or 'network-dump'. This depends on the configure
+ * 'archive', 'network' or 'network-dump'. This depends on the configuration
  * Salad was compiled with -- cf. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING.
  *
  * @par     --input-filter &lt;regex&gt;
@@ -219,11 +219,6 @@ int main(int argc, char* argv[]);
  * Sets the size of batches that are read and processed in one go. When
  * processing network streams this is automatically set to 1.
  *
- * @par -u, --update-model
- * In case the specified output file exists and contains a valid model this
- * flag indicates that that model should be update rather than recreated from
- * scratch.
- *
  * @par -p,  --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
@@ -232,7 +227,7 @@ int main(int argc, char* argv[]);
  * @par -u,  --update-model
  * In case the specified output file exists and contains a valid model this
  * flag indicates that that model should be update rather than recreated from
- * scratch
+ * scratch.
  *
  * @par -o,  --output &lt;file&gt;
  * The output filename.
@@ -456,26 +451,16 @@ const int _salad_stats_(const config_t* const c);
 const int _salad_inspect_(const config_t* const c);
 
 /**
- * @page salad-inspect Inspection mode of Salad
+ * @page salad-dbg (Unit) Testing of the implementation of Salad
  *
  * @section SYNOPSIS
  *
- * salad inspect [options]
+ * salad dbg [options]
  *
  * @section DESCRIPTION
  *
- * Performs a detailed inspection of the n-grams that would be extracted in the
- * course of processing the data using salad-train and the model
- * generated thereby. Specifically the following four values are extracted
- * for each sample:
- * - The number of new/ unseen n-grams
- * - The number of unique n-grams
- * - The total number of n-grams
- * - The length of the sample in number of bytes
- *
- * This in turn can be used to make a point how well and if anomaly detection is
- * suitable for this particular data set or classification might be the better
- * choice in this setting.
+ * Performs a series of in-depth tests of \b Salad's implementation and the
+ * libraries used.
  *
  * @section OPTIONS
  *
