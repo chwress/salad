@@ -17,6 +17,8 @@
 
 #include "main.h"
 
+#ifdef TEST_SALAD
+
 #define CTEST_MAIN
 #include <ctest.h>
 
@@ -41,3 +43,4 @@ const int _salad_dbg_(const test_config_t* const c)
 	return (ctest_main(3, argv) == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
+#endif

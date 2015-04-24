@@ -71,7 +71,7 @@ static inline const int salad_train_net_callback##X(data_t* data, const size_t n
 		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, s->delimiter.d);            \
 		break;                                                                                          \
 	default:                                                                                            \
-		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                             \
+		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
 		break;                                                                                          \
 	}                                                                                                   \
 	return EXIT_SUCCESS;                                                                                \

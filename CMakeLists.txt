@@ -4,6 +4,9 @@ if (COMMAND cmake_policy)
 	cmake_policy(SET CMP0011 NEW)
 endif ()
 
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+
 set(OUTPUTNAME "salad")
 set(PROJECTNAME "${OUTPUTNAME}")
 set(TAGLINE "Salad - A Content Anomaly Detector based on n-Grams")
@@ -40,13 +43,16 @@ set(SOURCE_DIR "src/")
 set(INCLUDE_DIR "${SOURCE_DIR}")
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}/config.h)
 
+
+if (TEST_SALAD)
+	add_subdirectory(
+		"${CMAKE_CURRENT_SOURCE_DIR}/lib/ctest"
+		"${CMAKE_CURRENT_BINARY_DIR}/ctest")
+endif ()
+
 add_subdirectory(
 	"${CMAKE_CURRENT_SOURCE_DIR}/lib/util"
 	"${CMAKE_CURRENT_BINARY_DIR}/util"
-)
-add_subdirectory(
-	"${CMAKE_CURRENT_SOURCE_DIR}/lib/ctest"
-	"${CMAKE_CURRENT_BINARY_DIR}/ctest"
 )
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/salad")
 
@@ -64,6 +70,8 @@ if (TEST_SALAD)
 
 	set(sources ${sources} ${test_sources})
 	set(headers ${headers} ${test_headers})
+else ()
+	list(REMOVE_ITEM sources "${SRC}/salad_dbg.c")
 endif ()
 
 source_group("Source Files" FILES ${sources})
@@ -98,8 +106,10 @@ target_link_libraries("${TARGETNAME}" "${libutil_LIBRARIES}")
 add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
 
 # ctest
-find_package(ctest REQUIRED)
-include_directories("${ctest_INCLUDE_DIRS}")
+if (TEST_SALAD)
+	find_package(ctest REQUIRED)
+	include_directories("${ctest_INCLUDE_DIRS}")
+endif ()
 
 # libarchive
 if (USE_ARCHIVES)
@@ -192,10 +202,10 @@ endif ()
 
 if (DOXYGEN_FOUND)
 	set(DOXYGEN_FILE_PATTERN "main.h")
-	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile @ONLY)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target(doc
-		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile
+		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif ()
