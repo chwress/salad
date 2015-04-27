@@ -3,6 +3,7 @@
 
 #cmakedefine USE_ARCHIVES
 #cmakedefine LIBARCHIVE2
+#cmakedefine EXTENDED_METADATA
 #cmakedefine GROUPED_INPUT
 #cmakedefine USE_REGEX_FILTER
 

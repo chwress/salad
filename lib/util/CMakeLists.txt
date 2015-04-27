@@ -29,7 +29,8 @@ endif ()
 
 option(USE_ARCHIVES        "Enable support for loading archives (requires libarchive)" OFF)
 option(USE_REGEX_FILTER    "Enable support for grouped inputs (only for archives)" ${USE_REGEX_DEFAULT})
-option(GROUPED_INPUT       "Enable support for grouped inputs (only for archives)" ON)
+option(EXTENDED_METADATA   "Enable the support for extended meta data (filenames, ...)" OFF)
+option(GROUPED_INPUT       "Enable support for grouped inputs" OFF)
 option(USE_NETWORK         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(_XOPEN_SOURCE_7     "Enable X/Open 7 extensions (incorporating POSIX 2008)" OFF)
 option(USE_COLORS          "Enable the use of colors for console output" ON)
@@ -61,7 +62,7 @@ get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 # CODE
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
-set(INC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
+set(INC "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}/")
 file(GLOB sources "${SRC}/*.c")
 file(GLOB headers "${SRC}/*.h" "${INC}/*.h")
 

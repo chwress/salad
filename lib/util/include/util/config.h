@@ -1,8 +1,9 @@
 #ifndef UTIL_CONFIG_H_
 #define UTIL_CONFIG_H_
 
-/* #undef USE_ARCHIVES */
+#define USE_ARCHIVES
 /* #undef LIBARCHIVE2 */
+#define EXTENDED_METADATA
 #define GROUPED_INPUT
 #define USE_REGEX_FILTER
 

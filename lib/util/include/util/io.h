@@ -87,6 +87,10 @@ typedef struct
 	size_t num_items;
 	size_t total_size;
 
+#ifdef EXTENDED_METADATA
+	char** filenames;
+#endif
+
 #ifdef GROUPED_INPUT
 	group_t* groups;
 	size_t num_groups;
@@ -110,9 +114,17 @@ void dataset_destroy(dataset_t* const ds);
 #include <regex.h>
 #endif
 
+static const char* const FILE_IO_READ = "r";
+static const char* const FILE_IO_WRITE = "w";
+typedef enum { FILE_IOMODE_READ = 1, FILE_IOMODE_WRITE = 2 } file_iomode_t;
+
+const file_iomode_t to_fileiomode(const char* const s);
+const char* const fileiomode_tostring(const file_iomode_t mode);
+
 typedef struct
 {
 	FILE* fd;
+	file_iomode_t mode;
 	void* data;
 #ifdef USE_REGEX_FILTER
 	regex_t filter;
@@ -122,12 +134,13 @@ typedef struct
 	metadata_t meta;
 } file_t;
 
-typedef const int(*FN_OPEN)(file_t* const f, const char* const filename, void *const p);
+typedef const int(*FN_OPEN)(file_t* const f, const char* const filename, const char* mode, void *const p);
 typedef const int (*FN_META)(file_t* const f, const int group_input);
 typedef const int (*FN_FILTER)(file_t* const f, const char* const pattern);
 typedef const size_t (*FN_READ)(file_t* const f, dataset_t* const ds, const size_t n);
 typedef const int (*FN_DATA)(data_t* data, const size_t n, void* const usr);
 typedef const size_t (*FN_RECV)(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
+typedef const size_t (*FN_WRITE)(file_t* const f, dataset_t* const ds, void* const usr);
 typedef const int(*FN_CLOSE)(file_t* const f);
 
 
@@ -158,6 +171,7 @@ typedef struct
 	FN_FILTER filter;
 	FN_READ read;
 	FN_RECV recv;
+	FN_WRITE write;
 	FN_CLOSE close;
 } data_processor_t;
 

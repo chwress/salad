@@ -117,6 +117,17 @@ void metadata_free(metadata_t* const meta)
 {
 	assert(meta != NULL);
 
+#ifdef EXTENDED_METADATA
+	for (size_t i = 0; i < meta->num_items; i++)
+	{
+		if (meta->filenames[i] != NULL)
+		{
+			free(meta->filenames[i]);
+		}
+	}
+	free(meta->filenames);
+#endif
+
 #ifdef GROUPED_INPUT
 	for (size_t i = 0; i < meta->num_groups; i++)
 	{
@@ -170,42 +181,66 @@ void dataset_destroy(dataset_t* const ds)
 	free(ds);
 }
 
+const file_iomode_t to_fileiomode(const char* const s)
+{
+	switch (cmp(s, FILE_IO_READ, FILE_IO_WRITE, NULL))
+	{
+	case 0:  return FILE_IOMODE_READ;
+	case 1:  return FILE_IOMODE_WRITE;
+	default: return 0;
+	}
+}
+
+const char* const fileiomode_tostring(file_iomode_t mode)
+{
+	switch (mode)
+	{
+	case FILE_IOMODE_READ:  return FILE_IO_READ;
+	case FILE_IOMODE_WRITE: return FILE_IO_WRITE;
+	default:                return NULL;
+	}
+}
+
+
 const int all_filter(file_t* const f, const char* const pattern);
 const int all_filter_ex(file_t* const f, const char* const pattern);
 const int all_filter_close(file_t* const f);
 
-const int    file_open(file_t* const f, const char* const filename, void *const p);
+const int    file_open(file_t* const f, const char* const filename, const char* mode, void *const p);
 const int    file_meta(file_t* const f, const int group_input);
 const size_t file_read(file_t* const f, dataset_t* const ds, const size_t num_lines);
 const size_t file_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
+const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr);
 const int    file_close(file_t* const f);
 const int    file_close_ex(file_t* const f, int keep_metadata);
 
-data_processor_t dp_lines   = { .open = file_open, .meta = file_meta, .filter = all_filter, .read = file_read, .recv = file_recv, .close = file_close };
-data_processor_t dp_files   = { .open = NULL, .meta = NULL, .filter = all_filter, .read = NULL, .recv = NULL, .close = NULL };
+data_processor_t dp_lines   = { .open = file_open, .meta = file_meta, .filter = all_filter, .read = file_read, .recv = file_recv, .write = file_write, .close = file_close };
+data_processor_t dp_files   = { .open = NULL, .meta = NULL, .filter = all_filter, .read = NULL, .recv = NULL, .write = NULL, .close = NULL };
 
 
 #ifdef USE_ARCHIVES
-const int    archive_open(file_t* const f, const char* const filename, void *const p);
+const int    archive_open(file_t* const f, const char* const filename, const char* mode, void *const p);
 const int    archive_meta(file_t* const f, const int group_input);
 const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t num_files);
 const size_t archive_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
+const size_t archive_write(file_t* const f, dataset_t* const ds, void* const usr);
 const int    archive_close(file_t* const f);
 const int    archive_close_ex(file_t* const f, int keep_metadata);
 
-data_processor_t dp_archive = { .open = archive_open, .meta = archive_meta, .filter = all_filter, .read = archive_read, .recv = archive_recv, .close = archive_close };
+data_processor_t dp_archive = { .open = archive_open, .meta = archive_meta, .filter = all_filter, .read = archive_read, .recv = archive_recv, .write = archive_write, .close = archive_close };
 #endif
 
 
 #ifdef USE_NETWORK
-const int    net_open(file_t* const f, const char* const filename, void *const p);
+const int    net_open(file_t* const f, const char* const filename, const char* mode, void *const p);
 const int    net_meta(file_t* const f, const int group_input);
 const int    net_filter(file_t* const f, const char* const pattern);
 const size_t net_read(file_t* const f, dataset_t* const ds, const size_t num_streams);
 const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
+const size_t net_write(file_t* const f, dataset_t* const ds, void* const usr);
 const int    net_close(file_t* const f);
 
-data_processor_t dp_network = { .open = net_open, .meta = net_meta, .filter = net_filter, .read = NULL, .recv = net_recv, .close = net_close };
+data_processor_t dp_network = { .open = net_open, .meta = net_meta, .filter = net_filter, .read = NULL, .recv = net_recv, .write = NULL, .close = net_close };
 #endif
 
 const data_processor_t* const to_dataprocssor(const iomode_t m)
@@ -262,16 +297,19 @@ const int all_filter_close(file_t* const f)
 
 
 // OPEN
-const int file_open(file_t* const f, const char* const filename, void *const p)
+const int file_open(file_t* const f, const char* const filename, const char* mode, void *const p)
 {
 	assert(f != NULL);
+	f->mode = to_fileiomode(mode);
+	assert(mode != NULL && fileiomode_tostring(f->mode) != NULL);
 
-	f->fd = fopen(filename, "rb");
+	f->fd = fopen(filename, (f->mode == FILE_IOMODE_READ ? "rb" : "wb"));
 	if (f->fd == NULL)
 	{
 		return EXIT_FAILURE;
 	}
 	f->data = NULL;
+	// XXX: This doesn't work on Microsoft Windows OSs
 	f->is_device = (strncmp(filename, "/dev/", 5) == 0);
 
 	if (p != REOPEN)
@@ -284,25 +322,41 @@ const int file_open(file_t* const f, const char* const filename, void *const p)
 }
 
 #ifdef USE_ARCHIVES
-const int archive_open(file_t* const f, const char* const filename, void* const p)
+const int archive_open(file_t* const f, const char* const filename, const char* mode, void* const p)
 {
-	assert(f != NULL);
-
-	int ret = file_open(f, filename, p);
+	int ret = file_open(f, filename, mode, p);
 	if (ret != EXIT_SUCCESS)
 	{
 		return ret;
 	}
 
-	struct archive* const a = archive_read_new();
-#ifdef LIBARCHIVE2
-	archive_read_support_compression_all(a);
-#else
-	archive_read_support_filter_all(a);
-#endif
-	archive_read_support_format_all(a);
 
-	ret = archive_read_open_FILE(a, f->fd);
+	struct archive* a = NULL;
+	switch (f->mode)
+	{
+	case FILE_IOMODE_READ:
+	{
+		a = archive_read_new();
+	#ifdef LIBARCHIVE2
+		archive_read_support_compression_all(a);
+	#else
+		archive_read_support_filter_all(a);
+	#endif
+		archive_read_support_format_all(a);
+
+		ret = archive_read_open_FILE(a, f->fd);
+		break;
+	}
+	case FILE_IOMODE_WRITE:
+	{
+		struct archive* const a = archive_write_new();
+		archive_write_add_filter_gzip(a);
+		archive_write_set_format_pax_restricted(a);
+		ret = archive_write_open_FILE(a, f->fd);
+		break;
+	}}
+
+
 	if (ret != ARCHIVE_OK)
 	{
 		return EXIT_FAILURE;
@@ -346,9 +400,11 @@ void sigfunc(int sig)
 	pcap_breakloop(nids_params.pcap_desc);
 }
 
-const int net_open(file_t* const f, const char* const filename, void *const p)
+const int net_open(file_t* const f, const char* const filename, const char* mode, void *const p)
 {
 	assert(f != NULL);
+	f->mode = to_fileiomode(mode);
+	assert(mode != NULL && f->mode == FILE_IOMODE_READ);
 
 	net_param_t default_params = { FALSE, NULL };
 	net_param_t* const params = (p != NULL ? (net_param_t*) p : &default_params);
@@ -444,7 +500,7 @@ const int file_meta(file_t* const f, const int group_input)
 
 	// reopen file
 	file_close_ex(f, TRUE);
-	return file_open(f, f->meta.filename, REOPEN);
+	return file_open(f, f->meta.filename, fileiomode_tostring(f->mode), REOPEN);
 }
 
 #ifdef USE_ARCHIVES
@@ -456,9 +512,14 @@ const int archive_meta(file_t* const f, const int group_input)
 	meta->num_items  = 0;
 	meta->total_size = 0;
 
+#ifdef EXTENDED_METADATA
+	size_t fnames_capacity = 1;
+	meta->filenames = (char**) calloc(fnames_capacity, sizeof(char*));
+#endif
+
 #ifdef GROUPED_INPUT
-	size_t capacity = 1;
-	meta->groups = (group_t*) calloc(capacity, sizeof(group_t));
+	size_t groups_capacity = 1;
+	meta->groups = (group_t*) calloc(groups_capacity, sizeof(group_t));
 	meta->num_groups = 0;
 
 	group_t* cur = &meta->groups[0]; cur->name = "";
@@ -475,17 +536,19 @@ const int archive_meta(file_t* const f, const int group_input)
 	{
         if (archive_entry_filetype(entry) == AE_IFREG)
         {
+        	// is optimized away ifndef EXTENDED_METADATA, GROUPED_INPUT, USE_REGEX_FILTER
+        	const char* const name = archive_entry_pathname(entry); UNUSED(name);
+
 #ifdef GROUPED_INPUT
-        	const char* const name = archive_entry_pathname(entry);
         	const char* const slash = strrchr(name, '/');
 
     		if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
     		{
     			// new class
-    			if (meta->num_groups >= capacity)
+    			if (meta->num_groups >= groups_capacity)
 				{
-					capacity *= 2;
-					const size_t s = capacity *sizeof(group_t);
+					groups_capacity *= 2;
+					const size_t s = groups_capacity *sizeof(group_t);
 					meta->groups = (group_t*) realloc(meta->groups, s);
 				}
 				cur = &meta->groups[meta->num_groups++];
@@ -498,26 +561,35 @@ const int archive_meta(file_t* const f, const int group_input)
     		}
 #endif
 #ifdef USE_REGEX_FILTER
-#ifndef GROUPED_INPUT
-        	const char* const name = archive_entry_pathname(entry);
-#endif
     	    if (regexec(&f->filter, name, 1, m, 0) != 0)
     	    {
     	    	continue;
     	    }
+#endif
+#ifdef EXTENDED_METADATA
+			if (meta->num_items >= fnames_capacity)
+			{
+				fnames_capacity *= 2;
+				const size_t s = fnames_capacity *sizeof(char*);
+				meta->filenames = (char**) realloc(meta->filenames, s);
+			}
+        	STRDUP(name, meta->filenames[meta->num_items]);
 #endif
     		meta->num_items++;
             meta->total_size += (size_t) archive_entry_size(entry);
         }
         archive_read_data_skip(a);
 	}
+#ifdef EXTENDED_METADATA
+	meta->filenames = (char**) realloc(meta->filenames, meta->num_items *sizeof(char*));
+#endif
 #ifdef GROUPED_INPUT
 	meta->groups = (group_t*) realloc(meta->groups, meta->num_groups *sizeof(group_t));
 #endif
 
 	// reopen archive
 	archive_close_ex(f, TRUE);
-	archive_open(f, f->meta.filename, REOPEN);
+	archive_open(f, f->meta.filename, fileiomode_tostring(f->mode), REOPEN);
 
 	return (r == ARCHIVE_EOF ? EXIT_SUCCESS : EXIT_FAILURE);
 }
@@ -832,6 +904,78 @@ const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size
 #endif
 
 
+// WRITE
+
+const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr)
+{
+	assert(f != NULL);
+	assert(ds != NULL);
+
+	if (ds->n <= 0 || ds->capacity <= 0 || ds->data == NULL)
+	{
+		return 0;
+	}
+
+	char* line = NULL;
+	size_t N = 0, len = 0;
+
+	for (size_t i = 0; i < ds->n; i++)
+	{
+		const data_t* const d = &ds->data[i];
+		const size_t x = encode(&line, &len, d->buf, d->len);
+
+		size_t nwrote = fwrite(line, sizeof(char), x, f->fd);
+		N += nwrote;
+		if (nwrote != x) break;
+
+		nwrote = fwrite("\n", sizeof(char), 2, f->fd);
+		N += nwrote;
+		if (nwrote != 2) break;
+	}
+
+	free(line);
+	return N;
+}
+
+
+#ifdef USE_ARCHIVES
+const size_t archive_write(file_t* const f, dataset_t* const ds, void* const usr)
+{
+	assert(f != NULL);
+	assert(ds != NULL);
+
+	if (ds->n <= 0 || ds->capacity <= 0 || ds->data == NULL)
+	{
+		return 0;
+	}
+
+	struct archive* a = (struct archive*) f->data;
+	struct archive_entry* entry = archive_entry_new();
+
+	for (size_t i = 0; i < ds->n; i++)
+	{
+		const data_t* d = &ds->data[i];
+
+		const char* const fname = d->meta->name;
+		archive_entry_clear(entry);
+		archive_entry_set_pathname(entry, fname);
+		archive_entry_set_size(entry, d->len);
+		archive_entry_set_filetype(entry, AE_IFREG);
+		archive_entry_set_perm(entry, 0644);
+		archive_write_header(a, entry);
+
+		const size_t n = archive_write_data(a, d->buf, d->len);
+		if (n != d->len)
+		{
+			return i;
+		}
+		archive_entry_free(entry);
+	}
+	return ds->n;
+}
+#endif
+
+
 // CLOSE
 const int file_close_ex(file_t* const f, int keep_metadata)
 {
@@ -857,14 +1001,38 @@ const int file_close(file_t* const f)
 }
 
 #ifdef USE_ARCHIVES
+typedef int (*FN_ARCHIVE)(struct archive *);
+
 const int archive_close_ex(file_t* const f, int keep_metadata)
 {
 	assert(f != NULL);
+	FN_ARCHIVE close_archive = NULL;
+	FN_ARCHIVE free_archive = NULL;
+
+	if (f->mode == FILE_IOMODE_READ)
+	{
+		close_archive = archive_read_close;
 #ifdef LIBARCHIVE2
-	if (archive_read_finish((struct archive*) f->data) != ARCHIVE_OK)
+		free_archive = archive_read_finish;
 #else
-	if (archive_read_free((struct archive*) f->data) != ARCHIVE_OK)
+		free_archive = archive_read_free;
 #endif
+	}
+	else if (f->mode == FILE_IOMODE_WRITE)
+	{
+		close_archive = archive_write_close;
+#ifdef LIBARCHIVE2
+		free_archive = archive_write_finish;
+#else
+		free_archive = archive_write_free;
+#endif
+	}
+
+	assert(close_archive != NULL);
+	assert(free_archive != NULL);
+
+	if (close_archive((struct archive*) f->data) != ARCHIVE_OK ||
+		free_archive((struct archive*) f->data) != ARCHIVE_OK)
 	{
 		return EXIT_FAILURE;
 	}
