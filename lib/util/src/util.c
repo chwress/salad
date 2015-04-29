@@ -95,6 +95,50 @@ const size_t inline_decode(char* s, const size_t len)
 	return j;
 }
 
+// allocate conservatively
+#define ENCODE_ALLOC_RATIO(len) ((len) *3)
+
+const size_t encode(char** out, size_t* outsize, const char* const s, const size_t len)
+{
+	assert(s != NULL);
+	assert(out != NULL);
+	char* x = *out;
+
+	size_t dummy = 0;
+	size_t xsize = *(outsize == NULL ? &dummy : outsize);
+	size_t newsize = ENCODE_ALLOC_RATIO(len) +1;
+
+	if (x == NULL)
+	{
+		x = (char*) malloc(sizeof(char) *(xsize = newsize));
+	}
+	else if (xsize < newsize)
+	{
+		xsize = ENCODE_ALLOC_RATIO(len);
+		x = (char*) realloc(x, sizeof(char) *(xsize = newsize));
+	}
+
+	char* y = x;
+	for (size_t i = 0; i < len; i++)
+	{
+		if (isprint(s[i]))
+		{
+			*y = s[i]; y++;
+		}
+		else
+		{
+			y += sprintf(y, "%%%02x", s[i]);
+		}
+	}
+
+	xsize = (y -x);
+	x = (char*) realloc(x, sizeof(char) *xsize +1);
+	*y = 0x00;
+
+	*out = x;
+	return xsize;
+}
+
 const int starts_with(const char* const s, const char* const prefix)
 {
 	assert(s != NULL && prefix != NULL);
@@ -286,5 +330,4 @@ char* load_file(char* path, char* name, unsigned int* size)
 	return x;
 }
 #endif
-
 
