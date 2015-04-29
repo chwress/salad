@@ -61,7 +61,7 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 #endif
 
 	file_t f_in;
-	int ret = dp->open(&f_in, c->input, &p);
+	int ret = dp->open(&f_in, c->input, FILE_IO_READ, &p);
 	if (ret != EXIT_SUCCESS)
 	{
 		error("Unable to open input data.");

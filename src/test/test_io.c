@@ -124,7 +124,7 @@ const int test_read_stub(const char* const filename, const data_processor_t* con
 	assert(ref != NULL);
 
 	file_t input;
-	if (dp->open(&input, filename, p) != EXIT_SUCCESS)
+	if (dp->open(&input, filename, FILE_IO_READ, p) != EXIT_SUCCESS)
 	{
 		CTEST_ERR("Unable to open test file '%s'.", filename);
 		ASSERT_FAIL();
@@ -196,7 +196,7 @@ const int test_recv_stub(const char* const filename, const data_processor_t* con
 	assert(ref != NULL);
 
 	file_t input;
-	if (dp->open(&input, filename, p) != EXIT_SUCCESS)
+	if (dp->open(&input, filename, FILE_IO_READ, p) != EXIT_SUCCESS)
 	{
 		CTEST_ERR("Unable to open test file '%s'.", filename);
 		ASSERT_FAIL();
