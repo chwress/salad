@@ -118,22 +118,28 @@ void metadata_free(metadata_t* const meta)
 	assert(meta != NULL);
 
 #ifdef EXTENDED_METADATA
-	for (size_t i = 0; i < meta->num_items; i++)
+	if (meta->filenames != NULL)
 	{
-		if (meta->filenames[i] != NULL)
+		for (size_t i = 0; i < meta->num_items; i++)
 		{
-			free(meta->filenames[i]);
+			if (meta->filenames[i] != NULL)
+			{
+				free(meta->filenames[i]);
+			}
 		}
+		free(meta->filenames);
 	}
-	free(meta->filenames);
 #endif
 
 #ifdef GROUPED_INPUT
-	for (size_t i = 0; i < meta->num_groups; i++)
+	if (meta->groups != NULL)
 	{
-		free(meta->groups[i].name);
+		for (size_t i = 0; i < meta->num_groups; i++)
+		{
+			free(meta->groups[i].name);
+		}
+		free(meta->groups);
 	}
-	free(meta->groups);
 #endif
 }
 
@@ -144,10 +150,26 @@ void metadata_destroy(metadata_t* const meta)
 	free(meta);
 }
 
+void destroy_slices(slices_t* const c)
+{
+	free(c->x);
+	c->x = NULL;
+	c->capacity = 0;
+	c->n = 0;
+}
+
+void free_slices(slices_t* s)
+{
+	destroy_slices(s);
+	free(s);
+}
+
 void data_free(data_t* const d)
 {
 	assert(d != NULL);
 	free(d->buf);
+
+	destroy_slices(&d->slices);
 }
 
 void data_destroy(data_t* const d)
@@ -210,7 +232,7 @@ const int    file_open(file_t* const f, const char* const filename, const char* 
 const int    file_meta(file_t* const f, const int group_input);
 const size_t file_read(file_t* const f, dataset_t* const ds, const size_t num_lines);
 const size_t file_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
-const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr);
+const size_t file_write(file_t* const f, const dataset_t* const ds, void* const usr);
 const int    file_close(file_t* const f);
 const int    file_close_ex(file_t* const f, int keep_metadata);
 
@@ -223,7 +245,7 @@ const int    archive_open(file_t* const f, const char* const filename, const cha
 const int    archive_meta(file_t* const f, const int group_input);
 const size_t archive_read(file_t* const f, dataset_t* const ds, const size_t num_files);
 const size_t archive_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
-const size_t archive_write(file_t* const f, dataset_t* const ds, void* const usr);
+const size_t archive_write(file_t* const f, const dataset_t* const ds, void* const usr);
 const int    archive_close(file_t* const f);
 const int    archive_close_ex(file_t* const f, int keep_metadata);
 
@@ -237,7 +259,7 @@ const int    net_meta(file_t* const f, const int group_input);
 const int    net_filter(file_t* const f, const char* const pattern);
 const size_t net_read(file_t* const f, dataset_t* const ds, const size_t num_streams);
 const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
-const size_t net_write(file_t* const f, dataset_t* const ds, void* const usr);
+const size_t net_write(file_t* const f, const dataset_t* const ds, void* const usr);
 const int    net_close(file_t* const f);
 
 data_processor_t dp_network = { .open = net_open, .meta = net_meta, .filter = net_filter, .read = NULL, .recv = net_recv, .write = NULL, .close = net_close };
@@ -349,7 +371,7 @@ const int archive_open(file_t* const f, const char* const filename, const char* 
 	}
 	case FILE_IOMODE_WRITE:
 	{
-		struct archive* const a = archive_write_new();
+		a = archive_write_new();
 		archive_write_add_filter_gzip(a);
 		archive_write_set_format_pax_restricted(a);
 		ret = archive_write_open_FILE(a, f->fd);
@@ -498,6 +520,14 @@ const int file_meta(file_t* const f, const int group_input)
 		f->meta.total_size += num_perc;
 	}
 
+#ifdef EXTENDED_METADATA
+	f->meta.filenames = NULL;
+#endif
+#ifdef GROUPED_INPUT
+	f->meta.groups = NULL;
+	f->meta.num_groups = 0;
+#endif
+
 	// reopen file
 	file_close_ex(f, TRUE);
 	return file_open(f, f->meta.filename, fileiomode_tostring(f->mode), REOPEN);
@@ -606,6 +636,14 @@ const int net_meta(file_t* const f, const int group_input)
 	// network traffic and without parsing/ reassembling the streams.
 	f->meta.num_items = 0;
 	f->meta.total_size = 0;
+
+#ifdef EXTENDED_METADATA
+	f->meta.filenames = NULL;
+#endif
+#ifdef GROUPED_INPUT
+	f->meta.groups = NULL;
+	f->meta.num_groups = 0;
+#endif
 
 	return EXIT_SUCCESS;
 }
@@ -905,8 +943,20 @@ const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size
 
 
 // WRITE
+#define FILE_WRITESLICE(f, buf, _start_, end) {               \
+	const size_t start = _start_;                             \
+	const size_t slen = (end) -start;                         \
+	const size_t x = encode(&line, &len, buf +start, slen);   \
+	                                                          \
+	const size_t nwrote = fwrite(line, sizeof(char), x, f);   \
+	N += nwrote;                                              \
+	if (nwrote != x)                                          \
+	{	                                                      \
+		break;                                                \
+	}	                                                      \
+}
 
-const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr)
+const size_t file_write(file_t* const f, const dataset_t* const ds, void* const usr)
 {
 	assert(f != NULL);
 	assert(ds != NULL);
@@ -922,15 +972,22 @@ const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr)
 	for (size_t i = 0; i < ds->n; i++)
 	{
 		const data_t* const d = &ds->data[i];
-		const size_t x = encode(&line, &len, d->buf, d->len);
+		if (d->slices.n > 0)
+		{
+			for (size_t j = 0; j < d->slices.n; j++)
+			{
+				const slice_t* const s = &d->slices.x[j];
+				FILE_WRITESLICE(f->fd, d->buf, s->start, s->end);
+			}
+		}
+		else
+		{
+			FILE_WRITESLICE(f->fd, d->buf, 0, d->len);
+		}
 
-		size_t nwrote = fwrite(line, sizeof(char), x, f->fd);
+		const size_t nwrote = fwrite("\n", sizeof(char), 1, f->fd);
 		N += nwrote;
-		if (nwrote != x) break;
-
-		nwrote = fwrite("\n", sizeof(char), 2, f->fd);
-		N += nwrote;
-		if (nwrote != 2) break;
+		if (nwrote != 1) break;
 	}
 
 	free(line);
@@ -939,7 +996,17 @@ const size_t file_write(file_t* const f, dataset_t* const ds, void* const usr)
 
 
 #ifdef USE_ARCHIVES
-const size_t archive_write(file_t* const f, dataset_t* const ds, void* const usr)
+#define ARCHIVE_WRITESLICE(a, buf, _start_, end) {            \
+	const size_t start = _start_;                             \
+	const size_t len = ((end) -start);                        \
+	const size_t n = archive_write_data(a, buf +start, len);  \
+	if (n != len)                                             \
+	{	                                                      \
+		return i;                                             \
+	}	                                                      \
+}
+
+const size_t archive_write(file_t* const f, const dataset_t* const ds, void* const usr)
 {
 	assert(f != NULL);
 	assert(ds != NULL);
@@ -954,20 +1021,40 @@ const size_t archive_write(file_t* const f, dataset_t* const ds, void* const usr
 
 	for (size_t i = 0; i < ds->n; i++)
 	{
-		const data_t* d = &ds->data[i];
-
+		const data_t* const d = &ds->data[i];
 		const char* const fname = d->meta->name;
+		size_t len = d->len;
+
+		const int has_slices = (d->slices.n > 0);
+
+		if (has_slices)
+		{
+			len = 0;
+			for (size_t j = 0; j < d->slices.n; j++)
+			{
+				slice_t* const s = &d->slices.x[j];
+				len += (s->end -s->start);
+			}
+		}
+
 		archive_entry_clear(entry);
 		archive_entry_set_pathname(entry, fname);
-		archive_entry_set_size(entry, d->len);
+		archive_entry_set_size(entry, len);
 		archive_entry_set_filetype(entry, AE_IFREG);
 		archive_entry_set_perm(entry, 0644);
 		archive_write_header(a, entry);
 
-		const size_t n = archive_write_data(a, d->buf, d->len);
-		if (n != d->len)
+		if (has_slices)
 		{
-			return i;
+			for (size_t j = 0; j < d->slices.n; j++)
+			{
+				slice_t* const s = &d->slices.x[j];
+				ARCHIVE_WRITESLICE(a, d->buf, s->start, s->end);
+			}
+		}
+		else
+		{
+			ARCHIVE_WRITESLICE(a, d->buf, 0, d->len);
 		}
 		archive_entry_free(entry);
 	}

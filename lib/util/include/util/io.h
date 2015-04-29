@@ -60,6 +60,21 @@ const int is_valid_iomode(const char* const str);
 #endif
 #endif
 
+typedef struct
+{
+	size_t start;
+	size_t end;
+} slice_t;
+
+typedef struct {
+	slice_t* x;
+	size_t n;
+	size_t capacity;
+} slices_t;
+
+void destroy_slices(slices_t* const c);
+void free_slices(slices_t* c);
+
 #ifdef GROUPED_INPUT
 typedef struct
 {
@@ -72,6 +87,7 @@ typedef struct
 {
 		char* buf;
 		size_t len;
+		slices_t slices;
 
 #ifdef GROUPED_INPUT
 		group_t* meta;
@@ -140,7 +156,7 @@ typedef const int (*FN_FILTER)(file_t* const f, const char* const pattern);
 typedef const size_t (*FN_READ)(file_t* const f, dataset_t* const ds, const size_t n);
 typedef const int (*FN_DATA)(data_t* data, const size_t n, void* const usr);
 typedef const size_t (*FN_RECV)(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
-typedef const size_t (*FN_WRITE)(file_t* const f, dataset_t* const ds, void* const usr);
+typedef const size_t (*FN_WRITE)(file_t* const f, const dataset_t* const ds, void* const usr);
 typedef const int(*FN_CLOSE)(file_t* const f);
 
 
