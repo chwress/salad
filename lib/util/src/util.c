@@ -35,18 +35,33 @@ const int cmp(const char* const s, ...)
 	va_list args;
 	va_start(args, s);
 
-	const char* needle = va_arg(args, char*);
-	for (int i = 0; needle != NULL; i++)
+	const char* x = va_arg(args, char*);
+	for (int i = 0; x != NULL; i++)
 	{
-		if (strcmp(s, needle) == 0)
+		if (strcmp(s, x) == 0)
 		{
 			va_end(args);
 			return i;
 		}
-		needle = va_arg(args, char*);
+		x = va_arg(args, char*);
 	}
 
 	va_end(args);
+	return -1;
+}
+
+
+const int cmp2(const char* const s, const char* const haystack[])
+{
+	const char* const* arr = haystack;
+	for (int i = 0; *arr != NULL; i++)
+	{
+		if (strcmp(s, *arr) == 0)
+		{
+			return i;
+		}
+		arr++;
+	}
 	return -1;
 }
 
