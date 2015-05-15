@@ -150,6 +150,10 @@ void metadata_destroy(metadata_t* const meta)
 	free(meta);
 }
 
+
+extern void slices_resize(slices_t* const slices, const size_t new_size);
+extern void slices_grow(slices_t* const slices);
+
 void destroy_slices(slices_t* const c)
 {
 	free(c->x);

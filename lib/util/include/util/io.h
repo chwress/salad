@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "util.h"
 
 #ifdef USE_ARCHIVES
 #ifdef USE_NETWORK
@@ -71,6 +72,22 @@ typedef struct {
 	size_t n;
 	size_t capacity;
 } slices_t;
+
+
+inline void slices_resize(slices_t* const slices, const size_t new_size)
+{
+	slices->x = (slice_t*) realloc(slices->x, new_size);
+	slices->capacity = new_size;
+	slices->n = MIN(slices->n, new_size);
+}
+
+inline void slices_grow(slices_t* const slices)
+{
+	if (slices->n == slices->capacity)
+	{
+		slices_resize(slices, slices->capacity *2);
+	}
+}
 
 void destroy_slices(slices_t* const c);
 void free_slices(slices_t* c);
