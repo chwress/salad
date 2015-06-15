@@ -55,14 +55,14 @@ const float frand();
 #if __STDC_VERSION__ >= 199901L
 #include <tgmath.h>
 #define POW pow
-#define MIN fmin
-#define MAX fmax
 #else
 #include <math.h>
 #define POW (size_t) pow
+#endif
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) < (Y) ? (Y) : (X))
-#endif
+
+#define UNSIGNED_SUBSTRACTION(A, B) ((A) < (B) ? 0 : (A) - (B))
 
 #if (_XOPEN_SOURCE -0) >= 700
 	#define STRDUP(from, to)                               \
