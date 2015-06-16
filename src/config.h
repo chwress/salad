@@ -8,7 +8,7 @@
 #define VERSION_STR "0.5.0"
 
 
-/* #undef USE_ARCHIVES */
+#define USE_ARCHIVES
 /* #undef LIBARCHIVE2 */
 /* #undef GROUPED_INPUT */
 #define USE_REGEX_FILTER
@@ -20,7 +20,7 @@
 /* #undef _XOPEN_SOURCE */
 /* #undef IOTYPE_FILES */
 
-/* #undef USE_COLORS */
+#define USE_COLORS
 /* #undef TEST_SALAD */
 
 #endif /* SALAD_H_ */
