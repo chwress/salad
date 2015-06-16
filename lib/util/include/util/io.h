@@ -67,6 +67,8 @@ typedef struct
 	size_t end;
 } slice_t;
 
+#define SLICE_LEN(s) ((s).end -(s).start)
+
 typedef struct {
 	slice_t* x;
 	size_t n;
@@ -102,13 +104,21 @@ typedef struct
 
 typedef struct
 {
+#ifdef EXTENDED_METADATA
+		char* filename;
+#endif
+#ifdef GROUPED_INPUT
+		group_t* group;
+#endif
+} metaref_t;
+
+typedef struct
+{
 		char* buf;
 		size_t len;
 		slices_t slices;
 
-#ifdef GROUPED_INPUT
-		group_t* meta;
-#endif
+		metaref_t meta;
 } data_t;
 
 void data_free(data_t* const d);
@@ -170,9 +180,11 @@ typedef struct
 typedef const int(*FN_OPEN)(file_t* const f, const char* const filename, const char* mode, void *const p);
 typedef const int (*FN_META)(file_t* const f, const int group_input);
 typedef const int (*FN_FILTER)(file_t* const f, const char* const pattern);
-typedef const size_t (*FN_READ)(file_t* const f, dataset_t* const ds, const size_t n);
+typedef const size_t (*FN_READ)(file_t* const f, dataset_t* const ds, const size_t num_files);
+typedef const size_t (*FN_READ2)(file_t* const f, dataset_t* const ds, const size_t chunk_size);
 typedef const int (*FN_DATA)(data_t* data, const size_t n, void* const usr);
 typedef const size_t (*FN_RECV)(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
+typedef const size_t (*FN_RECV2)(file_t* const f, FN_DATA callback, const size_t batch_size, void* const usr);
 typedef const size_t (*FN_WRITE)(file_t* const f, const dataset_t* const ds, void* const usr);
 typedef const int(*FN_CLOSE)(file_t* const f);
 
@@ -191,19 +203,15 @@ typedef struct
 } net_param_t;
 #endif
 
-static struct {
-	const int b;
-} _REOPEN = {1};
-
-static void* const REOPEN = &_REOPEN;
+extern void* const REOPEN;
 
 typedef struct
 {
 	FN_OPEN open;
 	FN_META meta;
 	FN_FILTER filter;
-	FN_READ read;
-	FN_RECV recv;
+	FN_READ read; FN_READ2 read2;
+	FN_RECV recv; FN_RECV2 recv2;
 	FN_WRITE write;
 	FN_CLOSE close;
 } data_processor_t;
