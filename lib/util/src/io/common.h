@@ -34,6 +34,7 @@ const size_t file_recv2(file_t* const f, FN_DATA callback, const size_t batch_si
 const size_t file_write(file_t* const f, const dataset_t* const ds, void* const usr);
 const int    file_close(file_t* const f);
 const int    file_close_ex(file_t* const f, int keep_metadata);
+const int    file_close_itr(file_t* const f);
 
 #ifdef USE_ARCHIVES
 const int    archive_open(file_t* const f, const char* const filename, const char* mode, void *const p);
@@ -76,7 +77,7 @@ const size_t type##_read(file_t* const f, dataset_t* const ds, const size_t num_
 	{                                                                                  \
 		data_t* const data = &ds->data[ds->n];                                         \
 		const int ret = type##_read_next(f, data, ITERATOR_READALL);                   \
-		assert(ret == ITERATOR_END || ret == ITERATOR_UNIT);                           \
+		/* assert(ret == ITERATOR_END || ret == ITERATOR_UNIT); */                     \
                                                                                        \
 		if (ret == ITERATOR_END)                                                       \
 		{                                                                              \

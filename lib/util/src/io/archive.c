@@ -114,6 +114,7 @@ const int archive_open(file_t* const f, const char* const filename, const char* 
 		return EXIT_FAILURE;
 	}
 
+	file_close_itr(f);
 	f->data = create_archive_iterator(f, a);
 	return EXIT_SUCCESS;
 }
@@ -262,7 +263,7 @@ static inline int archive_read_next(file_t* const f, data_t* const out, const si
 			if (archive_entry_filetype(it->state.entry) == AE_IFREG)
 			{
 #ifdef EXTENDED_METADATA
-				out->meta.filename = f->meta.filenames[it->context.i++];
+				out->meta.filename = name;
 #endif
 #ifdef GROUPED_INPUT
 				out->meta.group = group_next(&f->meta, &it->context.gid, &it->context.fid);

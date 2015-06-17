@@ -105,7 +105,7 @@ typedef struct
 typedef struct
 {
 #ifdef EXTENDED_METADATA
-		char* filename;
+		const char* filename;
 #endif
 #ifdef GROUPED_INPUT
 		group_t* group;

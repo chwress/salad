@@ -37,12 +37,6 @@ typedef struct
 		.size = 0 \
 }
 
-#define RESET_LINE_ITERATOR_STATE(it) \
-{ \
-	(it).state.pos = 0; \
-	(it).state.size = 0; \
-}
-
 typedef struct
 {
 	FILE* f;
@@ -57,7 +51,7 @@ static inline line_iterator_t* const create_line_iterator(file_t* const f)
 	assert(f != NULL);
 	line_iterator_t* const it = (line_iterator_t*) calloc(1, sizeof(line_iterator_t));
 
-	it->f = (FILE*) f->data;
+	it->f = (FILE*) f->fd;
 	it->state.line = NULL;
 	it->state.size = it->state.pos = 0;
 
@@ -68,6 +62,33 @@ static inline line_iterator_t* const create_line_iterator(file_t* const f)
 	it->strip['\n'] = TRUE;
 
 	return it;
+};
+
+static inline void reset_line_iterator_state(line_iterator_t* const it)
+{
+	assert(it != NULL);
+
+	if (it->state.line != NULL)
+	{
+		free(it->state.line);
+		it->state.line = NULL;
+	}
+	it->state.pos = 0;
+	it->state.size = 0;
+}
+
+static inline void destroy_line_iterator(file_t* const f)
+{
+	assert(f != NULL);
+
+	if (f->data != NULL)
+	{
+		line_iterator_t* it = (line_iterator_t*) f->data;
+		reset_line_iterator_state(it);
+		free(it);
+
+		f->data = NULL;
+	}
 };
 
 const int file_open(file_t* const f, const char* const filename, const char* mode, void* const p)
@@ -163,45 +184,46 @@ static inline const int file_read_next(file_t* const f, data_t* const out, const
 
 	if (it->state.pos >= it->state.size)
 	{
-		char* line = it->state.line;
+		char** line = &it->state.line;
 
-		while (1)
+#ifdef USE_REGEX_FILTER
+		do
 		{
+#endif
 			// In order not to break with the standard getline/ getdelim functions
 			// we read one complete line and check for the size afterwards
-			ssize_t read = getline(&line, &it->state.size, it->f);
+			ssize_t read = getline(line, &it->state.size, it->f);
 			if (read <= -1)
 			{
-				RESET_LINE_ITERATOR_STATE(*it);
+				reset_line_iterator_state(it);
 				return LINE_ITERATOR_EOF;
 			}
 
 			int j;
 			for (j = read -1; j >= 0; j--)
 			{
-				if (!it->strip[(int) line[j]]) break;
+				if (!it->strip[(int) (*line)[j]]) break;
 			}
-			it->state.line[j +1] = 0x00;
+			(*line)[j +1] = 0x00;
 
 #ifdef USE_REGEX_FILTER
-			/* No match found */
-			if (regexec(&f->filter, line, 1, it->context.m, 0) != 0)
-			{
-				continue;
-			}
+		} while (regexec(&f->filter, *line, 1, it->context.m, 0) != 0); /* match found */
 #endif
-		}
 		it->state.pos = 0;
-		it->state.size = inline_decode(line, strlen(line));
+		it->state.size = inline_decode(*line, strlen(*line));
 	}
 
 	out->len = MIN(chunk_size, it->state.size -it->state.pos);
 	STRNDUP(out->len, it->state.line +it->state.pos, out->buf);
 	it->state.pos += out->len;
 
+#ifdef EXTENDED_METADATA
+	out->meta.filename = f->meta.filename;
+#endif
+
 	if (it->state.pos >= it->state.size)
 	{
-		RESET_LINE_ITERATOR_STATE(*it);
+		reset_line_iterator_state(it);
 		return LINE_ITERATOR_EOL;
 	}
 	return LINE_ITERATOR_OK;
@@ -277,6 +299,12 @@ const size_t file_write(file_t* const f, const dataset_t* const ds, void* const 
 
 
 // CLOSE
+const int file_close_itr(file_t* const f)
+{
+	destroy_line_iterator(f);
+	return EXIT_SUCCESS;
+}
+
 const int file_close_ex(file_t* const f, int keep_metadata)
 {
 	assert(f != NULL);
@@ -286,8 +314,8 @@ const int file_close_ex(file_t* const f, int keep_metadata)
 		return EXIT_FAILURE;
 	}
 	f->fd = NULL;
-	line_iterator_t* it = (line_iterator_t*) f->data;
-	free(it);
+
+	file_close_itr(f);
 
 	if (!keep_metadata)
 	{

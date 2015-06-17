@@ -79,7 +79,7 @@ const size_t inline_decode(char* s, const size_t len)
 			continue;
 		}
 
-		// write out truncated truncated sequence
+		// write out truncated sequence
 		const size_t x = len -i;
 		if (x <= 2)
 		{
