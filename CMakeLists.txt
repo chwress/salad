@@ -25,8 +25,10 @@ set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.$
 
 # CONFIGURATION
 
-option(ALLOW_LIVE_TRAINING "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(TEST_SALAD          "Enable the ability to run the integrated unit tests" OFF)
+set(ALLOW_LIVE_TRAINING OFF CACHE INTERNAL "")
+set(GROUPED_INPUT OFF CACHE INTERNAL "")
+set(USE_NETWORK OFF CACHE INTERNAL "")
 
 set(STRICT TRUE)
 
