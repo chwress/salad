@@ -179,11 +179,9 @@ const int archive_meta(file_t* const f, const int group_input)
     		}
 #endif
 #ifdef USE_REGEX_FILTER
-    	    if (regexec(&f->filter, name, 1, m, 0) != 0)
-    	    {
-    	    	continue;
-    	    }
+    	    if (regexec(&f->filter, name, 1, m, 0) != 0) continue;
 #endif
+
 #ifdef EXTENDED_METADATA
 			if (meta->num_items >= fnames_capacity)
 			{
@@ -253,30 +251,29 @@ static inline int archive_read_next(file_t* const f, data_t* const out, const si
 				RESET_ARCHIVE_ITERATOR_ENTRY(*it);
 				return ARCHIVE_ITERATOR_EOA;
 			}
+
+        	// is optimized away ifndef EXTENDED_METADATA, GROUPED_INPUT, USE_REGEX_FILTER
+			const char* const name = archive_entry_pathname(it->state.entry); UNUSED(name);
+
+			if (archive_entry_filetype(it->state.entry) != AE_IFREG) continue;
 #ifdef USE_REGEX_FILTER
-			const char* const name = archive_entry_pathname(it->state.entry);
-			if (regexec(&f->filter, name, 1, it->context.m, 0) != 0)
-			{
-				continue;
-			}
+			if (regexec(&f->filter, name, 1, it->context.m, 0) != 0) continue;
 #endif
-			if (archive_entry_filetype(it->state.entry) == AE_IFREG)
-			{
+
 #ifdef EXTENDED_METADATA
-				out->meta.filename = name;
+			out->meta.filename = name;
 #endif
 #ifdef GROUPED_INPUT
-				out->meta.group = group_next(&f->meta, &it->context.gid, &it->context.fid);
+			out->meta.group = group_next(&f->meta, &it->context.gid, &it->context.fid);
 #endif
-				it->state.n = 0;
-				it->state.length_at_end = (archive_entry_size_is_set(it->state.entry) == 0);
+			it->state.n = 0;
+			it->state.length_at_end = (archive_entry_size_is_set(it->state.entry) == 0);
 
-				if (!it->state.length_at_end)
-				{
-					it->state.size = (size_t) archive_entry_size(it->state.entry);
-				}
-				break;
+			if (!it->state.length_at_end)
+			{
+				it->state.size = (size_t) archive_entry_size(it->state.entry);
 			}
+			break;
 		}
 	}
 
