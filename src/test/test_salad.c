@@ -15,7 +15,6 @@
  * GNU General Public License for more details.
  */
 
-#include "common.h"
 #include <ctest.h>
 
 #include <salad/analyze.h>
@@ -30,8 +29,7 @@
 #include <string.h>
 #include <limits.h>
 
-
-#include "config.h"
+#include "common.h"
 
 CTEST_DATA(salad)
 {
@@ -42,6 +40,7 @@ CTEST_DATA(salad)
 
 CTEST_SETUP(salad)
 {
+	salad_init(&data->x);
 	salad_set_bloomfilter_ex(&data->x, bloom_init(8, HASHES_SIMPLE));
 	salad_set_delimiter(&data->x, DELIMITER);
 	salad_set_ngramlength(&data->x, NGRAM_LENGTH);
@@ -49,6 +48,7 @@ CTEST_SETUP(salad)
 	salad_t* y[] = { &data->b1, &data->b2, NULL };
 	for (salad_t** x = y; *x != NULL; x++)
 	{
+		salad_init(*x);
 		salad_set_bloomfilter_ex(*x, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
 		salad_set_delimiter(*x, DELIMITER);
 		salad_set_ngramlength(*x, NGRAM_LENGTH);
@@ -73,22 +73,22 @@ CTEST2(salad, bloom_init)
 {
 	ASSERT_NOT_NULL(data->x.model.x);
 	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngram_length);
-	ASSERT_EQUAL(data->x.use_tokens, (strlen(DELIMITER) != 0));
+	ASSERT_EQUAL(__(data->x).use_tokens, (strlen(DELIMITER) != 0));
 	DELIM(delim);
 	to_delimiter_array(DELIMITER, delim);
-	ASSERT_DATA(delim, DELIM_SIZE, data->x.delimiter.d, DELIM_SIZE);
+	ASSERT_DATA(delim, DELIM_SIZE, __(data->x).delimiter.d, DELIM_SIZE);
 }
 
 CTEST(salad, spec_diff)
 {
-	SALAD_T(x);
-	SALAD_T(y);
+	SALAD_T(x); salad_init(&x);
+	SALAD_T(y); salad_init(&y);
 
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.use_tokens = (DELIMITER[0] == 0);
+	__(x).use_tokens = (DELIMITER[0] == 0);
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
-	y.use_tokens = x.use_tokens;
+	__(y).use_tokens = __(x).use_tokens;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
 	x.as_binary = TRUE;
@@ -96,24 +96,27 @@ CTEST(salad, spec_diff)
 	y.as_binary = x.as_binary;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
-	x.delimiter.d[0] = 1;
+	__(x).delimiter.d[0] = 1;
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
-	y.delimiter.d[0] = 1;
+	__(y).delimiter.d[0] = 1;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
 
 	x.ngram_length = NGRAM_LENGTH +1;
 	ASSERT_TRUE(salad_spec_diff(&x, &y));
 	y.ngram_length = x.ngram_length;
 	ASSERT_FALSE(salad_spec_diff(&x, &y));
+
+	salad_destroy(&x);
+	salad_destroy(&y);
 }
 
-#define TEST_BLOOMIZE_EX(X, bf)                                                                      \
-{	                                                                                                 \
-	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                                 \
-	                                                                                                 \
-	ASSERT_EQUAL(0, bloom_count(x));                                                                 \
-	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, data->x.delimiter.d);  \
-	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                           \
+#define TEST_BLOOMIZE_EX(X, bf)                                                                          \
+{	                                                                                                     \
+	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                                     \
+	                                                                                                     \
+	ASSERT_EQUAL(0, bloom_count(x));                                                                     \
+	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, __(data->x).delimiter.d);  \
+	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                               \
 }
 
 typedef struct {
@@ -128,31 +131,31 @@ void TEST_BLOOMIZE_COUNT_EX(const char X, salad_t* const s1, const count_exp_t e
 
 	bloomize_stats_t stats;
 	// Adds TEST_STR1 to b1
-	BLOOMIZE_EX(X, b1, TEST_STR1, strlen(TEST_STR1), n, s1->delimiter.d);
+	BLOOMIZE_EX(X, b1, TEST_STR1, strlen(TEST_STR1), n, _(s1)->delimiter.d);
 
 	// Clears b2, adds TEST_STR1 to both
-	BLOOMIZE_EX3(X, b1, b2, TEST_STR1, strlen(TEST_STR1), n, s1->delimiter.d, &stats);
+	BLOOMIZE_EX3(X, b1, b2, TEST_STR1, strlen(TEST_STR1), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL(0, bloom_compare(b1, b2));
 	ASSERT_EQUAL(0, stats.new);
 	ASSERT_EQUAL(exp1.uniq, stats.uniq);
 	ASSERT_EQUAL(exp1.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to b2 only
-	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
+	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_NOT_EQUAL(0, bloom_compare(b1, b2));
 	ASSERT_EQUAL(new, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
 	ASSERT_EQUAL(exp2.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to both
-	BLOOMIZE_EX3(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
+	BLOOMIZE_EX3(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
 	ASSERT_EQUAL(new, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
 	ASSERT_EQUAL(exp2.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to b2 only
-	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, s1->delimiter.d, &stats);
+	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
 	ASSERT_EQUAL(0, stats.new);
 	ASSERT_EQUAL(exp2.uniq, stats.uniq);
@@ -214,8 +217,8 @@ CTEST2(salad, bloomizew_ex)
 		"\x20\x00\x20\x80\x00\x00\x00\x00";
 
 	DELIM(zero) = {0};
-	ASSERT_DATA(zero, DELIM_SIZE, data->x.delimiter.d, DELIM_SIZE);
-	to_delimiter_array(TOKEN_DELIMITER, data->x.delimiter.d);
+	ASSERT_DATA(zero, DELIM_SIZE, __(data->x).delimiter.d, DELIM_SIZE);
+	to_delimiter_array(TOKEN_DELIMITER, __(data->x).delimiter.d);
 
 	TEST_BLOOMIZE_EX(w, bf);
 
@@ -223,8 +226,8 @@ CTEST2(salad, bloomizew_ex)
 	ASSERT_TRUE(data->b1.ngram_length == data->b2.ngram_length);
 	const size_t n = data->b1.ngram_length;
 
-	to_delimiter_array(TOKEN_DELIMITER, data->b1.delimiter.d);
-	to_delimiter_array(TOKEN_DELIMITER, data->b2.delimiter.d);
+	to_delimiter_array(TOKEN_DELIMITER, __(data->b1).delimiter.d);
+	to_delimiter_array(TOKEN_DELIMITER, __(data->b2).delimiter.d);
 
 	// TODO: bloomizew_ex2
 
@@ -244,6 +247,7 @@ CTEST(salad, fileformat_consistency)
 	char* TEST_FILE = "test.out";
 
 	SALAD_T(x);
+	salad_init(&x);
 	salad_set_bloomfilter_ex(&x, bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE));
 	salad_set_delimiter(&x, DELIMITER);
 	salad_set_ngramlength(&x, NGRAM_LENGTH);

@@ -128,11 +128,11 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 	SALAD_T(cur);
 	salad_from_config(&cur, c);
 
-	const model_type_t t = to_model_type(cur.as_binary, cur.use_tokens);
+	const model_type_t t = to_model_type(cur.as_binary, __(cur).use_tokens);
 
 	inspect_t context = {
 			.fct = pick_wrapper(t, newBloomFilter),
-			.param = {training.model.x, cur.model.x, cur.ngram_length, cur.delimiter.d},
+			.param = {training.model.x, cur.model.x, cur.ngram_length, __(cur).delimiter.d},
 			.buf = {0},
 			.stats = (bloomize_stats_t*) calloc(c->batch_size, sizeof(bloomize_stats_t)),
 			.num_uniq = 0,

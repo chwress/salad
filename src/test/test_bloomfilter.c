@@ -16,7 +16,6 @@
  */
 
 
-#include "common.h"
 #include <ctest.h>
 
 #include <container/bloom.h>
@@ -25,6 +24,7 @@
 #include <string.h>
 #include <limits.h>
 
+#include "common.h"
 
 CTEST_DATA(bloom)
 {

@@ -17,6 +17,8 @@
 
 #include "salad.h"
 
+#include "common.h"
+
 #include "analyze.h"
 #include "classify.h"
 #include "util.h"
@@ -36,6 +38,10 @@ void salad_init(salad_t* const s)
 {
 	assert(s != NULL);
 	*s = EMPTY_SALAD_OBJECT;
+
+	s->data = (saladcontext_t*) calloc(1, sizeof(saladcontext_t));
+	delimiter_init(&_(s)->delimiter);
+	_(s)->use_tokens = FALSE;
 }
 
 const int salad_allocate(saladdata_t* const d, const size_t n)
@@ -72,7 +78,7 @@ void salad_use_binary_ngrams(salad_t* const s, const int b)
 	assert(s != NULL);
 
 	s->as_binary = (b <= 0 ? FALSE : TRUE);
-	salad_set_delimiter(s, s->delimiter.str);
+	salad_set_delimiter(s, _(s)->delimiter.str);
 }
 
 void salad_set_delimiter(salad_t* const s, const char* const d)
@@ -82,8 +88,8 @@ void salad_set_delimiter(salad_t* const s, const char* const d)
 	// TODO: We somehow need to prevent the memory leak in case this
 	// function is called twice, as for instance when this function
 	// is used in combination with salad_use_binary_ngrams(.,.)
-	to_delimiter(d, s->as_binary, &s->delimiter);
-	s->use_tokens = (s->delimiter.str != NULL && s->delimiter.str[0] != 0x00);
+	to_delimiter(d, &_(s)->delimiter);
+	_(s)->use_tokens = (_(s)->delimiter.str != NULL && _(s)->delimiter.str[0] != 0x00);
 }
 
 void salad_set_ngramlength(salad_t* const s, const size_t n)
@@ -104,19 +110,26 @@ void salad_destroy(salad_t* const s)
 {
 	assert(s != NULL);
 
-	switch (s->model.type)
+	if (s->model.x != NULL)
 	{
-	case SALAD_MODEL_BLOOMFILTER:
-		bloom_destroy(s->model.x);
-		break;
+		switch (s->model.type)
+		{
+		case SALAD_MODEL_BLOOMFILTER:
+			bloom_destroy(s->model.x);
+			break;
 
-	default: break;
+		default: break;
+		}
 	}
-
 	SET_NOTSPECIFIED(s->model);
 
-	free(s->delimiter.str);
-	s->delimiter.str = NULL;
+	saladcontext_t* ctx = _(s);
+	if (ctx->delimiter.str != NULL)
+	{
+		free(ctx->delimiter.str);
+		ctx->delimiter.str = NULL;
+	}
+	free(ctx);
 }
 
 
@@ -126,7 +139,7 @@ const int salad_train(salad_t* const s, const saladdata_t* const data, const siz
 	BLOOM* const bloom = GET_BLOOMFILTER(s->model);
 
 	// TODO: Let's check whether we can optimize away the function calls
-	switch (to_model_type(s->as_binary, s->use_tokens))
+	switch (to_model_type(s->as_binary, _(s)->use_tokens))
 	{
 	case BIT_NGRAM:
 		for (size_t i = 0; i < n; i++)
@@ -145,7 +158,7 @@ const int salad_train(salad_t* const s, const saladdata_t* const data, const siz
 	case TOKEN_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			bloomizew_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
+			bloomizew_ex(bloom, data[i].buf, data[i].len, s->ngram_length, _(s)->delimiter.d);
 		}
 		break;
 
@@ -166,7 +179,7 @@ const int salad_predict_ex(salad_t* const s, const saladdata_t* const data, cons
 	}
 
 	// TODO: Let's check whether we can optimize away the function calls
-	switch (to_model_type(s->as_binary, s->use_tokens))
+	switch (to_model_type(s->as_binary, _(s)->use_tokens))
 	{
 	case BIT_NGRAM:
 		for (size_t i = 0; i < n; i++)
@@ -185,7 +198,7 @@ const int salad_predict_ex(salad_t* const s, const saladdata_t* const data, cons
 	case TOKEN_NGRAM:
 		for (size_t i = 0; i < n; i++)
 		{
-			out[i] = classify_1class_w_ex(bloom, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);
+			out[i] = classify_1class_w_ex(bloom, data[i].buf, data[i].len, s->ngram_length, _(s)->delimiter.d);
 		}
 		break;
 
@@ -217,18 +230,20 @@ const int salad_spec_diff(const salad_t* const a, const salad_t* const b)
 	assert(b != NULL);
 
 	return (a->model.type != b->model.type
-			|| strcmp(a->delimiter.str, b->delimiter.str) != 0
-			|| memcmp(a->delimiter.d, b->delimiter.d, 256) != 0
+			|| strcmp(_(a)->delimiter.str, _(b)->delimiter.str) != 0
+			|| memcmp(_(a)->delimiter.d, _(b)->delimiter.d, 256) != 0
 			|| a->as_binary != b->as_binary
-			|| a->use_tokens != b->use_tokens
-			|| a->ngram_length != b->ngram_length);
+			|| a->ngram_length != b->ngram_length
+			|| _(a)->use_tokens != _(b)->use_tokens);
 }
 
 const int bloom_from_file_ex(FILE* const f, salad_t* const out)
 {
+	delimiter_destroy(&_(out)->delimiter);
+
 	BLOOM* bloom = NULL;
-	const int ret = fread_model(f, &bloom, &out->ngram_length, out->delimiter.d, &out->use_tokens, &out->as_binary);
-	delimiter_array_to_string(out->delimiter.d, &out->delimiter.str);
+	const int ret = fread_model(f, &bloom, &out->ngram_length, _(out)->delimiter.d, &_(out)->use_tokens, &out->as_binary);
+	delimiter_array_to_string(_(out)->delimiter.d, &_(out)->delimiter.str);
 
 	if (ret == 0)
 	{
@@ -257,6 +272,8 @@ const int bloom_from_file(const char* const filename, salad_t* const out)
 
 const int salad_from_file(const char* const filename, salad_t* const out)
 {
+	salad_init(out);
+
 	// TODO: right now there only are bloom filters!
 	out->model.type = SALAD_MODEL_BLOOMFILTER;
 
@@ -272,6 +289,8 @@ const int salad_from_file(const char* const filename, salad_t* const out)
 
 const int salad_from_file_ex(FILE* const f, salad_t* const out)
 {
+	salad_init(out);
+
 	// TODO: right now there only are bloom filters!
 	out->model.type = SALAD_MODEL_BLOOMFILTER;
 
@@ -309,6 +328,6 @@ const int salad_to_file_ex(const salad_t* const s, FILE* const f)
 	// TODO: right now there only are bloom filters!
 	BLOOM* const b = GET_BLOOMFILTER(s->model);
 
-	const int n = fwrite_model(f, b, s->ngram_length, s->delimiter.str, s->as_binary);
+	const int n = fwrite_model(f, b, s->ngram_length, _(s)->delimiter.str, s->as_binary);
 	return (n >= 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }

@@ -15,12 +15,12 @@
  * GNU General Public License for more details.
  */
 
-#include "common.h"
 #include <ctest.h>
 
 #include <stdlib.h>
 #include <string.h>
 
+#include "common.h"
 
 CTEST(util, cmp)
 {

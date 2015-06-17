@@ -15,16 +15,10 @@
  * GNU General Public License for more details.
  */
 
-#include "common.h"
 #include <ctest.h>
-
 #include <util/io.h>
 
-#include "config.h"
-
-#ifndef TEST_SRC
-#define TEST_SRC "./"
-#endif
+#include "common.h"
 
 const char* const input_lines = TEST_SRC"res/testing/http.txt";
 const char* const input_files = TEST_SRC"res/testing/http/";

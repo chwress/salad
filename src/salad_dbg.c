@@ -17,10 +17,10 @@
 
 #include "main.h"
 
-#ifdef TEST_SALAD
-
 #define CTEST_MAIN
 #include <ctest.h>
+
+#ifdef TEST_SALAD
 
 extern const char* salad_filename;
 

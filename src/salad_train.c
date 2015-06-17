@@ -47,7 +47,7 @@ static inline const int salad_train_callback##X(data_t* data, const size_t n, vo
 			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
 			break;                                                                                      \
 		case 'w':                                                                                       \
-			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, s->delimiter.d);        \
+			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, _(s)->delimiter.d);     \
 			break;                                                                                      \
 		default:                                                                                        \
 			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
@@ -68,7 +68,7 @@ static inline const int salad_train_net_callback##X(data_t* data, const size_t n
 		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
 		break;                                                                                          \
 	case 'w':                                                                                           \
-		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, s->delimiter.d);            \
+		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, _(s)->delimiter.d);         \
 		break;                                                                                          \
 	default:                                                                                            \
 		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
@@ -138,7 +138,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 		}
 	}
 
-	const model_type_t t = to_model_type(s1.as_binary, s1.use_tokens);
+	const model_type_t t = to_model_type(s1.as_binary, __(s1).use_tokens);
 
 #ifdef USE_NETWORK
 	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)

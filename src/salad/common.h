@@ -22,20 +22,9 @@
 #ifndef SALAD_COMMON_H_
 #define SALAD_COMMON_H_
 
-#include "config.h"
-
 #include <stddef.h>
 #include <stdint.h>
-
-#if defined _WIN32 || defined __CYGWIN__
-  #define PUBLIC __declspec(dllexport)
-#else
-  #if __GNUC__ >= 4
-    #define PUBLIC __attribute__ ((visibility ("default")))
-  #else
-    #define PUBLIC
-  #endif
-#endif
+#include <stdlib.h>
 
 #define DELIM_SIZE  	256
 #define DELIM(delim)	uint8_t delim[DELIM_SIZE]
@@ -54,19 +43,14 @@ extern const int MASK_BITSIZE;
  * a byte array "mask" as well as the string representation.
  */
 typedef struct {
-	DELIM(d); //!< The byte array "mask" that translates delimiter characters.
-	ngram_mask_t m; ///!< The bit mask for the use of binary n-grams.
-
 	char* str; //!< The string representation of the delimiters.
-	int binary; ///!< Indicates that salad uses bit n-grams.
+	DELIM(d); //!< The byte array "mask" that translates delimiter characters.
 } delimiter_t;
 
 
 #define EMPTY_DELIMITER_INITIALIZER { \
-		.d = {0}, \
-		.m = 0, \
-		.str = "", \
-		.binary = 0 \
+		.str = NULL, \
+		.d = {0} \
 }
 
 /**
@@ -75,20 +59,43 @@ typedef struct {
 #define DELIMITER_T(d) delimiter_t d = EMPTY_DELIMITER_INITIALIZER
 static const DELIMITER_T(EMPTY_DELIMITER);
 
+void delimiter_init(delimiter_t* const d);
+void delimiter_destroy(delimiter_t* const d);
+
+
+typedef struct
+{
+	int use_tokens; //!< Whether or not to use word/ token n-grams rather than byte/ bit n-grams.
+	delimiter_t delimiter; //!< The delimiter of the tokens in case token n-grams are used.
+} saladcontext_t;
+
+
+#define EMPTY_SALAD_CONTEXT_INITIALIZER { \
+		.use_tokens= 0, \
+		.delimiter = EMPTY_DELIMITER_INITIALIZER \
+}
+
+#define _(s)  ((saladcontext_t*) (s)->data)
+#define __(s) (*(saladcontext_t*) (s).data)
+
+/**
+ * The preferred way of initializing the saladcontext_t object/ struct.
+ */
+#define SALADCONTEXT_T(m) saladcontext_t m = EMPTY_SALAD_CONTEXT_INITIALIZER
+static const SALADCONTEXT_T(EMPTY_SALAD_CONTEXT);
+
 
 /**
  * Converts the string representation of a set of delimiters to the
  * generic representation of delimiters as used by salad.
  *
  * @param[in] str The string representation of a set of delimiters
- * @param[in] binary_ngrams Indicates that the delimiter string should be
- *                          interpreted as binary string for binary n-grams.
  * @param[out] out The generic representation of delimiters as used by salad.
  *
  * @return The input parameter of the string representation of the
  *         set of delimiters.
  */
-const char* const to_delimiter(const char* const str, const int binary_ngrams, delimiter_t* const out);
+const char* const to_delimiter(const char* const str, delimiter_t* const out);
 /**
  * Converts the string representation of a set of delimiters to
  * corresponding byte array "mask".

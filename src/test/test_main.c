@@ -16,11 +16,14 @@
  */
 
 
-#include "common.h"
 #include <ctest.h>
 
-#include "util/getline.h"
-#include "util/colors.h"
+#include <salad/salad.h>
+#include <salad/util.h>
+
+#include <util/getline.h>
+#include <util/colors.h>
+#include <util/util.h>
 
 #include <stdarg.h>
 #include <stdlib.h>
@@ -31,7 +34,7 @@
 #include <unistd.h>
 #include <strings.h>
 
-#include "config.h"
+#include "common.h"
 
 #define CMD_LENGTH 4096
 
@@ -41,6 +44,11 @@
 #define TEST_INPUT "test.in"
 #define TEST_OUT "test.out"
 #define TEST_LOG "test.log"
+
+static const char* const EX1_INPUT1 = TEST_SRC "res/testing/ex1-train.zip";
+static const char* const EX1_INPUT2 = TEST_SRC "res/testing/ex1-test.zip";
+static const char* const EX1_OUTPUT = TEST_SRC "res/testing/ref/ex1/n=%"Z".model";
+static const char* const EX1_SCORES = TEST_SRC "res/testing/ref/ex1/n=%"Z".scores";
 
 
 CTEST_DATA(main)
@@ -225,20 +233,20 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	return ret;
 }
 
-#define FIND_IN_LOG(d, needle)                \
-{                                             \
-	char* const log = read_log(d);            \
-	if (log != NULL)                          \
-	{		                                  \
-		char* const x = strstr(log, needle);  \
-		free(log);                            \
-			                                  \
-		if (x == NULL)                        \
-		{	                                  \
-			remove((d)->log);                 \
-		}	                                  \
-		ASSERT_NOT_NULL(x);                   \
-	}		                                  \
+static void FIND_IN_LOG(const struct main_data* const d, const char* const needle)
+{
+	char* const log = read_log(d);
+	if (log != NULL)
+	{
+		char* const x = strstr(log, needle);
+		free(log);
+
+		if (x == NULL)
+		{
+			remove((d)->log);
+		}
+		ASSERT_NOT_NULL(x);
+	}
 }
 
 static const char* SALAD_MODES[] = {
@@ -378,11 +386,112 @@ CTEST2(main, train_wgrams)
 	CTEST_LOG("Not yet implemented");
 }
 
+#ifdef USE_ARCHIVES
+CTEST2(main, ex1)
+{
+	for (size_t n = 1; n <= 3; n++)
+	for (size_t batch_size = 0; batch_size < 10; batch_size++)
+	{
+		// training
+		SET_MODE(data, "train");
+		ADD_PARAM(data, "-i", EX1_INPUT1);
+		ADD_PARAM(data, "-f", "archive");
+		if (batch_size > 0)
+		{
+			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+		}
+		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-d", "%s", "\"%0a%0d%20%21%22.,:;?\"");
+		ADD_PARAM(data, "-o", data->out);
+		int ret = EXEC_EX(data);
+		if (ret != 0)
+		{
+			CTEST_LOG("'%s' is not available", EX1_INPUT1);
+			return; // Input file doesn't exist?
+		}
+
+		FIND_IN_LOG(data, "[*] Train salad on");
+
+		SALAD_T(s1);
+		if (salad_from_file(data->out, &s1) != EXIT_SUCCESS)
+		{
+			salad_destroy(&s1);
+			ASSERT_FAIL();
+		}
+
+		char buf[0x1000];
+		snprintf(buf, 0x1000, EX1_OUTPUT, n);
+
+		SALAD_T(s2);
+		if (salad_from_file(buf, &s2) != EXIT_SUCCESS)
+		{
+			salad_destroy(&s1);
+			salad_destroy(&s2);
+			return; // Output file doesn't exist?
+		}
+
+		ASSERT_FALSE(salad_spec_diff(&s1, &s2));
+
+		BLOOM* const b1 = GET_BLOOMFILTER(s1.model);
+		BLOOM* const b2 = GET_BLOOMFILTER(s2.model);
+
+		ASSERT_EQUAL(0, bloom_compare(b1, b2));
+
+		salad_destroy(&s1);	salad_destroy(&s2);
+
+
+		// testing
+		char b[0x1000];
+		snprintf(b, 0x1000, "%s~tmp", data->out);
+		ASSERT_NOT_EQUAL(-1, rename(data->out, b));
+
+		SET_MODE(data, "predict");
+		ADD_PARAM(data, "-i", EX1_INPUT2);
+		ADD_PARAM(data, "-f", "archive");
+		if (batch_size > 0)
+		{
+			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+		}
+		ADD_PARAM(data, "-b", b);
+		ADD_PARAM(data, "-o", data->out);
+		ret = EXEC_EX(data);
+		remove(b);
+
+		if (ret != 0)
+		{
+			CTEST_LOG("'%s' is not available", EX1_INPUT2);
+			return; // Input file doesn't exist?
+		}
+
+		FILE* f1 = fopen(data->out, "rb");
+		ASSERT_NOT_NULL(f1);
+
+
+		snprintf(buf, 0x1000, EX1_SCORES, n);
+		FILE* f2 = fopen(buf, "rb");
+		if (f2 == NULL)
+		{
+			fclose(f1);
+			ASSERT_NOT_NULL(f2);
+		}
+
+		int ch1, ch2;
+		do
+		{
+			ch1 = getc(f1);
+			ch2 = getc(f2);
+		} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
+
+		fclose(f1); fclose(f2);
+		ASSERT_EQUAL(ch1, ch2);
+	}
+}
+#endif
+
 CTEST(main, cleanup)
 {
 	remove(TEST_INPUT);
 }
-
 
 CTEST(valgrind, memcheck)
 {

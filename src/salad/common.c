@@ -29,7 +29,28 @@ const int BITGRAM_SIZE = sizeof(bitgram_t);
 const int BITGRAM_BITSIZE = sizeof(bitgram_t) * 8;
 const int MASK_BITSIZE = sizeof(ngram_mask_t) * 8 -7;
 
-const char* const to_delimiter(const char* const str, const int bit_ngrams, delimiter_t* const out)
+
+void delimiter_init(delimiter_t* const d)
+{
+	assert(d != NULL);
+
+	*d = EMPTY_DELIMITER;
+	d->str = calloc(1, sizeof(char));
+}
+
+void delimiter_destroy(delimiter_t* const d)
+{
+	assert(d != NULL);
+
+	if (d->str != NULL)
+	{
+		free(d->str);
+	}
+	*d = EMPTY_DELIMITER;
+}
+
+
+const char* const to_delimiter(const char* const str, delimiter_t* const out)
 {
 	assert(out != NULL);
 
@@ -41,22 +62,11 @@ const char* const to_delimiter(const char* const str, const int bit_ngrams, deli
 			x = NULL;
 		}
 	}
-	if (bit_ngrams)
-	{
-		to_ngram_mask(x, &out->m);
-		ngram_mask_to_string(out->m, &out->str);
 
-		// Reset the character n-gram settings
-		memset(&out->d, 0x00, DELIM_SIZE);
-	}
-	else
-	{
-		to_delimiter_array(x, out->d);
-		delimiter_array_to_string(out->d, &out->str);
+	delimiter_destroy(out);
 
-		// Reset the bit n-gram mask
-		out->m = 0;
-	}
+	to_delimiter_array(x, out->d);
+	delimiter_array_to_string(out->d, &out->str);
 	return x;
 }
 

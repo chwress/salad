@@ -48,4 +48,10 @@ static const size_t NGRAM_LENGTH = 3;
 static const char* const TEST_STR1 = "The quick brown fox jumps over the lazy dog";
 static const char* const TEST_STR2 = "The quick brown fox jumps over the lazy dog!";
 
+#include "../config.h"
+
+#ifndef TEST_SRC
+#define TEST_SRC "./"
+#endif
+
 #endif /* TESTS_COMMON_H_ */

@@ -153,6 +153,7 @@ void echo_options(config_t* const config)
 const int salad_from_config(salad_t* const s, const config_t* const c)
 {
 	assert(s != NULL && c != NULL);
+	salad_init(s);
 
 	// TODO: right now there only are bloom filters!
 	salad_set_bloomfilter_ex(s, bloom_init(c->filter_size, c->hash_set));

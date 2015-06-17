@@ -241,7 +241,7 @@ configure_file(${PROJECTNAME}-config.cmake.in
                @ONLY)
 
 install(TARGETS ${TARGETNAME} RUNTIME DESTINATION bin LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/salad.h" "${CMAKE_CURRENT_SOURCE_DIR}/common.h" DESTINATION "include/salad")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/salad.h" DESTINATION "include/salad")
 
 if (UNIX)
 	install(DIRECTORY ${BASE_SOURCE_DIR}/${PROJECTNAME}/man/

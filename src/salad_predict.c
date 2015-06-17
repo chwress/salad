@@ -71,14 +71,14 @@ const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 #ifdef GROUPED_INPUT
 	if (x->config->group_input)
 	{
-		group_t* prev = data[0].meta;
+		group_t* prev = data[0].meta.group;
 		fputs(TO_STRING(x->scores[0]), x->out);
 
 		for (size_t j = 1; j < n; j++)
 		{
-			fputs(prev == data[j].meta ? " " : "\n", x->out);
+			fputs(prev == data[j].meta.group ? " " : "\n", x->out);
 			fputs(TO_STRING(x->scores[j]), x->out);
-			prev = data[j].meta;
+			prev = data[j].meta.group;
 		}
 	}
 	else
@@ -188,16 +188,16 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 			break;
 		}
 
-		STRDUP(good.delimiter.str, cfg.delimiter);
+		STRDUP(__(good).delimiter.str, cfg.delimiter);
 		echo_options(&cfg);
 		free(cfg.delimiter);
 	}
 
-	const model_type_t t = to_model_type(good.as_binary, good.use_tokens);
+	const model_type_t t = to_model_type(good.as_binary, __(good).use_tokens);
 
 	predict_t context = {
 			.fct = pick_classifier(t, bad_model == NULL),
-			.param = {good_model, bad_model, good.ngram_length, good.delimiter.d},
+			.param = {good_model, bad_model, good.ngram_length, __(good).delimiter.d},
 			.config = c,
 			// TODO: we do not know the batch size of the recv function
 			.scores = (float*) calloc(c->batch_size, sizeof(float)),

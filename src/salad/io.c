@@ -26,6 +26,9 @@
 
 const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_length, const char* const delimiter, const int as_binary)
 {
+	const char* const magic = "SALAD-F2";
+	if (fwrite(magic, sizeof(char), strlen(magic), f) != strlen(magic)) return -1;
+
 	const uint8_t b = (as_binary ? 1 : 0);
 	if (fwrite(&b, sizeof(uint8_t), 1, f) != 1) return -1;
 
@@ -48,19 +51,36 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_le
 {
 	assert(f != NULL && bloom != NULL);
 
-	uint8_t cdummy;
-	size_t n1 = fread(&cdummy, sizeof(uint8_t), 1, f);
-	if (as_binary != NULL) *as_binary = cdummy;
+	static const size_t len_magic = 8;
+	char magic[len_magic +1];
+	long int pos = ftell(f);
+	fread(magic, sizeof(char), len_magic, f);
+	magic[len_magic] = 0x00;
 
+	size_t n1 = 1;
+	if (starts_with(magic, "SALAD-F"))
+	{
+		char* tail;
+		const unsigned long version = strtoul(magic +7, &tail, 10);
+		UNUSED(version);
 
-	if (use_wgrams != NULL) *use_wgrams = 0;
+		uint8_t cdummy;
+		n1 = fread(&cdummy, sizeof(uint8_t), 1, f);
+		if (as_binary != NULL) *as_binary = cdummy;
+	}
+	else
+	{
+		fseek(f, pos, SEEK_SET);
+	}
+
+	if (use_wgrams != NULL) *use_wgrams = FALSE;
 
 	char* const delimiter = fread_str(f);
 	if (delimiter != NULL)
 	{
 		if (delimiter[0] != 0x00)
 		{
-			if (use_wgrams != NULL) *use_wgrams = 1;
+			if (use_wgrams != NULL) *use_wgrams = TRUE;
 			if (delim != NULL) to_delimiter_array(delimiter, delim);
 		}
 		free(delimiter);

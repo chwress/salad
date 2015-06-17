@@ -388,7 +388,7 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 		else
 #endif
 #ifdef GROUPED_INPUT
-#ifdef USE_ARCHIVE
+#ifdef USE_ARCHIVES
 		if (config->input_type != ARCHIVE)
 #endif
 		{
@@ -810,8 +810,8 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config,
 			return SALAD_VERSION;
 
 		default: break;
-		}
 	}
+		}
 	return SALAD_EXIT;
 }
 
