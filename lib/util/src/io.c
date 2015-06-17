@@ -80,7 +80,7 @@ const int is_valid_iomode(const char* const str)
 	}
 }
 
-void metadata_free(metadata_t* const meta)
+void metadata_destroy(metadata_t* const meta)
 {
 	assert(meta != NULL);
 
@@ -110,10 +110,10 @@ void metadata_free(metadata_t* const meta)
 #endif
 }
 
-void metadata_destroy(metadata_t* const meta)
+void metadata_free(metadata_t* const meta)
 {
 	assert(meta != NULL);
-	metadata_free(meta);
+	metadata_destroy(meta);
 	free(meta);
 }
 

@@ -152,49 +152,49 @@ const int archive_meta(file_t* const f, const int group_input)
 	int r = ARCHIVE_FAILED;
 	while ((r = archive_read_next_header(a, &entry)) == ARCHIVE_OK)
 	{
-        if (archive_entry_filetype(entry) == AE_IFREG)
-        {
-        	// is optimized away ifndef EXTENDED_METADATA, GROUPED_INPUT, USE_REGEX_FILTER
-        	const char* const name = archive_entry_pathname(entry); UNUSED(name);
+    	// is optimized away ifndef EXTENDED_METADATA, GROUPED_INPUT, USE_REGEX_FILTER
+    	const char* const name = archive_entry_pathname(entry); UNUSED(name);
+
+        if (archive_entry_filetype(entry) != AE_IFREG) continue;
+#ifdef USE_REGEX_FILTER
+   	    if (regexec(&f->filter, name, 1, m, 0) != 0) continue;
+#endif
 
 #ifdef GROUPED_INPUT
-        	const char* const slash = strrchr(name, '/');
+		const char* const slash = strrchr(name, '/');
 
-    		if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
-    		{
-    			// new class
-    			if (meta->num_groups >= groups_capacity)
-				{
-					groups_capacity *= 2;
-					const size_t s = groups_capacity *sizeof(group_t);
-					meta->groups = (group_t*) realloc(meta->groups, s);
-				}
-				cur = &meta->groups[meta->num_groups++];
-				STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
-				cur->n = 1;
-    		}
-    		else
-    		{
-    			cur->n++;
-    		}
-#endif
-#ifdef USE_REGEX_FILTER
-    	    if (regexec(&f->filter, name, 1, m, 0) != 0) continue;
+		if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
+		{
+			// new class
+			if (meta->num_groups >= groups_capacity)
+			{
+				groups_capacity *= 2;
+				const size_t s = groups_capacity *sizeof(group_t);
+				meta->groups = (group_t*) realloc(meta->groups, s);
+			}
+			cur = &meta->groups[meta->num_groups++];
+			STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
+			cur->n = 1;
+		}
+		else
+		{
+			cur->n++;
+		}
 #endif
 
 #ifdef EXTENDED_METADATA
-			if (meta->num_items >= fnames_capacity)
-			{
-				fnames_capacity *= 2;
-				const size_t s = fnames_capacity *sizeof(char*);
-				meta->filenames = (char**) realloc(meta->filenames, s);
-			}
-        	STRDUP(name, meta->filenames[meta->num_items]);
+		if (meta->num_items >= fnames_capacity)
+		{
+			fnames_capacity *= 2;
+			const size_t s = fnames_capacity *sizeof(char*);
+			meta->filenames = (char**) realloc(meta->filenames, s);
+		}
+		STRDUP(name, meta->filenames[meta->num_items]);
 #endif
-    		meta->num_items++;
-            meta->total_size += (size_t) archive_entry_size(entry);
-        }
-        archive_read_data_skip(a);
+		meta->num_items++;
+		meta->total_size += (size_t) archive_entry_size(entry);
+
+        archive_read_data_skip(a); // Not really necesssary
 	}
 #ifdef EXTENDED_METADATA
 	meta->filenames = (char**) realloc(meta->filenames, meta->num_items *sizeof(char*));
@@ -319,7 +319,7 @@ static inline int archive_read_next(file_t* const f, data_t* const out, const si
 
 	if (it->state.n >= it->state.size)
 	{
-		archive_read_data_skip(it->a);
+		archive_read_data_skip(it->a); // Not really necessary
 		RESET_ARCHIVE_ITERATOR_ENTRY(*it);
 		return ARCHIVE_ITERATOR_EOF;
 	}
@@ -456,7 +456,7 @@ const int archive_close_ex(file_t* const f, int keep_metadata)
 
 	if (!keep_metadata)
 	{
-		metadata_free(&f->meta);
+		metadata_destroy(&f->meta);
 		all_filter_close(f);
 	}
 	return file_close_ex(f, TRUE);

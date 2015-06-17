@@ -140,8 +140,8 @@ typedef struct
 #endif
 } metadata_t;
 
-void metadata_free(metadata_t* const meta);
 void metadata_destroy(metadata_t* const meta);
+void metadata_free(metadata_t* const meta);
 
 typedef struct
 {
