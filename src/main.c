@@ -86,7 +86,7 @@ static struct option predict_longopts[] = {
 	{ "input-format",   required_argument, NULL, 'f' },
 	{ "input-filter",   required_argument, NULL, OPTION_INPUTFILTER },
 	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
-	{ "group-input",    required_argument, NULL, 'g' },
+	{ "group-input",    no_argument, NULL, 'g' },
 	{ "pcap-filter",    required_argument, NULL, 'p' },
 	{ "output",         required_argument, NULL, 'o' },
 
@@ -238,7 +238,7 @@ const int usage_predict()
 	"       --batch-size <num>     Set the size of batches that are read and \n"
 	"                              processed in one go (Default: %"Z").\n"
 #ifdef GROUPED_INPUT
-	"  -g,  --grouped-input        Indicates that predictions for inputs in the "
+	"  -g,  --group-input        Indicates that predictions for inputs in the \n"
 	"                              same \"group\" should be grouped as well. \n"
 #endif
 #ifdef USE_NETWORK

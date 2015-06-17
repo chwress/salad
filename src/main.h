@@ -306,6 +306,10 @@ const int _salad_train_(const config_t* const c);
  * Sets the size of batches that are read and processed in one go. When
  * processing network streams this is automatically set to 1.
  *
+ * @par -g, --group-input
+ * Indicates that predictions for inputs in the same "group" should be
+ * grouped as well.
+ *
  * @par -p,  --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with

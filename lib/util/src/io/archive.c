@@ -136,10 +136,15 @@ const int archive_meta(file_t* const f, const int group_input)
 
 #ifdef GROUPED_INPUT
 	size_t groups_capacity = 1;
-	meta->groups = (group_t*) calloc(groups_capacity, sizeof(group_t));
-	meta->num_groups = 0;
+	group_t* cur = NULL;
 
-	group_t* cur = &meta->groups[0]; cur->name = "";
+	if (group_input)
+	{
+		meta->groups = (group_t*) calloc(groups_capacity, sizeof(group_t));
+		meta->num_groups = 0;
+
+		cur = &meta->groups[0]; cur->name = "";
+	}
 #endif
 #ifdef USE_REGEX_FILTER
     regmatch_t m[1];
@@ -161,25 +166,28 @@ const int archive_meta(file_t* const f, const int group_input)
 #endif
 
 #ifdef GROUPED_INPUT
-		const char* const slash = strrchr(name, '/');
+   	    if (group_input)
+   	    {
+			const char* const slash = strrchr(name, '/');
 
-		if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
-		{
-			// new class
-			if (meta->num_groups >= groups_capacity)
+			if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
 			{
-				groups_capacity *= 2;
-				const size_t s = groups_capacity *sizeof(group_t);
-				meta->groups = (group_t*) realloc(meta->groups, s);
+				// new class
+				if (meta->num_groups >= groups_capacity)
+				{
+					groups_capacity *= 2;
+					const size_t s = groups_capacity *sizeof(group_t);
+					meta->groups = (group_t*) realloc(meta->groups, s);
+				}
+				cur = &meta->groups[meta->num_groups++];
+				STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
+				cur->n = 1;
 			}
-			cur = &meta->groups[meta->num_groups++];
-			STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
-			cur->n = 1;
-		}
-		else
-		{
-			cur->n++;
-		}
+			else
+			{
+				cur->n++;
+			}
+   	    }
 #endif
 
 #ifdef EXTENDED_METADATA
@@ -200,7 +208,10 @@ const int archive_meta(file_t* const f, const int group_input)
 	meta->filenames = (char**) realloc(meta->filenames, meta->num_items *sizeof(char*));
 #endif
 #ifdef GROUPED_INPUT
-	meta->groups = (group_t*) realloc(meta->groups, meta->num_groups *sizeof(group_t));
+	if (group_input)
+	{
+		meta->groups = (group_t*) realloc(meta->groups, meta->num_groups *sizeof(group_t));
+	}
 #endif
 
 	// reopen archive
