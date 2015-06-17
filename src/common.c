@@ -52,7 +52,7 @@ const saladmode_t to_saladmode(const char* const str)
 const int salad_heart(const config_t* const c, FN_SALAD fct)
 {
 	assert(c != NULL);
-	const data_processor_t* const dp = to_dataprocssor(c->input_type);
+	const data_processor_t* const dp = to_dataprocessor(c->input_type);
 
 #ifdef USE_NETWORK
 	net_param_t p = { (c->input_type == NETWORK), c->pcap_filter, NULL };

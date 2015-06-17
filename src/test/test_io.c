@@ -64,13 +64,13 @@ CTEST_DATA(io)
 
 CTEST_SETUP(io)
 {
-	data->lines = to_dataprocssor(LINES);
-	data->files = to_dataprocssor(FILES);
+	data->lines = to_dataprocessor(LINES);
+	data->files = to_dataprocessor(FILES);
 #ifdef USE_ARCHIVES
-	data->archive = to_dataprocssor(ARCHIVE);
+	data->archive = to_dataprocessor(ARCHIVE);
 #endif
 #ifdef USE_NETWORK
-	data->network = to_dataprocssor(NETWORK);
+	data->network = to_dataprocessor(NETWORK);
 #endif
 
 	size_t num_refs = 0;

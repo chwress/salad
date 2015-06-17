@@ -216,7 +216,7 @@ typedef struct
 	FN_CLOSE close;
 } data_processor_t;
 
-const data_processor_t* const to_dataprocssor(const iomode_t m);
+const data_processor_t* const to_dataprocessor(const iomode_t m);
 
 
 #endif /* UTIL_IO_H_ */

@@ -243,7 +243,7 @@ data_processor_t dp_network = {
 		.close = net_close };
 #endif
 
-const data_processor_t* const to_dataprocssor(const iomode_t m)
+const data_processor_t* const to_dataprocessor(const iomode_t m)
 {
 	switch (m)
 	{
