@@ -109,7 +109,7 @@ static const config_t DEFAULT_CONFIG =
 };
 
 
-typedef const int (*FN_SALAD)(const config_t* const c, const data_processor_t* const dp, file_t* const fIn, FILE* const fOut);
+typedef const int (*FN_SALAD)(const config_t* const c, const data_processor_t* const dp, file_t* const f_in, FILE* const f_out);
 const int salad_heart(const config_t* const c, FN_SALAD fct);
 
 void salad_header(const char* const msg, const metadata_t* const meta, const config_t* c);

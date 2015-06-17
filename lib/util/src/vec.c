@@ -37,10 +37,10 @@ const dim_t hash(const char* const s, const size_t len)
 
 	// TODO: Make the the number of bits configurable
 	const int num_bits = 24;
-	dim_t hashMask = ((long long unsigned) 2 << (num_bits - 1)) - 1;
+	dim_t mask = ((long long unsigned) 2 << (num_bits - 1)) - 1;
 
 	// TODO: 0x123457678 is the magic number used in Sally
-	return MurmurHash64B(s, len, 0x12345678) & hashMask;
+	return MurmurHash64B(s, len, 0x12345678) & mask;
 }
 
 
