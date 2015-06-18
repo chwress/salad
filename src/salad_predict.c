@@ -109,14 +109,14 @@ const int salad_predict_callback2(data_t* data, const size_t n, void* const usr)
 #ifdef GROUPED_INPUT
 	if (x->config->group_input)
 	{
-		group_t* prev = data[0].meta;
+		group_t* prev = data[0].meta.group;
 		fputs(TO_STRING(x->scores[0]), x->out);
 
 		for (size_t j = 1; j < n; j++)
 		{
-			fputs(prev == data[j].meta ? " " : "\n", x->out);
+			fputs(prev == data[j].meta.group ? " " : "\n", x->out);
 			fputs(TO_STRING(x->scores[1]), x->out);
-			prev = data[j].meta;
+			prev = data[j].meta.group;
 		}
 	}
 	else

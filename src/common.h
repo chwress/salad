@@ -22,13 +22,15 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+#include <util/config.h>
+
 #include <salad/salad.h>
 #include <salad/container/common.h>
+#include <util/config.h>
 #include <util/util.h>
 #include <util/io.h>
 
-#include <util/config.h>
-#include "config.h"
+#include <config.h>
 
 #ifndef USE_ARCHIVES
 // Just to make sure ;)

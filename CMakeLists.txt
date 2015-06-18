@@ -26,9 +26,9 @@ set(VERSION_STR "${${TARGETNAME}_VERSION_MAJOR}.${${TARGETNAME}_VERSION_MINOR}.$
 # CONFIGURATION
 
 option(TEST_SALAD  "Enable the ability to run the integrated unit tests" OFF)
-set(ALLOW_LIVE_TRAINING OFF CACHE INTERNAL "")
-set(GROUPED_INPUT OFF CACHE INTERNAL "")
-set(USE_NETWORK OFF CACHE INTERNAL "")
+set(ALLOW_LIVE_TRAINING OFF CACHE BOOL "")
+set(GROUPED_INPUT OFF CACHE BOOL "")
+set(USE_NETWORK OFF CACHE BOOL "")
 
 set(STRICT TRUE)
 
@@ -43,7 +43,7 @@ endif ()
 
 set(SOURCE_DIR "src/")
 set(INCLUDE_DIR "${SOURCE_DIR}")
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}/config.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/${INCLUDE_DIR}/config.h)
 
 
 if (TEST_SALAD)
@@ -86,7 +86,6 @@ set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
 
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_DIR}")
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/salad")
 
 

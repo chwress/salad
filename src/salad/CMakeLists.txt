@@ -67,6 +67,9 @@ else ()
 	file(GLOB headers "${SRC}/*.h" "${SRC}/container*.h")
 endif ()
 
+list(REMOVE_ITEM sources "${SRC}/config.h")
+list(REMOVE_ITEM sources "${SRC}/container/(config.h")
+
 source_group("Source Files" FILES ${sources})
 source_group("Header Files" FILES ${headers})
 
@@ -229,8 +232,8 @@ endif ()
 # INSTALL
 
 get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../"
-                      "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../")
+set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../"
+                      "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../")
 configure_file(${PROJECTNAME}-config.cmake.in
                "${PROJECT_BINARY_DIR}/${PROJECTNAME}-config.cmake"
                @ONLY)
