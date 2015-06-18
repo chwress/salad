@@ -66,6 +66,16 @@ set(INC "${CMAKE_CURRENT_SOURCE_DIR}/${INCLUDE_DIR}/")
 file(GLOB sources "${SRC}/*.c" "${SRC}/io/*.c")
 file(GLOB headers "${SRC}/*.h"  "${SRC}/io/*.h" "${INC}/*.h")
 
+list(REMOVE_ITEM sources "${INC}/config.h")
+
+if (NOT USE_NETWORK)
+	list(REMOVE_ITEM sources "${SRC}/io/net.c")
+endif ()
+
+if (NOT USE_ARCHIVE)
+	list(REMOVE_ITEM sources "${SRC}/io/archive.c")
+endif ()
+
 if (_XOPEN_SOURCE_7)
 	list(REMOVE_ITEM sources "${SRC}/getline.c")
 endif ()
@@ -169,8 +179,8 @@ endif ()
 # INSTALL
 
 get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
-set(CONF_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/"
-                      "${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/")
+set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/"
+                      "${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/")
 configure_file(${PROJECTNAME}-config.cmake.in
                "${PROJECT_BINARY_DIR}/${PROJECTNAME}-config.cmake"
                @ONLY)

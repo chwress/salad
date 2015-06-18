@@ -23,6 +23,8 @@
 #include <errno.h>
 #include <signal.h>
 
+#include <util/log.h>
+
 struct
 {
 	metadata_t* meta;
@@ -131,6 +133,13 @@ const int net_meta(file_t* const f, const int group_input)
 	f->meta.num_groups = 0;
 #endif
 
+	return EXIT_SUCCESS;
+}
+
+
+// FILTER
+const int net_filter(file_t* const f, const char* const pattern)
+{
 	return EXIT_SUCCESS;
 }
 

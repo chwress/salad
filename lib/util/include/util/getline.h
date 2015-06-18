@@ -18,7 +18,7 @@
 #ifndef UTIL_GETLINE_H_
 #define UTIL_GETLINE_H_
 
-#include "config.h"
+#include <util/config.h>
 #if (_XOPEN_SOURCE -0) < 700
 
 #include <stdlib.h>
