@@ -50,12 +50,14 @@ const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_len
 const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary)
 {
 	assert(f != NULL && bloom != NULL);
+	long int pos = ftell(f);
 
 	static const size_t len_magic = 8;
 	char magic[len_magic +1];
-	long int pos = ftell(f);
-	fread(magic, sizeof(char), len_magic, f);
+
+	size_t n = fread(magic, sizeof(char), len_magic, f);
 	magic[len_magic] = 0x00;
+	UNUSED(n);
 
 	size_t n1 = 1;
 	if (starts_with(magic, "SALAD-F"))
