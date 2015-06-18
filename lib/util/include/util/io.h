@@ -22,11 +22,9 @@
 #ifndef UTIL_IO_H_
 #define UTIL_IO_H_
 
-#include "config.h"
-
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <util/config.h>
 #include "util.h"
 
 #ifdef USE_ARCHIVES
@@ -102,6 +100,11 @@ typedef struct
 } group_t;
 #endif
 
+#if defined(EXTENDED_METADATA) && defined(GROUPED_INPUT)
+#define MAINTAIN_METADATA
+#endif
+
+#ifdef MAINTAIN_METADATA
 typedef struct
 {
 #ifdef EXTENDED_METADATA
@@ -111,14 +114,16 @@ typedef struct
 		group_t* group;
 #endif
 } metaref_t;
+#endif
 
 typedef struct
 {
 		char* buf;
 		size_t len;
 		slices_t slices;
-
+#ifdef MAINTAIN_METADATA
 		metaref_t meta;
+#endif
 } data_t;
 
 void data_free(data_t* const d);
