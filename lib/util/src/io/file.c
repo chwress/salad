@@ -62,7 +62,7 @@ static inline line_iterator_t* const create_line_iterator(file_t* const f)
 	it->strip['\n'] = TRUE;
 
 	return it;
-};
+}
 
 static inline void reset_line_iterator_state(line_iterator_t* const it)
 {
@@ -89,7 +89,7 @@ static inline void destroy_line_iterator(file_t* const f)
 
 		f->data = NULL;
 	}
-};
+}
 
 const int file_open(file_t* const f, const char* const filename, const char* mode, void* const p)
 {
