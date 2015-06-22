@@ -51,14 +51,18 @@ static struct option main_longopts[] = {
 #define OPTION_BATCHSIZE   1001
 #define OPTION_HASHSET     1002
 #define OPTION_BINARY      1003
+#define OPTION_NETCLIENT   1004
+#define OPTION_NETSERVER   1005
 
 static struct option train_longopts[] = {
 	// I/O options
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
 	{ "input-filter",   required_argument, NULL, OPTION_INPUTFILTER },
-	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "pcap-filter",    required_argument, NULL, 'p' },
+	{ "client-only",    no_argument,       NULL, OPTION_NETCLIENT},
+	{ "server-only",    no_argument,       NULL, OPTION_NETSERVER},
+	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "update-model",   no_argument,       NULL, 'u' },
 	{ "output",         required_argument, NULL, 'o' },
 
@@ -85,9 +89,11 @@ static struct option predict_longopts[] = {
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
 	{ "input-filter",   required_argument, NULL, OPTION_INPUTFILTER },
+	{ "pcap-filter",    required_argument, NULL, 'p' },
+	{ "client-only",    no_argument,       NULL, OPTION_NETCLIENT},
+	{ "server-only",    no_argument,       NULL, OPTION_NETSERVER},
 	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "group-input",    no_argument, NULL, 'g' },
-	{ "pcap-filter",    required_argument, NULL, 'p' },
 	{ "output",         required_argument, NULL, 'o' },
 
 	{ "bloom",          required_argument, NULL, 'b' },
@@ -109,8 +115,10 @@ static struct option inspect_longopts[] = {
 	{ "input",          required_argument, NULL, 'i' },
 	{ "input-format",   required_argument, NULL, 'f' },
 	{ "input-filter",   required_argument, NULL, OPTION_INPUTFILTER },
-	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "pcap-filter",    required_argument, NULL, 'p' },
+	{ "client-only",    no_argument,       NULL, OPTION_NETCLIENT},
+	{ "server-only",    no_argument,       NULL, OPTION_NETSERVER},
+	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "bloom",          required_argument, NULL, 'b' },
 	{ "output",         required_argument, NULL, 'o' },
 
@@ -185,11 +193,16 @@ const int usage_train()
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
 #endif
-	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
+	"       --client-only          Only consider the client-side of the network\n"
+	"                              communication.\n"
+	"       --server-only          Only consider the server-side of the network\n"
+	"                              communication.\n"
+#else
+	"       --batch-size <num>     Set the size of batches that are read and \n"
+	"                              processed in one go (Default: %"Z").\n"
 #endif
 	"  -u,  --update-model         In case the specified output file exists and\n"
 	"                              contains a valid model this flag indicates\n"
@@ -213,9 +226,10 @@ const int usage_train()
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
+#else
+	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
 #endif
 	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size);
@@ -235,15 +249,20 @@ const int usage_predict()
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
 #endif
-	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
-#ifdef GROUPED_INPUT
-	"  -g,  --group-input        Indicates that predictions for inputs in the \n"
-	"                              same \"group\" should be grouped as well. \n"
-#endif
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
+	"       --client-only          Only consider the client-side of the network\n"
+	"                              communication.\n"
+	"       --server-only          Only consider the server-side of the network\n"
+	"                              communication.\n"
+#else
+	"       --batch-size <num>     Set the size of batches that are read and \n"
+	"                              processed in one go (Default: %"Z").\n"
+#endif
+#ifdef GROUPED_INPUT
+	"  -g,  --group-input        Indicates that predictions for inputs in the \n"
+	"                              same \"group\" should be grouped as well. \n"
 #endif
 	"  -b,  --bloom <file>         The bloom filter to be used.\n"
 	"       --bad-bloom <file>     The bloom filter for the 2nd class (optional).\n"
@@ -256,9 +275,10 @@ const int usage_predict()
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */  DEFAULT_CONFIG.batch_size
 #ifdef USE_NETWORK
-	/* --pcap-filter */ ,DEFAULT_CONFIG.pcap_filter
+	/* --pcap-filter */  DEFAULT_CONFIG.pcap_filter
+#else
+	/* --batch-size  */  DEFAULT_CONFIG.batch_size
 #endif
 	);
 	return EXIT_SUCCESS;
@@ -277,11 +297,16 @@ const int usage_inspect()
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
 #endif
-	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
+	"       --client-only          Only consider the client-side of the network\n"
+	"                              communication.\n"
+	"       --server-only          Only consider the server-side of the network\n"
+	"                              communication.\n"
+#else
+	"       --batch-size <num>     Set the size of batches that are read and \n"
+	"                              processed in one go (Default: %"Z").\n"
 #endif
 	"  -b,  --bloom <file>         The bloom filter to be used.\n"
 	"  -o,  --output <file>        The output filename.\n"
@@ -301,9 +326,10 @@ const int usage_inspect()
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
+#else
+	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
 #endif
 	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size);
@@ -346,6 +372,21 @@ const int version()
 	    "Copyright (c) 2012-2015 Christian Wressnegger (christian@mlsec.org)\n",
 	    VERSION_STR);
 
+	return EXIT_SUCCESS;
+}
+
+const int check_netparams(config_t* const config, const int conly, const int sonly)
+{
+	if (conly && sonly)
+	{
+		fprintf(stderr, "--client-only and --server-only are mutually exclusive.");
+		return EXIT_FAILURE;
+	}
+	else if (conly || sonly)
+	{
+		config->net_clientcomm = conly;
+		config->net_servercomm = sonly;
+	}
 	return EXIT_SUCCESS;
 }
 
@@ -441,6 +482,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 	assert(config != NULL);
 
 	char* end; // For parsing numbers with strto*
+	int conly = FALSE, sonly = FALSE;
 
 	int option, bs = FALSE, fo = FALSE;
 	while ((option = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1)
@@ -459,6 +501,19 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			config->input_filter = optarg;
 			break;
 
+#ifdef USE_NETWORK
+		case 'p':
+			config->pcap_filter = optarg;
+			break;
+
+		case OPTION_NETCLIENT:
+			conly = TRUE;
+			break;
+
+		case OPTION_NETSERVER:
+			sonly = TRUE;
+			break;
+#else
 		case OPTION_BATCHSIZE:
 		{
 			const long long int batch_size = strtoll(optarg, &end, 10);
@@ -476,10 +531,6 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			}
 			break;
 		}
-#ifdef USE_NETWORK
-		case 'p':
-			config->pcap_filter = optarg;
-			break;
 #endif
 		case 'b':
 			config->bloom = optarg;
@@ -568,6 +619,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 		return SALAD_EXIT;
 	}
 
+	if (check_netparams(config, conly, sonly) == EXIT_FAILURE) return SALAD_HELP_TRAIN;
 	if (check_input(config, TRUE, bs) == EXIT_FAILURE) return SALAD_EXIT;
 	if (check_output(config) == EXIT_FAILURE) return SALAD_EXIT;
 
@@ -594,7 +646,7 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 	assert(argv != NULL);
 	assert(config != NULL);
 
-	char* end; // For parsing numbers with strto*
+	int conly = FALSE, sonly = FALSE;
 
 	int option, bs = FALSE;
 	while ((option = getopt_long(argc, argv, PREDICT_OPTION_STR, predict_longopts, NULL)) != -1)
@@ -613,8 +665,22 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 			config->input_filter = optarg;
 			break;
 
+#ifdef USE_NETWORK
+		case 'p':
+			config->pcap_filter = optarg;
+			break;
+
+		case OPTION_NETCLIENT:
+			conly = TRUE;
+			break;
+
+		case OPTION_NETSERVER:
+			sonly = TRUE;
+			break;
+#else
 		case OPTION_BATCHSIZE:
 		{
+			char* end; // For parsing numbers with strto*
 			const long long int batch_size = strtoll(optarg, &end, 10);
 			if (batch_size <= 0)
 			{
@@ -630,14 +696,10 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 			}
 			break;
 		}
+#endif
 #ifdef GROUPED_INPUT
 		case 'g':
 			config->group_input = TRUE;
-			break;
-#endif
-#ifdef USE_NETWORK
-		case 'p':
-			config->pcap_filter = optarg;
 			break;
 #endif
 		case 'o':
@@ -677,6 +739,7 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 		}
 	}
 
+	if (check_netparams(config, conly, sonly) == EXIT_FAILURE) return SALAD_HELP_PREDICT;
 	if (check_input(config, FALSE, bs) == EXIT_FAILURE) return SALAD_EXIT;
 	if (check_output(config) == EXIT_FAILURE) return SALAD_EXIT;
 

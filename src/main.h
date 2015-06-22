@@ -215,21 +215,27 @@ int main(int argc, char* argv[]);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
- * @par     --batch-size &lt;num&gt;
- * Sets the size of batches that are read and processed in one go. When
- * processing network streams this is automatically set to 1.
- *
- * @par -p,  --pcap-filter &lt;str&gt;
+ * @par -p, --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
  * network support -- cf. USE_NETWORK.
  *
- * @par -u,  --update-model
+ * @par     --client-only
+ * Only consider the client-side of the network communication -- cf. USE_NETWORK.
+ *
+ * @par     --server-only
+ * Only consider the server-side of the network communication -- cf. USE_NETWORK.
+ *
+ * @par     --batch-size &lt;num&gt;
+ * Sets the size of batches that are read and processed in one go. When
+ * processing network streams this is automatically set to 1.
+ *
+ * @par -u, --update-model
  * In case the specified output file exists and contains a valid model this
  * flag indicates that that model should be update rather than recreated from
  * scratch.
  *
- * @par -o,  --output &lt;file&gt;
+ * @par -o, --output &lt;file&gt;
  * The output filename.
  *
  * @subsection sec_featureops Feature Options:
@@ -302,6 +308,17 @@ const int _salad_train_(const config_t* const c);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
+ * @par -p, --pcap-filter &lt;str&gt;
+ * Filter expression for the PCAP library in case network data is processed
+ * (Default: tcp). This option is only available if Salad was compiled with
+ * network support -- cf. USE_NETWORK.
+ *
+ * @par     --client-only
+ * Only consider the client-side of the network communication -- cf. USE_NETWORK.
+ *
+ * @par     --server-only
+ * Only consider the server-side of the network communication -- cf. USE_NETWORK.
+ *
  * @par     --batch-size &lt;num&gt;
  * Sets the size of batches that are read and processed in one go. When
  * processing network streams this is automatically set to 1.
@@ -310,22 +327,17 @@ const int _salad_train_(const config_t* const c);
  * Indicates that predictions for inputs in the same "group" should be
  * grouped as well.
  *
- * @par -p,  --pcap-filter &lt;str&gt;
- * Filter expression for the PCAP library in case network data is processed
- * (Default: tcp). This option is only available if Salad was compiled with
- * network support -- cf. USE_NETWORK.
- *
- * @par -b,  --bloom &lt;file&gt;
+ * @par -b, --bloom &lt;file&gt;
  * The bloom filter to be used.
  *
- * @par      --bad-bloom &lt;file&gt;
+ * @par     --bad-bloom &lt;file&gt;
  * The bloom filter for the 2nd class (optional).
  *
- * @par -o,  --output &lt;file&gt;
+ * @par -o, --output &lt;file&gt;
  * The output filename.
  *
  * @subsection sec_featureops Feature Options:
- * @par -r,  --nan-str &lt;str&gt;
+ * @par -r, --nan-str &lt;str&gt;
  * Set the string to be shown for NaN values.
  *
  * @subsection sec_genericops Generic Options:
@@ -409,19 +421,25 @@ const int _salad_stats_(const config_t* const c);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
- * @par     --batch-size &lt;num&gt;
- * Sets the size of batches that are read and processed in one go. When
- * processing network streams this is automatically set to 1.
- *
- * @par -p,  --pcap-filter &lt;str&gt;
+ * @par -p, --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
  * network support -- cf. USE_NETWORK.
  *
- * @par -b,  --bloom &lt;file&gt;
+ * @par     --client-only
+ * Only consider the client-side of the network communication -- cf. USE_NETWORK.
+ *
+ * @par     --server-only
+ * Only consider the server-side of the network communication -- cf. USE_NETWORK.
+ *
+ * @par     --batch-size &lt;num&gt;
+ * Sets the size of batches that are read and processed in one go. When
+ * processing network streams this is automatically set to 1.
+ *
+ * @par -b, --bloom &lt;file&gt;
  * The bloom filter to be used.
  *
- * @par -o,  --output &lt;file&gt;
+ * @par -o, --output &lt;file&gt;
  * The output filename.
  *
  * @subsection sec_featureops Feature Options:

@@ -70,6 +70,8 @@ typedef struct
 	int group_input;
 	char* input_filter;
 	char* pcap_filter;
+	int net_clientcomm;
+	int net_servercomm;
 	char* input;
 	char* bloom;
 	char* bbloom;
@@ -94,6 +96,8 @@ static const config_t DEFAULT_CONFIG =
 	.group_input = FALSE,
 	.input_filter = "",
 	.pcap_filter = "tcp",
+	.net_clientcomm = TRUE,
+	.net_servercomm = TRUE,
 	.input = NULL,
 	.bloom = NULL,
 	.bbloom = NULL,
