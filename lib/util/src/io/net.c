@@ -150,7 +150,7 @@ const int net_filter(file_t* const f, const char* const pattern)
 	data[0].len = (hs)->count; \
 	nids_user.meta->num_items++; \
 	nids_user.meta->total_size += data[0].len; \
-	nids_user.callback(data, 1, nids_user.data); \
+	nids_user.callback(data, 1, d->usr); \
 	nids_user.num_chunks++; \
 	hourglass(&nids_user.state, nids_user.num_chunks); \
 }
@@ -159,6 +159,7 @@ void net_recv_tcp(struct tcp_stream* const s, void** reserved)
 {
 	// --batch-size is ignored for network streams
 	static data_t data[1];
+	net_data_t* const d = (net_data_t*) nids_user.data;
 
 	switch (s->nids_state)
 	{
@@ -179,15 +180,17 @@ void net_recv_tcp(struct tcp_stream* const s, void** reserved)
         }
 
         // Check who sent the data
-		struct half_stream* hlf = (s->client.count_new ? &s->client : &s->server);
-		PROCESS(hlf, count_new);
+    	// XXX: Yes, its somehow always the other way around.
+		if (d->server_comm && s->client.count_new) PROCESS(&s->client, count_new);
+		if (d->client_comm && s->server.count_new) PROCESS(&s->server, count_new);
         break;
 
 	case NIDS_CLOSE: case NIDS_RESET: case NIDS_TIMED_OUT:
         if (nids_user.merge_payloads)
         {
-			if (s->server.count != 0) PROCESS(&s->server, count);
-			if (s->client.count != 0) PROCESS(&s->client, count);
+        	// XXX: Yes, its somehow always the other way around.
+			if (d->client_comm && s->server.count != 0) PROCESS(&s->server, count);
+			if (d->server_comm && s->client.count != 0) PROCESS(&s->client, count);
         }
         break;
 	}

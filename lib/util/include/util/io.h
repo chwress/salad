@@ -206,6 +206,13 @@ typedef struct
 	const char* const pcap_filter;
 	const char* error_msg;
 } net_param_t;
+
+typedef struct {
+	const int client_comm;
+	const int server_comm;
+
+	void* const usr;
+} net_data_t;
 #endif
 
 extern void* const REOPEN;
