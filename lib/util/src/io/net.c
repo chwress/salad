@@ -75,7 +75,7 @@ const int net_open(file_t* const f, const char* const filename, const char* mode
 	f->mode = to_fileiomode(mode);
 	assert(mode != NULL && f->mode == FILE_IOMODE_READ);
 
-	net_param_t default_params = { FALSE, NULL };
+	net_param_t default_params = { FALSE, NULL, TRUE, TRUE, NULL };
 	net_param_t* const params = (p != NULL ? (net_param_t*) p : &default_params);
 
 	// Install signal handlers
@@ -96,6 +96,12 @@ const int net_open(file_t* const f, const char* const filename, const char* mode
 	f->fd = NULL;
 	f->data = &nids_params;
 	f->is_device = params->is_device;
+
+	net_data_t* const d = calloc(1, sizeof(net_data_t));
+	d->client_comm = params->client_comm;
+	d->server_comm = params->server_comm;
+	d->usr = NULL;
+	nids_user.data = d;
 
 	// No "real" reopen possible
 	memset(&f->meta, 0x00, sizeof(metadata_t));
@@ -205,7 +211,7 @@ const size_t net_recv(file_t* const f, FN_DATA callback, const size_t batch_size
 
 	nids_user.meta = &f->meta;
 	nids_user.callback = callback;
-	nids_user.data = usr;
+	((net_data_t*) nids_user.data)->usr = usr;
 	nids_user.merge_payloads = TRUE;
 	nids_user.state = 0;
 
@@ -235,6 +241,7 @@ const int net_close(file_t* const f)
 	nids_exit();
 	pcap_close(nids_params.pcap_desc);
 
+	free(nids_user.data);
 	return EXIT_SUCCESS;
 }
 #endif

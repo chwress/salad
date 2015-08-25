@@ -204,14 +204,16 @@ typedef struct
 {
 	const int is_device;
 	const char* const pcap_filter;
+	const int client_comm;
+	const int server_comm;
 	const char* error_msg;
 } net_param_t;
 
 typedef struct {
-	const int client_comm;
-	const int server_comm;
+	int client_comm;
+	int server_comm;
 
-	void* const usr;
+	void* usr;
 } net_data_t;
 #endif
 
