@@ -55,7 +55,12 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 	const data_processor_t* const dp = to_dataprocessor(c->input_type);
 
 #ifdef USE_NETWORK
-	net_param_t p = { (c->input_type == NETWORK), c->pcap_filter, NULL };
+	net_param_t p = {
+			(c->input_type == NETWORK),
+			 c->pcap_filter,
+			 c->net_clientcomm,
+			 c->net_servercomm,
+			 NULL };
 #else
 	io_param_t p = { NULL };
 #endif

@@ -144,8 +144,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 #ifdef USE_NETWORK
 	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)
 	{
-		net_data_t d = { c->net_clientcomm, c->net_servercomm, &s1 };
-		dp->recv(f_in, pick_callback(t, 1), c->batch_size, &d);
+		dp->recv(f_in, pick_callback(t, 1), c->batch_size, &s1);
 	}
 	else
 #endif
