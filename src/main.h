@@ -215,6 +215,10 @@ int main(int argc, char* argv[]);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
+ * @par     --batch-size &lt;num&gt;
+ * Sets the size of batches that are read and processed in one go. When
+ * processing network streams this is automatically set to 1.
+ *
  * @par -p, --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
@@ -225,10 +229,6 @@ int main(int argc, char* argv[]);
  *
  * @par     --server-only
  * Only consider the server-side of the network communication -- cf. USE_NETWORK.
- *
- * @par     --batch-size &lt;num&gt;
- * Sets the size of batches that are read and processed in one go. When
- * processing network streams this is automatically set to 1.
  *
  * @par -u, --update-model
  * In case the specified output file exists and contains a valid model this
@@ -308,6 +308,10 @@ const int _salad_train_(const config_t* const c);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
+ * @par     --batch-size &lt;num&gt;
+ * Sets the size of batches that are read and processed in one go. When
+ * processing network streams this is automatically set to 1.
+ *
  * @par -p, --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
@@ -318,10 +322,6 @@ const int _salad_train_(const config_t* const c);
  *
  * @par     --server-only
  * Only consider the server-side of the network communication -- cf. USE_NETWORK.
- *
- * @par     --batch-size &lt;num&gt;
- * Sets the size of batches that are read and processed in one go. When
- * processing network streams this is automatically set to 1.
  *
  * @par -g, --group-input
  * Indicates that predictions for inputs in the same "group" should be
@@ -421,6 +421,10 @@ const int _salad_stats_(const config_t* const c);
  * This can be used to operate salad more easily in a 2-class setting and use
  * identical input files as used for embeddings created by sally.
  *
+ * @par     --batch-size &lt;num&gt;
+ * Sets the size of batches that are read and processed in one go. When
+ * processing network streams this is automatically set to 1.
+ *
  * @par -p, --pcap-filter &lt;str&gt;
  * Filter expression for the PCAP library in case network data is processed
  * (Default: tcp). This option is only available if Salad was compiled with
@@ -431,10 +435,6 @@ const int _salad_stats_(const config_t* const c);
  *
  * @par     --server-only
  * Only consider the server-side of the network communication -- cf. USE_NETWORK.
- *
- * @par     --batch-size &lt;num&gt;
- * Sets the size of batches that are read and processed in one go. When
- * processing network streams this is automatically set to 1.
  *
  * @par -b, --bloom &lt;file&gt;
  * The bloom filter to be used.
