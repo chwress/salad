@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <limits.h>
+
 static const char* const CONFIG_HEADER = "Salad Configuration";
 
 const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_length, const char* const delimiter, const int as_binary)
@@ -32,25 +34,36 @@ const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_len
 	const int nheader = fprintf(f, "%s\n\n", CONFIG_HEADER);
 	if (nheader < 0) return -1;
 
-	const int nbinary = fprintf(f, " binary = %s\n", (as_binary ? "True" : "False"));
+	const int nbinary = fprintf(f, "binary = %s\n", (as_binary ? "True" : "False"));
 	if (nbinary < 0) return -1;
 
-	const int ndelim = fprintf(f, "delimiter =  %s\n", (delimiter == NULL ? "" : delimiter));
+	const int ndelim = fprintf(f, "delimiter = %s\n", (delimiter == NULL ? "" : delimiter));
 	if (ndelim < 0) return -1;
 
 	const int n = fprintf(f, "n = %"Z"\n", ngram_length);
 	if (n < 0) return -1;
 
-	size_t data_size = 0;
+	// Since we are do not want to determine the size of the data based on some
+	// internals, we do something ugly instead ;)
+	char buf[0x100];
+	snprintf(buf, 0x100, "%d", INT_MAX);
+	for (char* x = buf; *x != 0x00; x++) *x = ' ';
 
-	int nbloom = fprintf(f, "bloom_filter = %"Z"\n", data_size);
+	size_t pos = ftell(f) +15;
+	int nbloom = fprintf(f, "bloom_filter = %s\n", buf);
 	if (nbloom < 0) return -1;
 
 	int m, l;
 	if ((m = fwrite_hashspec(f, bloom)) < 0) return -1;
 	if ((l = bloom_to_file(bloom, f)) < 0) return -1;
 
-	return nheader + nbinary + ndelim + n + m + l;
+	if (fprintf(f, "\n") < 0) return -1;
+
+	fseek(f, pos, SEEK_SET);
+	fprintf(f, "%"Z, (size_t) m +l);
+	fseek(f, 0, SEEK_END);
+
+	return nheader + nbinary + ndelim + n + m + l +1;
 }
 
 char* const readline(char** buf, size_t* len, FILE* f)
