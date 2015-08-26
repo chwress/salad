@@ -84,3 +84,63 @@ ssize_t getline(char **buf, size_t *bufsiz, FILE *fp)
 }
 
 #endif
+
+
+#include "util/util.h"
+
+char* const getlines(const char* const fname)
+{
+	return getlines_ex(fname, NULL);
+}
+
+char* const getlines_ex(const char* const fname, const char* const prefix)
+{
+	FILE* f = fopen(fname, "r");
+	if (f == NULL)
+	{
+		return NULL;
+	}
+
+	fseek(f, 0, SEEK_END);
+	long int size = ftell(f);
+	fseek(f, 0, SEEK_SET);
+
+	char* log = malloc(sizeof(char) * (size +1));
+	if (log == NULL || size == 0)
+	{
+		return NULL;
+	}
+	log[0] = 0x00;
+
+	char* const x = log;
+	char* line = NULL;
+	size_t len = 0;
+
+	while (size > 0)
+	{
+		const ssize_t read = getline(&line, &len, f);
+		if (read < 0)
+		{
+			break;
+		}
+
+		const size_t s = MIN(size, read);
+		if (s > 0 && (prefix == NULL || starts_with(line, prefix)))
+		{
+			memcpy(log, line, s +1);
+
+			// Fix potential NULL bytes
+			for (char* y = log; y -log < s; y++)
+			{
+				if (*y == 0x00) *y = ' ';
+			}
+
+			log += s;
+			size -= s;
+		}
+	}
+	free(line);
+
+	fclose(f);
+	return x;
+}

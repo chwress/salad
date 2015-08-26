@@ -34,4 +34,8 @@ ssize_t getline(char** buf, size_t* bufsiz, FILE* fp);
 #include <stdio.h>
 #endif
 
+
+char* const getlines(const char* const fname);
+char* const getlines_ex(const char* const fname, const char* const prefix);
+
 #endif /* UTIL_GETLINE_H_ */
