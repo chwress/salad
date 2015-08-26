@@ -137,67 +137,10 @@ static void ADD_PARAM(struct main_data* const d, const char* const parg, const c
 	va_end(args);
 }
 
-static char* const read_file_ex(const char* const fname, const char* const prefix)
-{
-	FILE* f = fopen(fname, "r");
-	if (f == NULL)
-	{
-		return NULL;
-	}
-
-	fseek(f, 0, SEEK_END);
-	long int size = ftell(f);
-	fseek(f, 0, SEEK_SET);
-
-	char* log = malloc(sizeof(char) * (size +1));
-	if (log == NULL || size == 0)
-	{
-		return NULL;
-	}
-	log[0] = 0x00;
-
-	char* const x = log;
-	char* line = NULL;
-	size_t len = 0;
-
-	while (size > 0)
-	{
-		const ssize_t read = getline(&line, &len, f);
-		if (read < 0)
-		{
-			break;
-		}
-
-		const size_t s = MIN(size, read);
-		if (s > 0 && (prefix == NULL || starts_with(line, prefix)))
-		{
-			memcpy(log, line, s +1);
-
-			// Fix potential NULL bytes
-			for (char* y = log; y -log < s; y++)
-			{
-				if (*y == 0x00) *y = ' ';
-			}
-
-			log += s;
-			size -= s;
-		}
-	}
-	free(line);
-
-	fclose(f);
-	return x;
-}
-
-static char* const read_file(const char* const fname)
-{
-	return read_file_ex(fname, NULL);
-}
-
 static char* const read_log_ex(const struct main_data* const d, char* const prefix)
 {
 	assert(d != NULL);
-	return read_file_ex(d->log, prefix);
+	return getlines_ex(d->log, prefix);
 }
 
 static char* const read_log(const struct main_data* const d)
@@ -258,8 +201,9 @@ static void FIND_IN_LOG(const struct main_data* const d, const char* const needl
 		if (x == NULL)
 		{
 			remove((d)->log);
+			CTEST_LOG("Not found: %s", needle);
+			ASSERT_FAIL();
 		}
-		ASSERT_NOT_NULL(x);
 	}
 }
 
@@ -288,10 +232,10 @@ void CMP_FILES(const char* const a, const char* const b)
 
 void CMP_LINE(const char* const a, const char* const b, const char* const needle)
 {
-	char* const A = read_file(a);
+	char* const A = getlines(a);
 	ASSERT_NOT_NULL(A);
 
-	char* const B = read_file(b);
+	char* const B = getlines(b);
 	if (B == NULL)
 	{
 		free(A);
