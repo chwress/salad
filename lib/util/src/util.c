@@ -51,9 +51,9 @@ const int cmp(const char* const s, ...)
 }
 
 
-const int cmp2(const char* const s, const char* const haystack[])
+const int cmp2(const char* const s, const char* const needles[])
 {
-	const char* const* arr = haystack;
+	const char* const* arr = needles;
 	for (int i = 0; *arr != NULL; i++)
 	{
 		if (strcmp(s, *arr) == 0)
@@ -63,6 +63,18 @@ const int cmp2(const char* const s, const char* const haystack[])
 		arr++;
 	}
 	return -1;
+}
+
+const int isprintable(const char* const s)
+{
+	for (const char* x = s; *x != 0x00; x++)
+	{
+		if (!isprint(*x))
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 
 const size_t inline_decode(char* s, const size_t len)

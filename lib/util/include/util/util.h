@@ -34,8 +34,10 @@
 
 
 const int cmp(const char* const s, ...);
-const int cmp2(const char* const s, const char* const haystack[]);
+const int cmp2(const char* const s, const char* const needles[]);
 
+
+const int isprintable(const char* const s);
 const size_t inline_decode(char* s, const size_t len);
 const size_t encode(char** out, size_t* outsize, const char* const s, const size_t len);
 const int starts_with(const char* const s, const char* const prefix);
