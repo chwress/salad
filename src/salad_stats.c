@@ -34,7 +34,7 @@ const int _salad_stats_(const config_t* const c)
 
 	int ret = fread_model(f_filter, &bloom, NULL, NULL, NULL, NULL);
 	fclose(f_filter);
-	if (ret != 0)
+	if (ret <= 0)
 	{
 		error("Corrupt bloom filter file.");
 		return EXIT_FAILURE;

@@ -99,7 +99,7 @@ const char* const delimiter_array_to_string(const delimiter_array_t delim, char*
 	{
 		if (delim[i])
 		{
-			sprintf(buf, (isprint(i) ? "%c" : "%%%02X"), i);
+			sprintf(buf, (isprint(i) && !isspace(i) ? "%c" : "%%%02X"), i);
 			strcat(x, buf);
 		}
 	}

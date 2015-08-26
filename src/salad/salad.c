@@ -245,7 +245,7 @@ const int bloom_from_file_ex(FILE* const f, salad_t* const out)
 	const int ret = fread_model(f, &bloom, &out->ngram_length, _(out)->delimiter.d, &_(out)->use_tokens, &out->as_binary);
 	delimiter_array_to_string(_(out)->delimiter.d, &_(out)->delimiter.str);
 
-	if (ret == 0)
+	if (ret > 0)
 	{
 		salad_set_bloomfilter_ex(out, bloom);
 		return EXIT_SUCCESS;

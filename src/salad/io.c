@@ -19,61 +19,161 @@
 
 #include <container/io.h>
 #include <util/util.h>
+#include <util/getline.h>
 
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
+static const char* const CONFIG_HEADER = "Salad Configuration";
+
 const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_length, const char* const delimiter, const int as_binary)
 {
-	const char* const magic = "SALAD-F2";
-	if (fwrite(magic, sizeof(char), strlen(magic), f) != strlen(magic)) return -1;
+	const int nheader = fprintf(f, "%s\n\n", CONFIG_HEADER);
+	if (nheader < 0) return -1;
 
-	const uint8_t b = (as_binary ? 1 : 0);
-	if (fwrite(&b, sizeof(uint8_t), 1, f) != 1) return -1;
+	const int nbinary = fprintf(f, " binary = %s\n", (as_binary ? "True" : "False"));
+	if (nbinary < 0) return -1;
 
-	const char* const x = (delimiter == NULL ? "" : delimiter);
+	const int ndelim = fprintf(f, "delimiter =  %s\n", (delimiter == NULL ? "" : delimiter));
+	if (ndelim < 0) return -1;
 
-	size_t n = strlen(x);
+	const int n = fprintf(f, "n = %"Z"\n", ngram_length);
+	if (n < 0) return -1;
+
+	size_t data_size = 0;
+
+	int nbloom = fprintf(f, "bloom_filter = %"Z"\n", data_size);
+	if (nbloom < 0) return -1;
+
 	int m, l;
-	if (fwrite(x, sizeof(char), n +1, f) != n +1) return -1;
-
-	if (fwrite(&ngram_length, sizeof(size_t), 1, f) != 1) return -1;
-
 	if ((m = fwrite_hashspec(f, bloom)) < 0) return -1;
-
 	if ((l = bloom_to_file(bloom, f)) < 0) return -1;
 
-	return sizeof(uint8_t) + (n+1)*sizeof(char) +sizeof(size_t) +m +l;
+	return nheader + nbinary + ndelim + n + m + l;
 }
 
-const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary)
+char* const readline(char** buf, size_t* len, FILE* f)
+{
+	while (1)
+	{
+		const ssize_t read = getline(buf, len, f);
+		if (read < 0)
+		{
+			return NULL;
+		}
+
+		char* x = ltrim(*buf);
+		if (*x == '#') continue; // ignore comments
+
+		rtrim(x);
+		if (*x == 0x00) continue; // ignore empty lines
+
+		return x;
+	}
+}
+
+
+const int fread_model_txt(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary)
 {
 	assert(f != NULL && bloom != NULL);
 	long int pos = ftell(f);
 
-	static const size_t len_magic = 8;
-	char magic[len_magic +1];
+	char* line = NULL;
+	size_t len = 0;
 
-	size_t n = fread(magic, sizeof(char), len_magic, f);
-	magic[len_magic] = 0x00;
-	UNUSED(n);
-
-	size_t n1 = 1;
-	if (starts_with(magic, "SALAD-F"))
+	char* x = readline(&line, &len, f);
+	if (x == NULL || strcasecmp(x, CONFIG_HEADER) != 0)
 	{
-		char* tail;
-		const unsigned long version = strtoul(magic +7, &tail, 10);
-		UNUSED(version);
-
-		uint8_t cdummy;
-		n1 = fread(&cdummy, sizeof(uint8_t), 1, f);
-		if (as_binary != NULL) *as_binary = cdummy;
-	}
-	else
-	{
+		free(line);
 		fseek(f, pos, SEEK_SET);
+		return 0;
 	}
+
+	// Set default values
+	if (as_binary != NULL) *as_binary = FALSE;
+	if (use_wgrams != NULL) *use_wgrams = FALSE;
+	if (delim != NULL) to_delimiter_array("", delim);
+
+	// The bloom filter and the n-gram length are mandatory, though
+	int ngramlen_specified = FALSE;
+	int bloomfilter_specified = FALSE;
+
+	while (1)
+	{
+		char* x = readline(&line, &len, f);
+		if (x == NULL)
+		{
+			break;
+		}
+
+		char* y = strchr(x, '=');
+		if (y == NULL)
+		{
+			free(line);
+			return -1;
+		}
+
+		y[0] = 0x00;
+		char* value = ltrim(y +1);
+		rtrim(x);
+
+		char* tail;
+		switch (cmp(x, "binary", "delimiter", "n", "bloom_filter", NULL))
+		{
+		case 0:
+		{
+			long int b = strtol(value, &tail, 10);
+			if (tail == value)
+			{
+				b = (strcasecmp(value, "True") == 0);
+			}
+			if (as_binary != NULL) *as_binary = b;
+			break;
+		}
+		case 1:
+		{
+			if (value[0] != 0x00)
+			{
+				if (use_wgrams != NULL) *use_wgrams = TRUE;
+				if (delim != NULL) to_delimiter_array(value, delim);
+			}
+			break;
+		}
+		case 2:
+		{
+			unsigned long int n = strtoul(value, &tail, 10);
+			if (ngram_length != NULL) *ngram_length = n;
+			ngramlen_specified = TRUE;
+			break;
+		}
+		case 3:
+		{
+			unsigned long int len = strtoul(value, &tail, 10);
+			UNUSED(len); // we simply ignore the size for now
+			*bloom = bloom_init_from_file(f);
+			bloomfilter_specified = TRUE;
+			break;
+		}
+		default:
+			// Unkown identifier
+			free(line);
+			return -2;
+		}
+	}
+	free(line);
+
+	if (!ngramlen_specified) return -3;
+	if (!bloomfilter_specified) return -4;
+
+	return ftell(f) -pos;
+}
+
+
+const int fread_model_032(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams)
+{
+	assert(f != NULL && bloom != NULL);
+	size_t pos = ftell(f);
 
 	if (use_wgrams != NULL) *use_wgrams = FALSE;
 
@@ -93,10 +193,22 @@ const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_le
 	size_t* const _ngram_length = (ngram_length == NULL ? &dummy : ngram_length);
 
 	*_ngram_length = 0;
-	size_t n2 = fread(_ngram_length, sizeof(size_t), 1, f);
+	size_t n = fread(_ngram_length, sizeof(size_t), 1, f);
 
 	// The actual bloom filter values
 	*bloom = bloom_init_from_file(f);
 
-	return (n1 <= 0 || n2 <= 0 || *_ngram_length <= 0 || *bloom == NULL ? -1 : 0);
+	return (n <= 0 || *_ngram_length <= 0 || *bloom == NULL ? -1 : (ftell(f) -pos));
+}
+
+
+const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary)
+{
+	int ret = fread_model_txt(f, bloom, ngram_length, delim, use_wgrams, as_binary);
+	if (ret == 0) // seems to be in old format
+	{
+		if (as_binary != NULL) *as_binary = FALSE;
+		ret = fread_model_032(f, bloom, ngram_length, delim, use_wgrams);
+	}
+	return ret;
 }
