@@ -39,6 +39,8 @@ const int cmp2(const char* const s, const char* const haystack[]);
 const size_t inline_decode(char* s, const size_t len);
 const size_t encode(char** out, size_t* outsize, const char* const s, const size_t len);
 const int starts_with(const char* const s, const char* const prefix);
+char* const ltrim(char* const s);
+char* const rtrim(char* const s);
 const size_t count_char(const char* const s, const char ch);
 char* const join(const char* const sep, const char** strs);
 char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt);

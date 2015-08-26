@@ -160,6 +160,21 @@ const int starts_with(const char* const s, const char* const prefix)
 	return (strstr(s, prefix) == s);
 }
 
+char* const ltrim(char* const s)
+{
+	char* x = s;
+	while (isspace(*x) && *x != 0x00) x++;
+	return x;
+}
+
+char* const rtrim(char* const s)
+{
+	char* x = s +UNSIGNED_SUBSTRACTION(strlen(s), 1);
+	while (isspace(*x) && x != s) x--;
+	x[1] = 0x00;
+	return x;
+}
+
 const size_t count_char(const char* const s, const char ch)
 {
 	assert(s != NULL);
