@@ -50,6 +50,11 @@ static const char* const EX1_INPUT2 = TEST_SRC "res/testing/ex1-test.zip";
 static const char* const EX1_OUTPUT = TEST_SRC "res/testing/ref/ex1/n=%"Z".model";
 static const char* const EX1_SCORES = TEST_SRC "res/testing/ref/ex1/n=%"Z".scores";
 
+static const char* const EX2_INPUT1 = TEST_SRC "res/testing/ex2-train.zip";
+static const char* const EX2_OUTPUT = TEST_SRC "res/testing/ref/ex2/n=%"Z".model";
+static const char* const EX2_STATS  = TEST_SRC "res/testing/ref/ex2/n=%"Z".stats";
+static const char* const EX2_INSPECT= TEST_SRC "res/testing/ref/ex2/n=%"Z".inspect";
+
 
 CTEST_DATA(main)
 {
@@ -132,11 +137,9 @@ static void ADD_PARAM(struct main_data* const d, const char* const parg, const c
 	va_end(args);
 }
 
-static char* const read_log_ex(const struct main_data* const d, char* const prefix)
+static char* const read_file_ex(const char* const fname, const char* const prefix)
 {
-	assert(d != NULL);
-
-	FILE* f = fopen(d->log, "r");
+	FILE* f = fopen(fname, "r");
 	if (f == NULL)
 	{
 		return NULL;
@@ -184,6 +187,17 @@ static char* const read_log_ex(const struct main_data* const d, char* const pref
 
 	fclose(f);
 	return x;
+}
+
+static char* const read_file(const char* const fname)
+{
+	return read_file_ex(fname, NULL);
+}
+
+static char* const read_log_ex(const struct main_data* const d, char* const prefix)
+{
+	assert(d != NULL);
+	return read_file_ex(d->log, prefix);
 }
 
 static char* const read_log(const struct main_data* const d)
@@ -247,6 +261,90 @@ static void FIND_IN_LOG(const struct main_data* const d, const char* const needl
 		}
 		ASSERT_NOT_NULL(x);
 	}
+}
+
+void CMP_FILES(const char* const a, const char* const b)
+{
+	FILE* f1 = fopen(a, "rb");
+	ASSERT_NOT_NULL(f1);
+
+	FILE* f2 = fopen(b, "rb");
+	if (f2 == NULL)
+	{
+		fclose(f1);
+		ASSERT_NOT_NULL(f2);
+	}
+
+	int ch1, ch2;
+	do
+	{
+		ch1 = getc(f1);
+		ch2 = getc(f2);
+	} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
+
+	fclose(f1); fclose(f2);
+	ASSERT_EQUAL(ch1, ch2);
+}
+
+void CMP_LINE(const char* const a, const char* const b, const char* const needle)
+{
+	char* const A = read_file(a);
+	ASSERT_NOT_NULL(A);
+
+	char* const B = read_file(b);
+	if (B == NULL)
+	{
+		free(A);
+		ASSERT_NOT_NULL(B);
+	}
+
+	char* const x = strstr(A, needle);
+	char* const y = strstr(B, needle);
+
+	if (x == NULL || y == NULL)
+	{
+		free(A); free(B);
+		ASSERT_NOT_NULL(A);
+		ASSERT_NOT_NULL(B);
+	}
+
+	for (int i = 0, j = 0; x[i] != '\n' && x[i] != 0x00; i++, j++)
+	{
+		if (x[i] != y[j])
+		{
+			free(A); free(B);
+			ASSERT_STR(x, y);
+		}
+	}
+
+	free(A); free(B);
+}
+
+void CMP_MODELS(const char* const a, const char* const b)
+{
+	SALAD_T(s1);
+	if (salad_from_file(a, &s1) != EXIT_SUCCESS)
+	{
+		salad_destroy(&s1);
+		ASSERT_FAIL();
+	}
+
+	SALAD_T(s2);
+	if (salad_from_file(b, &s2) != EXIT_SUCCESS)
+	{
+		salad_destroy(&s1);
+		salad_destroy(&s2);
+		return; // Output file doesn't exist?
+	}
+
+	ASSERT_FALSE(salad_spec_diff(&s1, &s2));
+
+	BLOOM* const b1 = GET_BLOOMFILTER(s1.model);
+	BLOOM* const b2 = GET_BLOOMFILTER(s2.model);
+
+	ASSERT_EQUAL(0, bloom_compare(b1, b2));
+
+	salad_destroy(&s1);	salad_destroy(&s2);
 }
 
 static const char* SALAD_MODES[] = {
@@ -412,32 +510,10 @@ CTEST2(main, ex1)
 
 		FIND_IN_LOG(data, "[*] Train salad on");
 
-		SALAD_T(s1);
-		if (salad_from_file(data->out, &s1) != EXIT_SUCCESS)
-		{
-			salad_destroy(&s1);
-			ASSERT_FAIL();
-		}
-
 		char buf[0x1000];
 		snprintf(buf, 0x1000, EX1_OUTPUT, n);
 
-		SALAD_T(s2);
-		if (salad_from_file(buf, &s2) != EXIT_SUCCESS)
-		{
-			salad_destroy(&s1);
-			salad_destroy(&s2);
-			return; // Output file doesn't exist?
-		}
-
-		ASSERT_FALSE(salad_spec_diff(&s1, &s2));
-
-		BLOOM* const b1 = GET_BLOOMFILTER(s1.model);
-		BLOOM* const b2 = GET_BLOOMFILTER(s2.model);
-
-		ASSERT_EQUAL(0, bloom_compare(b1, b2));
-
-		salad_destroy(&s1);	salad_destroy(&s2);
+		CMP_MODELS(data->out, buf);
 
 
 		// testing
@@ -463,27 +539,75 @@ CTEST2(main, ex1)
 			return; // Input file doesn't exist?
 		}
 
-		FILE* f1 = fopen(data->out, "rb");
-		ASSERT_NOT_NULL(f1);
-
-
 		snprintf(buf, 0x1000, EX1_SCORES, n);
-		FILE* f2 = fopen(buf, "rb");
-		if (f2 == NULL)
+		CMP_FILES(data->out, buf);
+	}
+}
+
+CTEST2(main, ex2)
+{
+	for (size_t n = 1; n <= 3; n++)
+	for (size_t batch_size = 0; batch_size < 10; batch_size++)
+	{
+		// training
+		SET_MODE(data, "train");
+		ADD_PARAM(data, "-i", EX2_INPUT1);
+		ADD_PARAM(data, "-f", "archive");
+		if (batch_size > 0)
 		{
-			fclose(f1);
-			ASSERT_NOT_NULL(f2);
+			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+		}
+		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-d", "''");
+		ADD_PARAM(data, "-o", data->out);
+		int ret = EXEC_EX(data);
+		if (ret != 0)
+		{
+			CTEST_LOG("'%s' is not available", EX2_INPUT1);
+			return; // Input file doesn't exist?
 		}
 
-		int ch1, ch2;
-		do
-		{
-			ch1 = getc(f1);
-			ch2 = getc(f2);
-		} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
+		FIND_IN_LOG(data, "[*] Train salad on");
 
-		fclose(f1); fclose(f2);
-		ASSERT_EQUAL(ch1, ch2);
+		char buf[0x1000];
+		snprintf(buf, 0x1000, EX2_OUTPUT, n);
+
+		CMP_MODELS(data->out, buf);
+
+
+		// stats
+		char b[0x1000];
+		snprintf(b, 0x1000, "%s~tmp", data->out);
+		ASSERT_NOT_EQUAL(-1, rename(data->out, b));
+
+		SET_MODE(data, "stats");
+		ADD_PARAM(data, "--bloom", b);
+		ret = EXEC_EX(data);
+		remove(b);
+
+		snprintf(buf, 0x1000, EX2_STATS, n);
+		CMP_LINE(data->log, buf, "Saturation: ");
+
+		// inspect
+		SET_MODE(data, "inspect");
+		ADD_PARAM(data, "-i", EX2_INPUT1);
+		ADD_PARAM(data, "-f", "archive");
+		if (batch_size > 0)
+		{
+			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+		}
+		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-d", "''");
+		ADD_PARAM(data, "-o", data->out);
+		ret = EXEC_EX(data);
+		if (ret != 0)
+		{
+			CTEST_LOG("'%s' is not available", EX2_INPUT1);
+			return; // Input file doesn't exist?
+		}
+
+		snprintf(buf, 0x1000, EX2_INSPECT, n);
+		CMP_FILES(data->out, buf);
 	}
 }
 #endif
