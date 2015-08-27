@@ -37,10 +37,12 @@ struct archive* const archive_write_easyopen(FILE* const f, const archive_type t
 
 const int archive_read_seek(struct archive* const a, struct archive_entry** entry, const char* const name);
 const int archive_read_dumpfile(struct archive* const a, struct archive_entry* const entry);
+const int archive_read_dumpfile2(FILE* const f, const char* const name, const char* const filename);
 const int archive_write_file(struct archive* const a, const char* const filename, const char* const name);
 
 void archive_read_easyclose(struct archive* const a);
 void archive_write_easyclose(struct archive* const a);
+
 
 #endif
 

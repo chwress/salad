@@ -52,7 +52,7 @@ struct archive* const archive_write_easyopen(FILE* const f, const archive_type t
 	}
 
 	const int ret = archive_write_open_FILE(a, f);
-	return (ret ? a : NULL);
+	return (ret == ARCHIVE_OK ? a : NULL);
 }
 
 const int archive_read_seek(struct archive* const a, struct archive_entry** entry, const char* const needle)
@@ -91,6 +91,29 @@ const int archive_read_dumpfile(struct archive* const a, struct archive_entry* c
 		ret = archive_write_data_block(out, buf, size, offset);
 		if (ret != ARCHIVE_OK) return ret;
 	}
+}
+
+const int archive_read_dumpfile2(FILE* const f, const char* const name, const char* const filename)
+{
+	struct archive* a = archive_read_easyopen(f);
+	if (a == NULL)
+	{
+		return ARCHIVE_FAILED;
+	}
+
+	struct archive_entry* entry;
+	int ret = archive_read_seek(a, &entry, name);
+	if (ret != ARCHIVE_OK)
+	{
+		archive_read_easyclose(a);
+		return ret;
+	}
+
+	archive_entry_set_pathname(entry, filename);
+	ret = archive_read_dumpfile(a, entry);
+
+	archive_read_easyclose(a);
+	return ret;
 }
 
 const int archive_write_file(struct archive* const a, const char* const filename, const char* const name)
