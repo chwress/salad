@@ -248,8 +248,8 @@ void CMP_LINE(const char* const a, const char* const b, const char* const needle
 	if (x == NULL || y == NULL)
 	{
 		free(A); free(B);
-		ASSERT_NOT_NULL(A);
-		ASSERT_NOT_NULL(B);
+		CTEST_LOG("Does not contain '%s'", needle);
+		ASSERT_FAIL();
 	}
 
 	for (int i = 0, j = 0; x[i] != '\n' && x[i] != 0x00; i++, j++)
