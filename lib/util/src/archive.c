@@ -81,16 +81,20 @@ const int archive_read_dumpfile(struct archive* const a, struct archive_entry* c
 	size_t size;
 	off_t offset;
 
+	int ret = ARCHIVE_OK;
 	while (1)
 	{
 		int ret = archive_read_data_block(a, &buf, &size, &offset);
-		if (ret == ARCHIVE_EOF) return ARCHIVE_OK;
+		if (ret == ARCHIVE_EOF) break;
 
-		if (ret != ARCHIVE_OK) return ret;
+		if (ret != ARCHIVE_OK) break;
 
 		ret = archive_write_data_block(out, buf, size, offset);
-		if (ret != ARCHIVE_OK) return ret;
+		if (ret != ARCHIVE_OK) break;
 	}
+
+	archive_write_easyclose(out);
+	return (ret == ARCHIVE_EOF ? ARCHIVE_OK : ret);
 }
 
 const int archive_read_dumpfile2(FILE* const f, const char* const name, const char* const filename)
