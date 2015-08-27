@@ -22,14 +22,16 @@
 #ifndef SALAD_IO_H_
 #define SALAD_IO_H_
 
-#include "common.h"
+#include "util.h"
 
-#include <container/bloom.h>
+const int fwrite_model(FILE* const f, const salad_t* const s);
+const int fwrite_model_txt(FILE* const f, const salad_t* const s);
+const int fwrite_model_zip(FILE* const f, const salad_t* const s);
 
-const int fwrite_model(FILE* const f, BLOOM* const bloom, const size_t ngram_length, const char* const delimiter, const int as_binary);
-const int fread_model(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary);
-const int fread_model_txt(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams, int* const as_binary);
-const int fread_model_032(FILE* const f, BLOOM** const bloom, size_t* const ngram_length, delimiter_array_t delim, int* const use_wgrams);
+const int fread_model(FILE* const f, salad_t* const s);
+const int fread_model_txt(FILE* const f, salad_t* const s);
+const int fread_model_zip(FILE* const f, salad_t* const s);
+const int fread_model_032(FILE* const f, salad_t* const s);
 
 
 #endif /* SALAD_CONTAINER_IO_H_ */

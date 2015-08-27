@@ -187,7 +187,7 @@ void bloom_add_num(BLOOM* const bloom, const size_t num)
 
 static inline int bloom_check(BLOOM* const bloom, const char* s, const size_t len)
 {
-	assert((bloom) != NULL);
+	assert(bloom != NULL);
 
 	for(size_t n = 0; n < (bloom)->nfuncs; ++n)
 	{

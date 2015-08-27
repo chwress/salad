@@ -237,23 +237,7 @@ const int salad_spec_diff(const salad_t* const a, const salad_t* const b)
 			|| _(a)->use_tokens != _(b)->use_tokens);
 }
 
-const int bloom_from_file_ex(FILE* const f, salad_t* const out)
-{
-	delimiter_destroy(&_(out)->delimiter);
-
-	BLOOM* bloom = NULL;
-	const int ret = fread_model(f, &bloom, &out->ngram_length, _(out)->delimiter.d, &_(out)->use_tokens, &out->as_binary);
-	delimiter_array_to_string(_(out)->delimiter.d, &_(out)->delimiter.str);
-
-	if (ret > 0)
-	{
-		salad_set_bloomfilter_ex(out, bloom);
-		return EXIT_SUCCESS;
-	}
-	return EXIT_FAILURE;
-}
-
-const int bloom_from_file(const char* const filename, salad_t* const out)
+const int salad_from_file(const char* const filename, salad_t* const out)
 {
 	assert(filename != NULL && out != NULL);
 
@@ -263,28 +247,10 @@ const int bloom_from_file(const char* const filename, salad_t* const out)
 		return EXIT_FAILURE +1;
 	}
 
-	const int ret = bloom_from_file_ex(f, out);
+	const int ret = salad_from_file_ex(f, out);
 	fclose(f);
 
 	return (ret == EXIT_SUCCESS ? ret : EXIT_FAILURE +2);
-}
-
-
-const int salad_from_file(const char* const filename, salad_t* const out)
-{
-	salad_init(out);
-
-	// TODO: right now there only are bloom filters!
-	out->model.type = SALAD_MODEL_BLOOMFILTER;
-
-	switch (out->model.type)
-	{
-	case SALAD_MODEL_BLOOMFILTER:
-		return bloom_from_file(filename, out);
-
-	default:
-		return EXIT_FAILURE;
-	}
 }
 
 const int salad_from_file_ex(FILE* const f, salad_t* const out)
@@ -297,7 +263,7 @@ const int salad_from_file_ex(FILE* const f, salad_t* const out)
 	switch (out->model.type)
 	{
 	case SALAD_MODEL_BLOOMFILTER:
-		return bloom_from_file_ex(f, out);
+		return (fread_model(f, out) > 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 
 	default:
 		return EXIT_FAILURE;
@@ -325,9 +291,6 @@ const int salad_to_file_ex(const salad_t* const s, FILE* const f)
 		return EXIT_FAILURE;
 	}
 
-	// TODO: right now there only are bloom filters!
-	BLOOM* const b = GET_BLOOMFILTER(s->model);
-
-	const int n = fwrite_model(f, b, s->ngram_length, _(s)->delimiter.str, s->as_binary);
+	const int n = fwrite_model(f, s);
 	return (n >= 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }

@@ -30,16 +30,16 @@ const int _salad_stats_(const config_t* const c)
 		return EXIT_FAILURE;
 	}
 
-	BLOOM* bloom = NULL;
-
-	int ret = fread_model(f_filter, &bloom, NULL, NULL, NULL, NULL);
+	SALAD_T(s);
+	int ret = salad_from_file_ex(f_filter, &s);
 	fclose(f_filter);
-	if (ret <= 0)
+	if (ret != EXIT_SUCCESS)
 	{
 		error("Corrupt bloom filter file.");
 		return EXIT_FAILURE;
 	}
 
+	BLOOM* bloom = GET_BLOOMFILTER(s.model);
 	const size_t set = bloom_count(bloom);
 	status("Saturation: %.3f%%", (((double)set)/ ((double)bloom->bitsize))*100);
 	return EXIT_SUCCESS;
