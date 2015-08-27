@@ -46,6 +46,7 @@ char* const rtrim(char* const s);
 const size_t count_char(const char* const s, const char ch);
 char* const join(const char* const sep, const char** strs);
 char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt);
+void rand_s(char* const out, const size_t n);
 const int memcmp_bytes(const void* const a, const void* const b, const size_t n);
 
 #ifdef IOTYPE_FILES

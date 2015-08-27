@@ -271,6 +271,20 @@ char* const join(const char* const sep, const char** strs)
 	return join_ex(NULL, sep, strs, NULL);
 }
 
+void rand_s(char* const out, const size_t n)
+{
+	static const char alphanum[] =
+			"0123456789"
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			"abcdefghijklmnopqrstuvwxyz";
+
+	for (int i = 0; i < n; ++i)
+	{
+		out[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	}
+	out[n] = 0;
+}
+
 const int memcmp_bytes(const void* const a, const void* const b, const size_t n)
 {
 	const uint8_t* A = ((const uint8_t*) a) -1;
