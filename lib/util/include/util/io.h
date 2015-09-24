@@ -100,7 +100,7 @@ typedef struct
 } group_t;
 #endif
 
-#if defined(EXTENDED_METADATA) && defined(GROUPED_INPUT)
+#if defined(EXTENDED_METADATA) || defined(GROUPED_INPUT)
 #define MAINTAIN_METADATA
 #endif
 
