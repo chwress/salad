@@ -231,7 +231,6 @@ endif ()
 
 # INSTALL
 
-get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
 set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../"
                       "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../")
 configure_file(${PROJECTNAME}-config.cmake.in

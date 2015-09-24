@@ -41,13 +41,13 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(HAS_Z_MODIFIER FALSE) 
 endif ()
 
+if (_XOPEN_SOURCE_7)
+	set(_XOPEN_SOURCE "700")
+endif ()
+
 if (USE_NETWORK AND _XOPEN_SOURCE)
 	message(STATUS "Reject the usage of X/Open in favor of the network support.")
 	set(_XOPEN_SOURCE FALSE)
-endif ()
-
-if (_XOPEN_SOURCE_7)
-	set(_XOPEN_SOURCE "700")
 endif ()
 
 
@@ -112,6 +112,7 @@ if (USE_ARCHIVES)
 
 	include_directories(${LibArchive_INCLUDE_DIRS})
 	target_link_libraries(${TARGETNAME} ${LibArchive_LIBRARIES})
+	message(STATUS "---- ${TARGETNAME} ----- ${LibArchive_LIBRARIES}")
 else ()
 	set(GROUPED_INPUT FALSE)
 endif ()
@@ -178,7 +179,6 @@ endif ()
 
 # INSTALL
 
-get_property(CONF_LOCATION TARGET ${TARGETNAME} PROPERTY LOCATION)
 set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/"
                       "${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/")
 configure_file(${PROJECTNAME}-config.cmake.in
