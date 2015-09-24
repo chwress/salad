@@ -22,17 +22,15 @@
 #include <util/simple_conf.h>
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <limits.h>
 
 #ifdef USE_ARCHIVES
 #include <time.h>
 #include <util/archive.h>
 #include <archive_entry.h>
-#endif
-
 
 void gen_tmpname(char* const buf, const size_t n)
 {
@@ -45,6 +43,7 @@ void gen_tmpname(char* const buf, const size_t n)
 	srand(time(NULL));
 	rand_s(buf+1, n-2);
 }
+#endif
 
 static const char* const CONFIG_HEADER = "Salad Configuration";
 
@@ -249,7 +248,7 @@ const int fread_header(FILE* const f, const char* const key, const char* const v
 		long int b = strtol(value, &tail, 10);
 		if (tail == value)
 		{
-			b = (strcasecmp(value, "True") == 0);
+			b = (stricmp(value, "True") == 0);
 		}
 		salad_use_binary_ngrams(x->s, b);
 		break;

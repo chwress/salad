@@ -231,6 +231,7 @@ endif ()
 
 # INSTALL
 
+set(CONF_LIBRARIES "${TARGETNAME}")
 set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${SOURCE_DIR}/../"
                       "${PROJECT_SOURCE_DIR}/${SOURCE_DIR}/../")
 configure_file(${PROJECTNAME}-config.cmake.in

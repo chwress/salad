@@ -112,44 +112,6 @@ if (TEST_SALAD)
 	include_directories("${ctest_INCLUDE_DIRS}")
 endif ()
 
-# libarchive
-if (USE_ARCHIVES)
-	find_package(LibArchive 2.70)    
-	set(USE_ARCHIVES ${LibArchive_FOUND})
-endif ()
-
-if (USE_ARCHIVES)
-	if (${LibArchive_VERSION} VERSION_LESS "3")
-		set(LIBARCHIVE2 1)
-	endif (${LibArchive_VERSION} VERSION_LESS "3")
-
-	include_directories(${LibArchive_INCLUDE_DIRS})
-	target_link_libraries(${TARGETNAME} ${LibArchive_LIBRARIES})
-else ()
-	set(GROUPED_INPUT FALSE)
-endif ()
-
-
-# libnids
-if (USE_NETWORK)
-	find_library(NIDS_LIB nids)
-	if (NIDS_LIB)
-		target_link_libraries(${TARGETNAME} ${NIDS_LIB})
-	else ()
-		message(STATUS "Unable to locate libnids. Disable network usage!")
-		set(USE_NETWORK FALSE)
-	endif ()
-
-	find_library(PCAP_LIB pcap)
-	if (PCAP_LIB)
-		target_link_libraries(${TARGETNAME} ${PCAP_LIB})
-	else ()
-		message(STATUS "Unable to locate libpcap. Disable network usage!")
-		set(USE_NETWORK FALSE)
-	endif ()
-endif ()
-
-
 if (USE_NETWORK)
 	set(STRICT FALSE)
 endif (USE_NETWORK)

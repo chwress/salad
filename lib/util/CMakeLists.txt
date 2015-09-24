@@ -72,7 +72,7 @@ if (NOT USE_NETWORK)
 	list(REMOVE_ITEM sources "${SRC}/io/net.c")
 endif ()
 
-if (NOT USE_ARCHIVE)
+if (NOT USE_ARCHIVES)
 	list(REMOVE_ITEM sources "${SRC}/io/archive.c")
 endif ()
 
@@ -178,6 +178,7 @@ endif ()
 
 # INSTALL
 
+set(CONF_LIBRARIES "${TARGETNAME}")
 set(CONF_INCLUDE_DIRS "${PROJECT_BINARY_DIR}/${INCLUDE_DIR}/"
                       "${PROJECT_SOURCE_DIR}/${INCLUDE_DIR}/")
 configure_file(${PROJECTNAME}-config.cmake.in

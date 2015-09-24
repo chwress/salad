@@ -70,7 +70,7 @@ static inline archive_iterator_t* const create_archive_iterator(file_t* const f,
 	RESET_ARCHIVE_ITERATOR_ENTRY(*it);
 	init_iterator_context(&it->context, f);
 	return it;
-};
+}
 
 #define GET_ARCHIVE(f) ((archive_iterator_t*) f->data)->a
 

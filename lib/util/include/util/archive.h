@@ -27,7 +27,7 @@
 #include <util/config.h>
 
 #ifdef USE_ARCHIVES
-
+#include <time.h>
 #include <archive.h>
 
 typedef enum {ZIP, TARGZ} archive_type;
