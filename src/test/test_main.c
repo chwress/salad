@@ -373,7 +373,7 @@ CTEST2(main, train)
 	for (const char** x = input_modes; *x != NULL; x++)
 	{
 		char str[100];
-		snprintf(str, 100, "(%s mode)", *x);
+		snprintf(str, 100, "(%s mode", *x);
 
 		SET_MODE(data, "train");
 		ADD_PARAM(data, "-i", TEST_INPUT "-4KmR19beV");
