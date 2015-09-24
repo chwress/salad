@@ -140,7 +140,9 @@ static void ADD_PARAM(struct main_data* const d, const char* const parg, const c
 static char* const read_log_ex(const struct main_data* const d, char* const prefix)
 {
 	assert(d != NULL);
-	return getlines_ex(d->log, prefix);
+	char* const log = getlines_ex(d->log, prefix);
+	assert(log != NULL);
+	return log;
 }
 
 static char* const read_log(const struct main_data* const d)

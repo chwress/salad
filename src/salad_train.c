@@ -22,8 +22,9 @@
 #include <salad/classify.h>
 #include <salad/util.h>
 
-#include <util/log.h>
 #include <util/io.h>
+#include <util/log.h>
+#include <util/util.h>
 
 #include <inttypes.h>
 
@@ -131,7 +132,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 			salad_destroy(&s1);
 			s1 = s2;
 		}
-		fseek(f_out, 0, SEEK_SET);
+		fseek_s(f_out, 0, SEEK_SET);
 
 		if (c->echo_params)
 		{

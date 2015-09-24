@@ -30,6 +30,8 @@
 #include "util/getline.h"
 #ifndef _GNU_SOURCE
 
+#include <util/util.h>
+
 #include <errno.h>
 #include <string.h>
 
@@ -101,9 +103,9 @@ char* const getlines_ex(const char* const fname, const char* const prefix)
 		return NULL;
 	}
 
-	fseek(f, 0, SEEK_END);
-	long int size = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	fseek_s(f, 0, SEEK_END);
+	size_t size = ftell_s(f);
+	fseek_s(f, 0, SEEK_SET);
 
 	char* log = malloc(sizeof(char) * (size +1));
 	if (log == NULL || size == 0)

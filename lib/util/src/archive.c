@@ -19,6 +19,8 @@
 
 #ifdef USE_ARCHIVES
 #include <archive_entry.h>
+
+#include <util/util.h>
 #include <string.h>
 
 struct archive* const archive_read_easyopen(FILE* const f)
@@ -125,9 +127,9 @@ const int archive_write_file(struct archive* const a, const char* const filename
 	FILE* f = fopen(filename, "r+");
 	if (f == NULL) return ARCHIVE_FAILED;
 
-	fseek(f, 0, SEEK_END);
-	const size_t n = ftell(f);
-	fseek(f, 0, SEEK_SET);
+	fseek_s(f, 0, SEEK_END);
+	const size_t n = ftell_s(f);
+	fseek_s(f, 0, SEEK_SET);
 
 	struct archive_entry* entry = archive_entry_new();
 	archive_entry_clear(entry);

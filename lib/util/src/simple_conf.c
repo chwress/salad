@@ -43,7 +43,7 @@ char* const readline(char** buf, size_t* len, FILE* f)
 const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE handle, void* const usr)
 {
 	assert(f != NULL);
-	long int pos = ftell(f);
+	const size_t pos = ftell_s(f);
 
 	char* line = NULL;
 	size_t len = 0;
@@ -54,7 +54,7 @@ const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE hand
 		if (x == NULL || strcasecmp(x, header) != 0)
 		{
 			free(line);
-			fseek(f, pos, SEEK_SET);
+			fseek_s(f, pos, SEEK_SET);
 			return 0;
 		}
 	}
@@ -82,6 +82,5 @@ const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE hand
 		if (handle(f, x, value, usr)) nhandled++;
 	}
 	free(line);
-
-	return ftell(f) -pos;
+	return UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
 }

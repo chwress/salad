@@ -85,13 +85,13 @@ const int fwrite_bloom(FILE* const f, BLOOM* const b)
 
 const int fwrite_bloom_inline(FILE* const f, BLOOM* const b)
 {
-	// Since we are do not want to determine the size of the data based on some
+	// Since we do not want to determine the size of the data based on some
 	// internals, we do something ugly instead ;)
 	char buf[0x100];
 	snprintf(buf, 0x100, "%d", INT_MAX);
 	for (char* x = buf; *x != 0x00; x++) *x = ' ';
 
-	size_t pos = ftell(f) +15;
+	size_t pos = ftell_s(f) +15;
 	int nbloom = fprintf(f, "bloom_filter = %s\n", buf);
 	if (nbloom < 0) return -1;
 
@@ -101,9 +101,9 @@ const int fwrite_bloom_inline(FILE* const f, BLOOM* const b)
 	if (fprintf(f, "\n") < 0) return -1;
 
 
-	fseek(f, pos, SEEK_SET);
+	fseek_s(f, pos, SEEK_SET);
 	fprintf(f, "%"Z, (size_t) n);
-	fseek(f, 0, SEEK_END);
+	fseek_s(f, 0, SEEK_END);
 
 	return n +1;
 }
@@ -134,7 +134,7 @@ const int fwrite_model_txt(FILE* const f, const salad_t* const s)
 const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 {
 #ifdef USE_ARCHIVES
-	const size_t pos = ftell(f);
+	const size_t pos = ftell_s(f);
 
 	// Initialize output file
 	struct archive* a = archive_write_easyopen(f, ZIP);
@@ -190,7 +190,7 @@ const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 	archive_write_file(a, tmpname, BLOOM_FNAME);
 	remove(tmpname);
 
-	const size_t size = ftell(f) -pos;
+	const size_t size = UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
 	archive_write_easyclose(a);
 	return size;
 #else
@@ -317,11 +317,11 @@ const int fread_model_txt(FILE* const f, salad_t* const s)
 const int fread_model_zip(FILE* const f, salad_t* const s)
 {
 #ifdef USE_ARCHIVES
-	size_t pos = ftell(f);
+	const size_t pos = ftell_s(f);
 
 	uint16_t magic;
 	size_t n = fread(&magic, sizeof(uint16_t), 1, f);
-	fseek(f, pos, SEEK_SET);
+	fseek_s(f, pos, SEEK_SET);
 	if (n <= 0) return -1;
 
 	// Is ZIP archive?
@@ -339,7 +339,7 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 	{
 		return -1;
 	}
-	fseek(f, 0, SEEK_SET);
+	fseek_s(f, 0, SEEK_SET);
 
 	FILE* config = fopen(tmpname, "r");
 	if (config == NULL)
@@ -394,7 +394,7 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 	{
 		free(spec.bloomfilter);
 	}
-	return ftell(f) -pos;
+	return UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
 #else
 	return 0;
 #endif
@@ -404,7 +404,7 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 const int fread_model_032(FILE* const f, salad_t* const s)
 {
 	assert(f != NULL && s != NULL);
-	size_t pos = ftell(f);
+	const size_t pos = ftell(f);
 
 	// Set default values
 	salad_use_binary_ngrams(s, FALSE);
@@ -422,5 +422,5 @@ const int fread_model_032(FILE* const f, salad_t* const s)
 	// The actual bloom filter values
 	salad_set_bloomfilter_ex(s, bloom_init_from_file(f));
 
-	return (n <= 0 || s->ngram_length <= 0 || s->model.x == NULL ? -1 : (ftell(f) -pos));
+	return (n <= 0 || s->ngram_length <= 0 || s->model.x == NULL ? -1 : UNSIGNED_SUBSTRACTION(ftell_s(f), pos));
 }

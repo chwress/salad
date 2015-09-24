@@ -23,6 +23,7 @@
 #define UTIL_UTIL_H_
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -48,6 +49,7 @@ char* const join(const char* const sep, const char** strs);
 char* const join_ex(const char* const prefix, const char* const sep, const char** strs, const char* const fmt);
 void rand_s(char* const out, const size_t n);
 const int memcmp_bytes(const void* const a, const void* const b, const size_t n);
+
 
 #ifdef IOTYPE_FILES
 char* load_file(char* path, char* name, unsigned int* size);
@@ -104,6 +106,25 @@ const float frand();
 	// simply ignore the max-length parameter :/
 	#define STRNLEN(s, n) strlen(s)
 #endif
+
+
+inline size_t ftell_s(FILE* const f)
+{
+	// TODO: Do something clever here to potentially handy 4GB+ files
+	const long int pos = ftell(f);
+	assert(pos >= 0);
+	return MAX(0, pos);
+}
+
+inline int fseek_s(FILE* const f, const size_t offset, const int whence)
+{
+	// TODO: Do something clever here to potentially handy 4GB+ files
+	const size_t __offset = MIN(LONG_MAX, offset);
+	assert(__offset == offset);
+	const int ret = fseek(f, __offset, whence);
+	return ret;
+}
+
 
 #define FALSE 0
 #define TRUE  1

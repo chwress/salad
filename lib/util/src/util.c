@@ -322,6 +322,8 @@ const float frand()
 	return (float) rand() / RAND_MAX;
 }
 
+extern size_t ftell_s(FILE* const f);
+extern int fseek_s(FILE* const f, const size_t offset, const int whence);
 
 #ifdef IOTYPE_FILES
 FILE* const open_file_ex(char* path, char* name, struct stat* st)

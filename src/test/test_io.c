@@ -17,6 +17,7 @@
 
 #include <ctest.h>
 #include <util/io.h>
+#include <util/util.h>
 
 #include "common.h"
 
@@ -87,13 +88,13 @@ CTEST_SETUP(io)
 			CTEST_ERR("Cannot read reference file '%s'", INPUT_REF[i]);
 			ASSERT_FAIL();
 		}
-		fseek(f, 0, SEEK_END);
-		size_t n = (size_t) ftell(f);
+		fseek_s(f, 0, SEEK_END);
+		size_t n = ftell_s(f);
 		data->ref.expected[i].len = n;
 		data->ref.expected[i].buf = (char*) calloc(n, sizeof(data_t));
 		data->ref.n++;
 
-		fseek(f, 0, SEEK_SET);
+		fseek_s(f, 0, SEEK_SET);
 		n = fread(data->ref.expected[i].buf, 1, data->ref.expected[i].len, f);
 		fclose(f);
 
