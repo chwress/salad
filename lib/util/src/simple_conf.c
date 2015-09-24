@@ -51,7 +51,7 @@ const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE hand
 	if (header != NULL)
 	{
 		char* x = readline(&line, &len, f);
-		if (x == NULL || strcasecmp(x, header) != 0)
+		if (x == NULL || stricmp(x, header) != 0)
 		{
 			free(line);
 			fseek_s(f, pos, SEEK_SET);

@@ -65,6 +65,18 @@ const int cmp2(const char* const s, const char* const needles[])
 	return -1;
 }
 
+const int stricmp(const char* const a, const char* const b)
+{
+	const char* A = a;
+	const char* B = b;
+
+	while (tolower(*A) == tolower(*B) && *A != 0x00)
+	{
+		A++; B++;
+	}
+	return (*A - *B);
+}
+
 const int isprintable(const char* const s)
 {
 	for (const char* x = s; *x != 0x00; x++)

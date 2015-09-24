@@ -37,6 +37,7 @@
 const int cmp(const char* const s, ...);
 const int cmp2(const char* const s, const char* const needles[]);
 
+const int stricmp(const char* const a, const char* const b);
 
 const int isprintable(const char* const s);
 const size_t inline_decode(char* s, const size_t len);

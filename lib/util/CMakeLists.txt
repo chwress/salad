@@ -112,7 +112,6 @@ if (USE_ARCHIVES)
 
 	include_directories(${LibArchive_INCLUDE_DIRS})
 	target_link_libraries(${TARGETNAME} ${LibArchive_LIBRARIES})
-	message(STATUS "---- ${TARGETNAME} ----- ${LibArchive_LIBRARIES}")
 else ()
 	set(GROUPED_INPUT FALSE)
 endif ()

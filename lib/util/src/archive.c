@@ -145,7 +145,7 @@ const int archive_write_file(struct archive* const a, const char* const filename
 	size_t nread = 0;
 	do
 	{
-		nread = fread(buf, 1, BUFFER_SIZE, f);
+		nread = fread(buf, sizeof(char), BUFFER_SIZE, f);
 		const size_t nwrote = archive_write_data(a, buf, nread);
 		if (nread != nwrote)
 		{
