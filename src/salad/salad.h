@@ -75,7 +75,6 @@ typedef struct
 	saladmodel_t model; //!< The model to be used by salad.
 
 	size_t ngram_length; //!< The n-gram length.
-	char* delimiter; //!< The delimiter to extract tokens
 	int as_binary; //!> Whether or not to evaluate n-grams on a binary level.
 
 	void* data;
@@ -94,7 +93,6 @@ typedef struct
 #define EMPTY_SALAD_OBJECT_INITIALIZER { \
 		.model = {NULL, SALAD_MODEL_NOTSPECIFIED}, \
 		.ngram_length = 0, \
-		.delimiter = NULL, \
 		.as_binary = 0, \
 		.data = NULL \
 }
