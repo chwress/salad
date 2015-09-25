@@ -67,24 +67,24 @@ const char* const to_delimiter(const char* const str, delimiter_t* const out)
 
 	to_delimiter_array(x, out->d);
 	delimiter_array_to_string(out->d, &out->str);
-	return x;
+	return out->str;
 }
 
 void to_delimiter_array(const char* const s, delimiter_array_t out)
 {
 	assert(out != NULL);
-    memset(out, 0, 256);
+    memset(out, 0, sizeof(uint8_t) *DELIM_SIZE);
 
-	if (s == NULL)
+	if (s == NULL || s[0] == 0x00)
 	{
 		return;
 	}
 
 	char* const x = malloc((strlen(s) +1) *sizeof(char));
 	strcpy(x, s);
-	inline_decode(x, strlen(x));
+	const size_t n = inline_decode(x, strlen(x));
 
-    for (size_t i = 0; i < strlen(x); i++)
+    for (size_t i = 0; i < n; i++)
     {
     	out[(unsigned int) x[i]] = 1;
     }

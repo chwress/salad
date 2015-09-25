@@ -22,7 +22,6 @@
 #include <stddef.h>
 #include <errno.h>
 #include <ctype.h>
-#include <strings.h>
 
 
 #ifndef IOTYPE_FILES
@@ -310,7 +309,10 @@ const int memcmp_bytes(const void* const a, const void* const b, const size_t n)
 
 char* const fread_str(FILE* const f)
 {
-	size_t n = 2;
+	// This needs to be at least 4 such that valgrind doesn't complain
+	// about strlen reading uninitialized data :/
+	size_t n = 4;
+
 	char* out = (char*) malloc((n +1) *sizeof(char));
 	char* x = out;
 
