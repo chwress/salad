@@ -192,7 +192,7 @@ static const int EXEC(const int expected_return_value, const struct main_data* c
 	return ret;
 }
 
-static void FIND_IN_LOG(const struct main_data* const d, const char* const needle)
+static int FIND_IN_LOG_EX(const struct main_data* const d, const char* const needle)
 {
 	char* const log = read_log(d);
 	if (log != NULL)
@@ -200,12 +200,18 @@ static void FIND_IN_LOG(const struct main_data* const d, const char* const needl
 		char* const x = strstr(log, needle);
 		free(log);
 
-		if (x == NULL)
-		{
-			remove((d)->log);
-			CTEST_LOG("Not found: %s", needle);
-			ASSERT_FAIL();
-		}
+		return (x != NULL);
+	}
+	return FALSE;
+}
+
+static void FIND_IN_LOG(const struct main_data* const d, const char* const needle)
+{
+	if (!FIND_IN_LOG_EX(d, needle))
+	{
+		remove((d)->log);
+		CTEST_LOG("Not found: %s", needle);
+		ASSERT_FAIL();
 	}
 }
 
@@ -579,7 +585,12 @@ CTEST(valgrind, memcheck)
 		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all %s dbg -m", my_name);
 		EXEC_EX(&d);
 		remove(d.out);
-		FIND_IN_LOG(&d, "All heap blocks were freed -- no leaks are possible");
+
+		FIND_IN_LOG(&d, "ERROR SUMMARY: 0 errors from 0 contexts");
+		if (!FIND_IN_LOG_EX(&d, "All heap blocks were freed -- no leaks are possible"))
+		{
+			CTEST_LOG("A third-party library seems to cause problems. Salad appears to be ok, though.");
+		}
 		remove(d.log);
 	}
 }
