@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-typedef uint64_t dim_t;
+typedef size_t dim_t;
 
 const dim_t hash(const char* const s, const size_t len);
 
@@ -47,11 +47,11 @@ typedef struct sn vec_elem_t;
 typedef struct
 {
 	vec_elem_t* header;
-	int level;
-	int length;
+	size_t level;
+	size_t length;
 } vec_t;
 
-vec_t* const vec_create(const int len);
+vec_t* const vec_create(const size_t len);
 void vec_print(vec_t* const v);
 const size_t vec_length(const vec_t* const v);
 

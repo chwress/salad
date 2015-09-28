@@ -67,7 +67,7 @@ const size_t human2bytes(const char* const x)
 	while (*next != 0x00 && isblank(*next)) next++;
 
 	int m = -1;
-	for (int i = 0; SYMBOLS[i] != NULL && m < 0; i++)
+	for (size_t i = 0; SYMBOLS[i] != NULL && m < 0; i++)
 	{
 		m = cmp2(next, SYMBOLS[i]);
 	}

@@ -51,7 +51,7 @@ const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* c
 	{
 		return -1;
 	}
-	for (int i = 0; i < (int) *nfuncs; i++)
+	for (uint8_t i = 0; i < *nfuncs; i++)
 	{
 		if (fread(&fctid, sizeof(uint8_t), 1, f) != 1 || fctid >= NUM_HASHFCTS)
 		{

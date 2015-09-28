@@ -45,7 +45,7 @@ inline const size_t recv_stub_ex(file_t* const f, FN_READ read, FN_DATA data, co
 #endif
 		// Do not use dataset_free(.) since we want to reuse the
 		// memory consumed by dataset_t#data
-		for (int i = 0; i < buf.n; i++)
+		for (size_t i = 0; i < buf.n; i++)
 		{
 			data_free(&buf.data[i]);
 		}

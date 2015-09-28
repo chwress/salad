@@ -72,7 +72,7 @@ BLOOM* const vbloom_create(const size_t size, const uint8_t nfuncs, va_list func
 	hashfunc_t* buf = (hashfunc_t*) calloc(nfuncs, sizeof(hashfunc_t));
 	if (buf == NULL) return NULL;
 
-	for (int i = 0; i < nfuncs; i++)
+	for (uint8_t i = 0; i < nfuncs; i++)
 	{
 		buf[i] = va_arg(funcs, hashfunc_t);
 	}
@@ -98,7 +98,7 @@ BLOOM* const vbloom_create_from_file(FILE* const f, const uint8_t nfuncs, va_lis
 	hashfunc_t* buf = (hashfunc_t*) calloc(nfuncs, sizeof(hashfunc_t));
 	if (buf == NULL) return NULL;
 
-	for (int i = 0; i < nfuncs; i++)
+	for (uint8_t i = 0; i < nfuncs; i++)
 	{
 		buf[i] = va_arg(funcs, hashfunc_t);
 	}

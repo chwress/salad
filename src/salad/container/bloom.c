@@ -57,7 +57,7 @@ hashfunc_t HASH_FCTS[NUM_HASHFCTS] =
 
 const int to_hashid(hashfunc_t h)
 {
-	for (int j = 0; j < NUM_HASHFCTS; j++)
+	for (size_t j = 0; j < NUM_HASHFCTS; j++)
 	{
 		if (HASH_FCTS[j] == h)
 		{

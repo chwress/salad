@@ -159,7 +159,7 @@ void dataset_free(dataset_t* const ds)
 
 	if (ds->capacity > 0)
 	{
-		for (int i = 0; i < ds->n; i++)
+		for (size_t i = 0; i < ds->n; i++)
 		{
 			data_free(&ds->data[i]);
 		}

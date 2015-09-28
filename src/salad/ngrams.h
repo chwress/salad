@@ -52,7 +52,7 @@ inline void extract_bitgrams(const char* const str, const size_t len, const size
 	bitgram_t u = *(bitgram_t*) x;
 	const size_t remainder = (len -(x -str)) *8;
 
-	for (int i = 0; i < remainder -n +1; i++)
+	for (size_t i = 0; i < remainder -n +1; i++)
 	{
 		bitgram_t cur = (u & mask);
 		fct((char*) &cur, BITGRAM_SIZE, data);
@@ -142,7 +142,7 @@ inline void extract_wgrams(const char* const str, const size_t len, const size_t
 
     // Initialize sliding window
 	const char* x = s;
-    for (int i = 1; x < s +slen && i < n; x++)
+    for (size_t i = 1; x < s +slen && i < n; x++)
     {
     	if (*x == ch)
     	{

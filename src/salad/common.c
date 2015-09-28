@@ -120,7 +120,7 @@ int to_ngram_mask(const char* const s, ngram_mask_t* const out)
 	}
 	else
 	{
-		for (int i = 0; i < strlen(s); i++)
+		for (size_t i = 0; i < strlen(s); i++)
 		{
 			if (s[i] != '0' && s[i] != '1')
 			{
@@ -136,7 +136,7 @@ const char* const ngram_mask_to_string(const ngram_mask_t m, char** out)
 {
 	*out = (char*) calloc(MASK_BITSIZE +1, sizeof(char));
 
-	for (int i = 0; i < MASK_BITSIZE; i++)
+	for (size_t i = 0; i < MASK_BITSIZE; i++)
 	{
 		(*out)[i] = (GETBIT(m, i) ? '1' : '0');
 	}

@@ -35,7 +35,7 @@ const int cmp(const char* const s, ...)
 	va_start(args, s);
 
 	const char* x = va_arg(args, char*);
-	for (int i = 0; x != NULL; i++)
+	for (size_t i = 0; x != NULL; i++)
 	{
 		if (strcmp(s, x) == 0)
 		{
@@ -53,7 +53,7 @@ const int cmp(const char* const s, ...)
 const int cmp2(const char* const s, const char* const needles[])
 {
 	const char* const* arr = needles;
-	for (int i = 0; *arr != NULL; i++)
+	for (size_t i = 0; *arr != NULL; i++)
 	{
 		if (strcmp(s, *arr) == 0)
 		{
@@ -93,8 +93,8 @@ const size_t inline_decode(char* s, const size_t len)
 	char buf[5] = "0x00";
 	unsigned int ch;
 
-	unsigned int j = 0;
-	for (unsigned int i = 0; i < len; i++, j++)
+	size_t j = 0;
+	for (size_t i = 0; i < len; i++, j++)
 	{
 		if (s[i] != '%')
 		{
@@ -106,7 +106,7 @@ const size_t inline_decode(char* s, const size_t len)
 		const size_t x = len -i;
 		if (x <= 2)
 		{
-			for (unsigned int k = 0; k < x; k++, i++, j++)
+			for (size_t k = 0; k < x; k++, i++, j++)
 			{
 				s[j] = s[i];
 			}
@@ -289,7 +289,7 @@ void rand_s(char* const out, const size_t n)
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"abcdefghijklmnopqrstuvwxyz";
 
-	for (int i = 0; i < n; ++i)
+	for (size_t i = 0; i < n; ++i)
 	{
 		out[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
 	}

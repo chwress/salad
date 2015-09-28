@@ -75,11 +75,11 @@ CTEST_SETUP(io)
 #endif
 
 	size_t num_refs = 0;
-	for (int i = 0; INPUT_REF[i] != NULL; i++) num_refs++;
+	for (size_t i = 0; INPUT_REF[i] != NULL; i++) num_refs++;
 	data->ref.expected = (data_t*) calloc(num_refs, sizeof(data_t));
 	data->ref.n = 0;
 
-	for (int i = 0; i < num_refs; i++)
+	for (size_t i = 0; i < num_refs; i++)
 	{
 		FILE* const f = fopen(INPUT_REF[i], "rb");
 		if (f == NULL)

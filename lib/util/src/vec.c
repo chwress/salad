@@ -34,6 +34,7 @@
 const dim_t hash(const char* const s, const size_t len)
 {
 	assert(s != NULL && len >= 0);
+	assert(len <= INT32_MAX); // cf. MurmurHash64B :/
 
 	// TODO: Make the the number of bits configurable
 	const int num_bits = 24;
@@ -44,7 +45,7 @@ const dim_t hash(const char* const s, const size_t len)
 }
 
 
-const int random_level()
+const size_t random_level()
 {
 	static int first = 1;
 	int lvl = 0;
@@ -72,7 +73,7 @@ vec_elem_t* make_node(const int level, const dim_t dim, const float value)
 	return sn;
 }
 
-vec_t* const vec_create(const int len)
+vec_t* const vec_create(const size_t len)
 {
 	vec_t* const v = (vec_t*) malloc(sizeof(vec_t));
 	v->header = make_node(MAX_LEVEL, 0, 0.0);
@@ -131,15 +132,14 @@ const float vec_get(const vec_t* const vec, const dim_t dim)
 {
 	assert(vec != NULL);
 
-	if (vec->length >= 0 && dim >= vec->length)
+	if (dim >= vec->length)
 	{
 		fprintf(stderr, "Dimension out of range");
 		abort();
 	}
 
-	int i;
 	vec_elem_t* x = vec->header;
-	for (i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level; i >= 0; i--)
 	{
 		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
 		{
@@ -165,12 +165,11 @@ void vec_set(vec_t* const vec, const dim_t dim, const float value)
 		return;
 	}
 
-	int i;
 	vec_elem_t* x = vec->header;
 	vec_elem_t* update[MAX_LEVEL + 1];
 	memset(update, 0, MAX_LEVEL + 1);
 
-	for (i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level; i >= 0; i--)
 	{
 		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
 		{
@@ -182,18 +181,18 @@ void vec_set(vec_t* const vec, const dim_t dim, const float value)
 
 	if (x == NULL || x->dim != dim)
 	{
-		int lvl = random_level();
+		const size_t lvl = random_level();
 
 		if (lvl > vec->level)
 		{
-			for (i = vec->level + 1; i <= lvl; i++)
+			for (size_t i = vec->level + 1; i <= lvl; i++)
 			{
 				update[i] = vec->header;
 			}
 			vec->level = lvl;
 		}
 		x = make_node(lvl, dim, value);
-		for (i = 0; i <= lvl; i++)
+		for (size_t i = 0; i <= lvl; i++)
 		{
 			x->forward[i] = update[i]->forward[i];
 			update[i]->forward[i] = x;
@@ -209,12 +208,11 @@ void delete(vec_t* const vec, const dim_t dim)
 {
 	assert(vec != NULL);
 
-	int i;
 	vec_elem_t* x = vec->header;
 	vec_elem_t* update[MAX_LEVEL + 1];
 	memset(update, 0, MAX_LEVEL + 1);
 
-	for (i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level; i >= 0; i--)
 	{
 		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
 		{
@@ -226,7 +224,7 @@ void delete(vec_t* const vec, const dim_t dim)
 
 	if (x != NULL && x->dim == dim)
 	{
-		for (i = 0; i <= vec->level; i++)
+		for (size_t i = 0; i <= vec->level; i++)
 		{
 			if (update[i]->forward[i] != x)
 				break;
@@ -264,7 +262,10 @@ vec_t* const vec_read_liblinear(FILE* const f)
 	{
 		if (strncmp(line, "nr_feature", 10) == 0)
 		{
-			vec->length = atoi(line + 11);
+			char* tail;
+			long long int ll = strtoll(line + 11, &tail, 10);
+			assert(ll <= SIZE_MAX);
+			vec->length = MIN(SIZE_MAX, ll);
 		}
 	}
 
@@ -275,7 +276,7 @@ vec_t* const vec_read_liblinear(FILE* const f)
 	}
 
 	size_t read = getline(&line, &len, f);
-	for (unsigned int i = 0; i < vec->length && read != -1; i++)
+	for (size_t i = 0; i < vec->length && read != -1; i++)
 	{
 		float w = atof(line);
 		if (w > 0.0)

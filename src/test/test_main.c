@@ -260,7 +260,7 @@ void CMP_LINE(const char* const a, const char* const b, const char* const needle
 		ASSERT_FAIL();
 	}
 
-	for (int i = 0, j = 0; x[i] != '\n' && x[i] != 0x00; i++, j++)
+	for (size_t i = 0, j = 0; x[i] != '\n' && x[i] != 0x00; i++, j++)
 	{
 		if (x[i] != y[j])
 		{

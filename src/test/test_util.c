@@ -57,7 +57,7 @@ CTEST(util, inline_decode)
 		str7, "¼ pounder with cheese", NULL
 	};
 
-	for (int i = 0; strs[i] != NULL; i += 2)
+	for (size_t i = 0; strs[i] != NULL; i += 2)
 	{
 		inline_decode(strs[i], strlen(strs[i]));
 		ASSERT_STR(strs[i +1], strs[i]);
