@@ -57,6 +57,7 @@ const int cmp2(const char* const s, const char* const needles[])
 	{
 		if (strcmp(s, *arr) == 0)
 		{
+			ASSERT(i < INT_MAX);
 			return i;
 		}
 		arr++;

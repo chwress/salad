@@ -126,7 +126,6 @@ inline int fseek_s(FILE* const f, const size_t offset, const int whence)
 	return ret;
 }
 
-
 #define FALSE 0
 #define TRUE  1
 
@@ -139,5 +138,15 @@ inline int fseek_s(FILE* const f, const size_t offset, const int whence)
 	#define Z "lu"
 	#define SIZE_T unsigned long
 #endif
+
+# define ASSERT(expr) \
+{ \
+	assert(expr); \
+	if (!(expr)) \
+	{ \
+		fprintf(stderr, "Assertion failed: %s", #expr); \
+		fprintf(stderr, "in %s line %ud", __FILE__, __LINE__); \
+	} \
+}
 
 #endif /* UTIL_UTIL_H_ */
