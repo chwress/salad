@@ -111,18 +111,18 @@ const float frand();
 
 inline size_t ftell_s(FILE* const f)
 {
-	// TODO: Do something clever here to potentially handy 4GB+ files
+	// TODO: Do something clever here to potentially handle 4GB+ files
 	const long int pos = ftell(f);
 	assert(pos >= 0);
-	return MAX(0, pos);
+	return (size_t) MAX(0, pos);
 }
 
 inline int fseek_s(FILE* const f, const size_t offset, const int whence)
 {
-	// TODO: Do something clever here to potentially handy 4GB+ files
+	// TODO: Do something clever here to potentially handle 4GB+ files
 	const size_t __offset = MIN(LONG_MAX, offset);
 	assert(__offset == offset);
-	const int ret = fseek(f, __offset, whence);
+	const int ret = fseek(f, (long int) __offset, whence);
 	return ret;
 }
 
