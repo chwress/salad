@@ -25,7 +25,7 @@
 #include "io.h"
 
 #include <util/util.h>
-#include <container/bloom.h>
+#include <container/container.h>
 
 #include <assert.h>
 #include <getopt.h>
@@ -62,14 +62,15 @@ const int salad_allocate(saladdata_t* const d, const size_t n)
 
 const int salad_set_bloomfilter(salad_t* const s, const unsigned int filter_size, const char* const hashset)
 {
-	BLOOM* const b = bloom_init(filter_size, to_hashset(hashset));
-	if (b == NULL)
+	salad_create_container(s);
+
+	if (!container_init_bloomfilter(s->model.x, filter_size, hashset))
 	{
 		SET_NOTSPECIFIED(s->model);
 		return EXIT_FAILURE;
 	}
 
-	salad_set_bloomfilter_ex(s, b);
+	s->model.type = SALAD_MODEL_BLOOMFILTER;
 	return EXIT_SUCCESS;
 }
 
@@ -112,14 +113,7 @@ void salad_destroy(salad_t* const s)
 
 	if (s->model.x != NULL)
 	{
-		switch (s->model.type)
-		{
-		case SALAD_MODEL_BLOOMFILTER:
-			bloom_destroy(s->model.x);
-			break;
-
-		default: break;
-		}
+		container_free(s->model.x);
 	}
 	SET_NOTSPECIFIED(s->model);
 
@@ -256,18 +250,7 @@ const int salad_from_file(const char* const filename, salad_t* const out)
 const int salad_from_file_ex(FILE* const f, salad_t* const out)
 {
 	salad_init(out);
-
-	// TODO: right now there only are bloom filters!
-	out->model.type = SALAD_MODEL_BLOOMFILTER;
-
-	switch (out->model.type)
-	{
-	case SALAD_MODEL_BLOOMFILTER:
-		return (fread_model(f, out) > 0 ? EXIT_SUCCESS : EXIT_FAILURE);
-
-	default:
-		return EXIT_FAILURE;
-	}
+	return (fread_model(f, out) > 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 const int salad_to_file(const salad_t* const s, const char* const filename)

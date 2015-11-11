@@ -17,9 +17,10 @@
 
 #include "bloom_ex.h"
 
+#include <assert.h>
+#include <ctype.h>
 #include <limits.h>
 #include <stdio.h>
-#include <assert.h>
 #include <string.h>
 
 #include <util/util.h>
@@ -28,7 +29,7 @@
 #define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= (0x80>>((n)%CHAR_BIT)))
 #define GETBIT(a, n)  ((a)[(n)/CHAR_BIT] & (0x80>>((n)%CHAR_BIT)))
 
-BLOOM* const bloom_create_ex(const size_t bitsize, hashfunc_t* const funcs, const uint8_t nfuncs)
+BLOOM* const bloom_create(const size_t bitsize)
 {
 	BLOOM* const bloom = malloc(sizeof(BLOOM));
 	if (bloom == NULL)
@@ -47,104 +48,119 @@ BLOOM* const bloom_create_ex(const size_t bitsize, hashfunc_t* const funcs, cons
 		return NULL;
 	}
 
-	bloom->funcs = (hashfunc_t*) malloc(nfuncs *sizeof(hashfunc_t));
-	if (bloom->funcs == NULL)
-	{
-		free(bloom->a);
-		free(bloom);
-		return NULL;
-	}
-
-	for(int i = 0; i < (int) nfuncs; ++i)
-	{
-		bloom->funcs[i] = funcs[i];
-	}
-
-	bloom->nfuncs = nfuncs;
+	bloom->funcs = (hashfunc_t*) calloc(1, sizeof(hashfunc_t));
+	bloom->nfuncs = 0;
 	bloom->bitsize = bitsize;
 	bloom->size = size;
 
 	return bloom;
 }
 
-BLOOM* const vbloom_create(const size_t size, const uint8_t nfuncs, va_list funcs)
+const int bloom_set_hashfuncs(BLOOM* const bloom, const uint8_t nfuncs, ...)
+{
+	va_list args;
+	va_start(args, nfuncs);
+
+	const int ret = vbloom_set_hashfuncs(bloom, nfuncs, args);
+
+	va_end(args);
+	return ret;
+}
+
+const int vbloom_set_hashfuncs(BLOOM* const bloom, const uint8_t nfuncs, va_list funcs)
 {
 	hashfunc_t* buf = (hashfunc_t*) calloc(nfuncs, sizeof(hashfunc_t));
-	if (buf == NULL) return NULL;
+	if (buf == NULL) return EXIT_FAILURE;
 
 	for (uint8_t i = 0; i < nfuncs; i++)
 	{
 		buf[i] = va_arg(funcs, hashfunc_t);
 	}
 
-	BLOOM* const bloom = bloom_create_ex(size, buf, nfuncs);
+	const int ret = bloom_set_hashfuncs_ex(bloom, buf, nfuncs);
 	free(buf);
-	return bloom;
+	return ret;
 }
 
-BLOOM* const bloom_create(const size_t size, const uint8_t nfuncs, ...)
+const int bloom_set_hashfuncs_ex(BLOOM* const bloom, hashfunc_t* const funcs, const uint8_t nfuncs)
 {
-	va_list args;
-	va_start(args, nfuncs);
-
-	BLOOM* const bloom = vbloom_create(size, nfuncs, args);
-
-	va_end(args);
-	return bloom;
-}
-
-BLOOM* const vbloom_create_from_file(FILE* const f, const uint8_t nfuncs, va_list funcs)
-{
-	hashfunc_t* buf = (hashfunc_t*) calloc(nfuncs, sizeof(hashfunc_t));
-	if (buf == NULL) return NULL;
-
-	for (uint8_t i = 0; i < nfuncs; i++)
+	bloom->funcs = (hashfunc_t*) realloc(bloom->funcs, nfuncs *sizeof(hashfunc_t));
+	if (bloom->funcs == NULL)
 	{
-		buf[i] = va_arg(funcs, hashfunc_t);
+		return EXIT_FAILURE;
 	}
 
-	BLOOM* const bloom = bloom_create_from_file_ex(f, buf, nfuncs);
-	free(buf);
-	return bloom;
+	bloom->nfuncs = nfuncs;
+
+	for(int i = 0; i < (int) nfuncs; ++i)
+	{
+		bloom->funcs[i] = funcs[i];
+	}
+	return EXIT_SUCCESS;
 }
 
-BLOOM* const bloom_create_from_file(FILE* const f, const uint8_t nfuncs, ...)
+typedef const int (*FN_COPYBYTES)(BLOOM* const bloom, const size_t n, void* usr);
+const int __bloom_set(BLOOM* const bloom, FN_COPYBYTES cpy, const size_t bitsize, void* usr)
 {
-	va_list args;
-	va_start(args, nfuncs);
+	assert(bloom != NULL);
 
-	BLOOM* const bloom = vbloom_create_from_file(f, nfuncs, args);
+	const size_t size = (bitsize +CHAR_BIT -1)/CHAR_BIT;
+	const size_t intsize = (size +sizeof(unsigned int) -1)/ sizeof(unsigned int);
 
-	va_end(args);
-	return bloom;
+	// We use blocks of integers in order to ease the bit counting, cf. bloom_count(.)
+	unsigned char* b = (unsigned char*) calloc(intsize, sizeof(unsigned int));
+	if (b == NULL)
+	{
+		return FALSE;
+	}
+
+	free(bloom->a);
+	bloom->a = b;
+
+	if (!cpy(bloom, size, usr))
+	{
+		return FALSE;
+	}
+	bloom->bitsize = bitsize;
+	bloom->size = size;
+	return TRUE;
 }
 
-BLOOM* const bloom_create_from_file_ex(FILE* const f, hashfunc_t* const funcs, const uint8_t nfuncs)
+static inline const int __memcpy(BLOOM* const bloom, const size_t size, void* buf)
 {
-	assert(f != NULL);
-
-	size_t asize;
-	if (fread(&asize, sizeof(size_t), 1, f) != 1)
-	{
-		return NULL;
-	}
-
-	BLOOM* const bloom = bloom_create_ex(asize, funcs, nfuncs);
-
-	if (bloom == NULL)
-	{
-		return NULL;
-	}
-
-	const size_t numRead = fread(bloom->a, sizeof(char), bloom->size, f);
-
-	if (numRead != bloom->size)
-	{
-		bloom_destroy(bloom);
-		return NULL;
-	}
-	return bloom;
+	memcpy(bloom->a, buf, size);
+	return TRUE;
 }
+
+typedef struct {
+	FN_READBYTE fct;
+	void* usr;
+} __fctcpy_t;
+
+static inline const int __fctcpy(BLOOM* const bloom, const size_t size, void* usr)
+{
+	__fctcpy_t* const x = (__fctcpy_t*) usr;
+
+	for (size_t i = 0; i < size; i++)
+	{
+		const int ch = x->fct(x->usr);
+		if (ch < 0) return FALSE;
+		bloom->a[i] = (unsigned char) ch;
+	}
+	return TRUE;
+}
+
+const int bloom_set(BLOOM* const bloom, const uint8_t* const buf, const size_t size)
+{
+	return __bloom_set(bloom, __memcpy, size, (void*) buf);
+}
+
+const int bloom_set_ex(BLOOM* const bloom, FN_READBYTE fct, const size_t size, void* usr)
+{
+	__fctcpy_t x = {fct, usr};
+	return __bloom_set(bloom, __fctcpy, size, &x);
+}
+
 
 void bloom_clear(BLOOM* const bloom)
 {
@@ -250,6 +266,17 @@ const int bloom_compare(BLOOM* const a, BLOOM* const b)
 		return a->size -b->size;
 	}
 
+#if 1 // DEBUGGING
+	unsigned char *A = a->a, *B = b->a;
+	for (size_t i = 0; i < a->size; i++)
+	{
+		if (*A != *B)
+		{
+			break;
+		}
+		A++; B++;
+	}
+#endif
 	return memcmp(a->a, b->a, a->size);
 }
 
@@ -280,7 +307,7 @@ void bloom_print_ex(FILE* const f, BLOOM* const bloom)
 	fprintf(f, "\n");
 }
 
-const int bloom_to_file(BLOOM* const bloom, FILE* const f)
+const int bloom_to_file(const BLOOM* const bloom, FILE* const f)
 {
 	assert(f != NULL);
 

@@ -118,8 +118,8 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 		return EXIT_FAILURE;
 	}
 
-	// TODO: right now only bloom filter are possible
-	const int newBloomFilter = (training.model.x == NULL);
+	// TODO: right now only bloom filters are possible
+	const int newBloomFilter = (TO_BLOOMFILTER(training.model) == NULL);
 	if (newBloomFilter)
 	{
 		salad_from_config(&training, c);
@@ -132,7 +132,7 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 
 	inspect_t context = {
 			.fct = pick_wrapper(t, newBloomFilter),
-			.param = {training.model.x, cur.model.x, cur.ngram_length, __(cur).delimiter.d},
+			.param = {TO_BLOOMFILTER(training.model), TO_BLOOMFILTER(cur.model), cur.ngram_length, __(cur).delimiter.d},
 			.buf = {0},
 			.stats = (bloomize_stats_t*) calloc(c->batch_size, sizeof(bloomize_stats_t)),
 			.num_uniq = 0,
@@ -141,7 +141,7 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 
 	dp->recv(f_in, salad_inspect_callback, c->batch_size, &context);
 
-	BLOOM* const cur_model = (BLOOM*) cur.model.x;
+	BLOOM* const cur_model = TO_BLOOMFILTER(cur.model);
 
 	const size_t N = bloom_count(cur_model);
 	info("Saturation: %.3f%%", (((double)N)/ ((double)cur_model->bitsize))*100);

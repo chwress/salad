@@ -22,10 +22,24 @@
 #ifndef SALAD_CONTAINER_IO_H_
 #define SALAD_CONTAINER_IO_H_
 
-#include "bloom.h"
+#include "container.h"
+#include "container/io/common.h"
 
-const int fwrite_hashspec(FILE* const f, BLOOM* const bloom);
-const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* const nfuncs);
+#include <util/io.h>
+#include <stdio.h>
+
+// WRITING
+const int fwrite_containerconfig(const container_outputspec_t* const out, const container_t* const c);
+const int fwrite_containerconfig_ex(FILE* const f, const container_t* const c);
+const int fwrite_containerdata(const container_outputspec_t* const out, const container_t* c, container_outputstate_t* const state);
+
+const int fwrite_container(FILE* const f, const container_t* const c);
+const int fwrite_container_ex(FILE* const f, const container_t* const c, const container_outputformat_t fmt);
+
+
+// READING
+const int fread_containerconfig(FILE* const f, const char* const key, const char* const value, void* const usr);
+const int fread_container(FILE* const f, container_t* const c);
 
 
 #endif /* SALAD_CONTAINER_IO_H_ */

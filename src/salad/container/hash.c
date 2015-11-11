@@ -66,7 +66,7 @@ uint32_t sdbm_hash_n(const char* const key, const size_t len)
 }
 
 
-uint32_t bernstein_hash(const char* const key)
+uint32_t djb_hash(const char* const key)
 {
 	uint32_t h = 0;
 	const unsigned char* x = (const unsigned char*) key;
@@ -79,7 +79,7 @@ uint32_t bernstein_hash(const char* const key)
 }
 
 
-uint32_t bernstein_hash_n(const char* const key, const size_t len)
+uint32_t djb_hash_n(const char* const key, const size_t len)
 {
 	uint32_t h = 0;
 	const unsigned char* x = (const unsigned char*) key;
@@ -87,6 +87,32 @@ uint32_t bernstein_hash_n(const char* const key, const size_t len)
 	for(size_t i = 0; i < len; i++)
 	{
 		h=33*h + *x++;
+	}
+	return h;
+}
+
+
+uint32_t djb2_hash(const char* const key)
+{
+	uint32_t h = 5381;
+	const unsigned char* x = (const unsigned char*) key;
+
+	while(*x)
+	{
+		h=33*h ^ *x++;
+	}
+	return h;
+}
+
+
+uint32_t djb2_hash_n(const char* const key, const size_t len)
+{
+	uint32_t h = 5381;
+	const unsigned char* x = (const unsigned char*) key;
+
+	for(size_t i = 0; i < len; i++)
+	{
+		h=33*h ^ *x++;
 	}
 	return h;
 }

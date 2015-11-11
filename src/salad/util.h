@@ -26,15 +26,19 @@
 #include "salad.h"
 
 #include <container/common.h>
+#include <container/container.h>
 
+void salad_create_container(salad_t* const s);
+void salad_set_container(salad_t* const s, container_t* const c);
 void salad_set_bloomfilter_ex(salad_t* const s, BLOOM* const b);
 
 
 #define GET_BLOOMFILTER(model) \
-	(BLOOM*) model.x; \
-	assert(model.type == SALAD_MODEL_BLOOMFILTER);
+	(BLOOM*) (model.x == NULL ? NULL : ((container_t*) model.x)->data); \
+	assert(model.type == SALAD_MODEL_BLOOMFILTER); \
+    assert(((container_t*) model.x)->type == CONTAINER_BLOOMFILTER)
 
-#define TO_BLOOMFILTER(model) (BLOOM*) model.x;
+#define TO_BLOOMFILTER(model) (BLOOM*) (model.x == NULL ? NULL : ((container_t*) model.x)->data)
 
 
 #define SET_NOTSPECIFIED(model) { \

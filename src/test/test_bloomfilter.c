@@ -41,8 +41,11 @@ CTEST_SETUP(bloom)
 {
 	data->BITSIZE = POW(2, DEFAULT_BFSIZE);
 
-	data->b1 = bloom_create(data->BITSIZE, NUM_FUNCS, FUNCS);
-	data->b2 = bloom_create(data->BITSIZE, NUM_FUNCS, FUNCS);
+	data->b1 = bloom_create(data->BITSIZE);
+	bloom_set_hashfuncs(data->b1, NUM_FUNCS, FUNCS);
+
+	data->b2 = bloom_create(data->BITSIZE);
+	bloom_set_hashfuncs(data->b2, NUM_FUNCS, FUNCS);
 
 	data->x1 = bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE);
 	data->x2 = bloom_init(DEFAULT_BFSIZE, HASHES_MURMUR);

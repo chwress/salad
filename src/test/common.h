@@ -39,7 +39,7 @@ static const test_config_t DEFAULT_TEST_CONFIG =
 
 
 static const uint8_t NUM_FUNCS = 3;
-#define FUNCS sax_hash_n, sdbm_hash_n, bernstein_hash_n
+#define FUNCS sax_hash_n, sdbm_hash_n, djb2_hash_n
 
 static const char* const DELIMITER = "";
 static const char* const TOKEN_DELIMITER = "\r\n \t";

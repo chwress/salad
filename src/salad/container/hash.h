@@ -32,8 +32,11 @@ uint32_t sax_hash_n(const char* const key, const size_t len);
 uint32_t sdbm_hash(const char* const key);
 uint32_t sdbm_hash_n(const char* const key, const size_t len);
 
-uint32_t bernstein_hash(const char* const key);
-uint32_t bernstein_hash_n(const char* const key, const size_t len);
+uint32_t djb_hash(const char* const key);
+uint32_t djb_hash_n(const char* const key, const size_t len);
+
+uint32_t djb2_hash(const char* const key);
+uint32_t djb2_hash_n(const char* const key, const size_t len);
 
 
 uint32_t murmur_hash0(const char* const key);

@@ -24,10 +24,24 @@
 
 #include "util.h"
 
+#include <util/io.h>
+#include <container/io.h>
+#include <container/io/bloom.h>
+
+static const char* const CONFIG_HEADER;
+
+// WRITING
+const int fwrite_modelconfig(const container_outputspec_t* const out, const salad_t* const s);
+const int fwrite_modelconfig_ex(FILE* const f, const salad_t* const s);
+const int fwrite_modeldata(const container_outputspec_t* const out, const salad_t* const s, container_outputstate_t* const state);
+
 const int fwrite_model(FILE* const f, const salad_t* const s);
 const int fwrite_model_txt(FILE* const f, const salad_t* const s);
 const int fwrite_model_zip(FILE* const f, const salad_t* const s);
 
+
+// READING
+const int fread_modelconfig(FILE* const f, const char* const key, const char* const value, void* const usr);
 const int fread_model(FILE* const f, salad_t* const s);
 const int fread_model_txt(FILE* const f, salad_t* const s);
 const int fread_model_zip(FILE* const f, salad_t* const s);

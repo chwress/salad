@@ -35,7 +35,6 @@ const model_type_t to_model_type(const int as_binary, const int use_tokens)
 }
 
 
-
 typedef struct
 {
 	BLOOM* bloom;

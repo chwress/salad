@@ -18,6 +18,9 @@
 #include "io.h"
 
 #include <container/io.h>
+#include <container/io/bloom.h>
+#include <container/io/common.h>
+
 #include <util/util.h>
 #include <util/simple_conf.h>
 
@@ -40,7 +43,6 @@ void gen_tmpname(char* const buf, const size_t n)
 	if (n < 2) return;
 	buf[0] = '.';
 
-	srand(time(NULL));
 	rand_s(buf+1, n-2);
 }
 #endif
@@ -56,8 +58,13 @@ const int fwrite_model(FILE* const f, const salad_t* const s)
 #endif
 }
 
+const int fwrite_modelconfig(const container_outputspec_t* const out, const salad_t* const s)
+{
+	assert(out != NULL);
+	return (fwrite_modelconfig_ex(out->config, s) ? CONTAINER_TXT(out) : -1);
+}
 
-const int fwrite_header(FILE* const f, const salad_t* const s)
+const int fwrite_modelconfig_ex(FILE* const f, const salad_t* const s)
 {
 	const int nheader = fprintf(f, "%s\n\n", CONFIG_HEADER);
 	if (nheader < 0) return -1;
@@ -71,61 +78,31 @@ const int fwrite_header(FILE* const f, const salad_t* const s)
 	const int n = fprintf(f, "n = %"Z"\n", s->ngram_length);
 	if (n < 0) return -1;
 
-	return nheader + nbinary + ndelim + n;
+	const container_t* const c = (container_t*) s->model.x;
+	const int m = fwrite_containerconfig_ex(f, c);
+	if (m < 0) return -1;
+
+	return nheader + nbinary + ndelim + n + m;
 }
 
-const int fwrite_bloom(FILE* const f, BLOOM* const b)
+const int fwrite_modeldata(const container_outputspec_t* const out, const salad_t* const s, container_outputstate_t* const state)
 {
-	int n, m;
-	if ((n = fwrite_hashspec(f, b)) < 0) return -1;
-	if ((m = bloom_to_file(b, f)) < 0) return -1;
-	return n +m +1;
+	const container_t* const c = (container_t*) s->model.x;
+	return fwrite_containerdata(out, c, state);
 }
 
-const int fwrite_bloom_inline(FILE* const f, BLOOM* const b)
-{
-	// Since we do not want to determine the size of the data based on some
-	// internals, we do something ugly instead ;)
-	char buf[0x100];
-	snprintf(buf, 0x100, "%d", INT_MAX);
-	for (char* x = buf; *x != 0x00; x++) *x = ' ';
-
-	size_t pos = ftell_s(f) +15;
-	int nbloom = fprintf(f, "bloom_filter = %s\n", buf);
-	if (nbloom < 0) return -1;
-
-	int n = fwrite_bloom(f, b);
-	if (n < 0) return -1;
-
-	if (fprintf(f, "\n") < 0) return -1;
-
-
-	fseek_s(f, pos, SEEK_SET);
-	fprintf(f, "%"Z, (size_t) n);
-	fseek_s(f, 0, SEEK_END);
-
-	return n +1;
-}
 
 const int fwrite_model_txt(FILE* const f, const salad_t* const s)
 {
-	int n = fwrite_header(f, s);
+	int n = fwrite_modelconfig_ex(f, s);
 	if (n < 0) return -1;
 
-	int m = 0;
-	// TODO: right now there only are bloom filters!
-	switch (s->model.type)
-	{
-	case SALAD_MODEL_BLOOMFILTER:
-	{
-		BLOOM* b = GET_BLOOMFILTER(s->model);
-		m = fwrite_bloom_inline(f, b);
-		if (m < 0) return -1;
-		break;
-	}
-	default:
-		return -1;
-	}
+	CONTAINER_OUTPUTSTATE_T(state);
+	container_outputspec_t spec = {f, NULL, CONTAINER_OUTPUTFMT_MIXED};
+	container_t* c = (container_t*) s->model.x;
+
+	const int m = fwrite_containerdata(&spec, c, &state);
+	if (m < 0) return -1;
 
 	return n +m;
 }
@@ -140,54 +117,50 @@ const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 	if (a == NULL) return -1;
 
 	// Generate temporary output filename
-	char tmpname[16];
-	gen_tmpname(tmpname, 16);
+	char tmpconfig[16], tmpdata[16];
+	gen_tmpname(tmpconfig, 16);
+	gen_tmpname(tmpdata, 16);
 
 	// Configuration header
-	static const char* const BLOOM_FNAME = "bloom.data";
+	FILE* config = fopen(tmpconfig, "w+");
+	if (config == NULL) return -1;
 
-	FILE* tmp = fopen(tmpname, "w+");
-	if (tmp == NULL) return -1;
+	const int n = fwrite_modelconfig_ex(config, s);
 
-	int n = fwrite_header(tmp, s);
-	int m = fprintf(tmp, "bloom_filter = %s\n", BLOOM_FNAME);
-	fclose(tmp);
+	int m = -1, M = 0;
+	CONTAINER_OUTPUTSTATE_T(state);
+	do
+	{
+		// Container data
+		FILE* data = fopen(tmpdata, "w+");
+		if (tmpdata == NULL)
+		{
+			remove(tmpconfig);
+			return -1;
+		}
+
+		container_outputspec_t spec = {config, data, CONTAINER_OUTPUTFMT_SEPARATED};
+		m = fwrite_modeldata(&spec, s, &state);
+		M += m;
+
+		fclose(data);
+		if (m < 0) break;
+
+		archive_write_file(a, tmpdata, state.filename);
+		remove(tmpdata);
+
+	} while (!state.done);
+
+	fclose(config);
 	if (n < 0 || m < 0)
 	{
-		remove(tmpname);
+		remove(tmpconfig);
+		remove(tmpdata);
 		return -1;
 	}
 
-	archive_write_file(a, tmpname, "config");
-	remove(tmpname);
-
-	// Container
-	tmp = fopen(tmpname, "w+");
-	if (tmp == NULL) return -1;
-
-	// TODO: right now there only are bloom filters!
-	switch (s->model.type)
-	{
-	case SALAD_MODEL_BLOOMFILTER:
-	{
-		BLOOM* b = GET_BLOOMFILTER(s->model);
-		n = fwrite_bloom(tmp, b);
-		break;
-	}
-	default:
-		n = -1;
-		break;
-	}
-
-	fclose(tmp);
-	if (n < 0)
-	{
-		remove(tmpname);
-		return -1;
-	}
-
-	archive_write_file(a, tmpname, BLOOM_FNAME);
-	remove(tmpname);
+	archive_write_file(a, tmpconfig, "config");
+	remove(tmpconfig);
 
 	const size_t size = UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
 	archive_write_easyclose(a);
@@ -213,35 +186,35 @@ const int fread_model(FILE* const f, salad_t* const s)
 	return ret;
 }
 
+
 typedef struct
 {
 	salad_t* s;
-
 	int ngramlen_specified;
-	int inline_bloomfilter;
-	char* bloomfilter;
 
+	int has_container;
+	container_t container;
 } modelconf_spec_t;
+
 
 #define EMPTY_MODELCONF_SPEC_INITIALIZER { \
 		.s = NULL, \
-		.ngramlen_specified = FALSE, \
-		.inline_bloomfilter = FALSE, \
-		.bloomfilter = NULL \
+		.ngramlen_specified = 0, \
+		.has_container = 0, \
+		.container = EMPTY_CONTAINER \
 }
 
-/**
- * The preferred way of initializing the salad_t object/ struct.
- */
 #define MODELCONF_SPEC_T(spec) modelconf_spec_t spec = EMPTY_MODELCONF_SPEC_INITIALIZER
 
-const int fread_header(FILE* const f, const char* const key, const char* const value, void* const usr)
+
+const int fread_modelconfig(FILE* const f, const char* const key, const char* const value, void* const usr)
 {
 	assert(usr != NULL);
-	modelconf_spec_t* const x = (modelconf_spec_t*) usr;
+	container_iodata_t* const x = (container_iodata_t*) usr;
+	modelconf_spec_t* const conf = (modelconf_spec_t*) x->data;
 
 	char* tail;
-	switch (cmp(key, "binary", "delimiter", "n", "bloom_filter", NULL))
+	switch (cmp(key, "binary", "delimiter", "n", NULL))
 	{
 	case 0:
 	{
@@ -250,45 +223,32 @@ const int fread_header(FILE* const f, const char* const key, const char* const v
 		{
 			b = (stricmp(value, "True") == 0);
 		}
-		salad_use_binary_ngrams(x->s, b);
+		salad_use_binary_ngrams(conf->s, b);
 		break;
 	}
 	case 1:
 	{
-		salad_set_delimiter(x->s, value);
+		salad_set_delimiter(conf->s, value);
 		break;
 	}
 	case 2:
 	{
 		const size_t n = (size_t) strtoul(value, &tail, 10);
-		salad_set_ngramlength(x->s, n);
-		x->ngramlen_specified = TRUE;
-		break;
-	}
-	case 3:
-	{
-		unsigned long int len = strtoul(value, &tail, 10);
-		if (value != tail)
-		{
-			// Let's assume it is an inline bloom specification
-			// with the specified size.
-
-			UNUSED(len); // we simply ignore the size for now
-			BLOOM* b = bloom_init_from_file(f);
-
-			x->inline_bloomfilter = (b != NULL);
-			salad_set_bloomfilter_ex(x->s, b);
-		}
-		else
-		{
-			STRDUP(value, x->bloomfilter);
-		}
+		salad_set_ngramlength(conf->s, n);
+		conf->ngramlen_specified = TRUE;
 		break;
 	}
 	default:
-		// Unkown identifier
+	{
+		// Unknown identifier
+		container_iodata_t state = {&conf->container, x->request_file, x->host};
+		if (fread_containerconfig(f, key, value, &state))
+		{
+			salad_set_container(conf->s, &conf->container);
+			return TRUE;
+		}
 		return FALSE;
-	}
+	}}
 	return TRUE;
 }
 
@@ -300,17 +260,49 @@ const int fread_model_txt(FILE* const f, salad_t* const s)
 	salad_use_binary_ngrams(s, FALSE);
 	salad_set_delimiter(s, "");
 
-	MODELCONF_SPEC_T(spec);
-	spec.s = s;
+	MODELCONF_SPEC_T(conf);
+	conf.s = s;
 
-	int n = fread_config(f, CONFIG_HEADER, fread_header, &spec);
+	container_iodata_t state = {&conf, NULL, NULL};
+	const int n = fread_config(f, CONFIG_HEADER, fread_modelconfig, &state);
 	if (n <= 0) return n;
 
 	// The bloom filter and the n-gram length are mandatory, though
-	if (!spec.ngramlen_specified) return -3;
-	if (!spec.inline_bloomfilter) return -4;
+	if (!conf.ngramlen_specified) return -3;
 
 	return n;
+}
+
+typedef struct {
+	FILE* archive;
+	size_t nread;
+} requested_input_t;
+
+FILE* const request_input(const char* const filename, void* const host)
+{
+	requested_input_t* const x = (requested_input_t*) host;
+
+	char tmpname[16];
+	gen_tmpname(tmpname, 16);
+
+	int ret = archive_read_dumpfile2(x->archive, filename, tmpname);
+	if (ret != ARCHIVE_OK)
+	{
+		return NULL;
+	}
+
+	FILE* const f = fopen(tmpname, "r+");
+
+	// Record number of bytes read
+	fseek_s(f, 0, SEEK_END);
+	x->nread += ftell_s(f);
+	fseek_s(f, 0, SEEK_SET);
+
+	// Early delete.
+	// TODO: I hope this works on Windows as well ò_O
+	remove(tmpname);
+
+	return f;
 }
 
 const int fread_model_zip(FILE* const f, salad_t* const s)
@@ -352,48 +344,20 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 	salad_use_binary_ngrams(s, FALSE);
 	salad_set_delimiter(s, "");
 
-	MODELCONF_SPEC_T(spec);
-	spec.s = s;
+	MODELCONF_SPEC_T(conf);
+	conf.s = s;
 
-	int m = fread_config(config, CONFIG_HEADER, fread_header, &spec);
-	fclose(config);
-	remove(tmpname);
+	requested_input_t x = {f, 0};
+	container_iodata_t state = {&conf, request_input, &x};
+	const int m = fread_config(config, CONFIG_HEADER, fread_modelconfig, &state);
+
+	fclose(config); remove(tmpname);
 	if (m <= 0) return m;
 
 	// The bloom filter and the n-gram length are mandatory, though
-	if (!spec.ngramlen_specified) return -3;
-	if (!spec.inline_bloomfilter)
-	{
-		int ret = archive_read_dumpfile2(f, spec.bloomfilter, tmpname);
-		free(spec.bloomfilter);
-		if (ret != ARCHIVE_OK)
-		{
-			return -4;
-		}
+	if (!conf.ngramlen_specified) return -3;
 
-		FILE* bf = fopen(tmpname, "r+");
-		if (bf == NULL)
-		{
-			remove(tmpname);
-			return -5;
-		}
-
-		BLOOM* b = bloom_init_from_file(bf);
-		if (b == NULL)
-		{
-			remove(tmpname);
-			return -6;
-		}
-
-		salad_set_bloomfilter_ex(s, b);
-		fclose(bf);
-		remove(tmpname);
-	}
-	else
-	{
-		free(spec.bloomfilter);
-	}
-	return UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
+	return x.nread + m;
 #else
 	return 0;
 #endif
@@ -419,7 +383,8 @@ const int fread_model_032(FILE* const f, salad_t* const s)
 	size_t n = fread(&(s->ngram_length), sizeof(size_t), 1, f);
 
 	// The actual bloom filter values
-	salad_set_bloomfilter_ex(s, bloom_init_from_file(f));
+	BLOOM* b; fread_bloom(f, &b);
+	salad_set_bloomfilter_ex(s, b);
 
 	return (n <= 0 || s->ngram_length <= 0 || s->model.x == NULL ? -1 : UNSIGNED_SUBSTRACTION(ftell_s(f), pos));
 }

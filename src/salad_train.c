@@ -36,47 +36,47 @@ typedef struct {
 } train_t;
 
 
-#define TRAINING_CALLBACK(X, _data_, _n_, _usr_)                                                        \
-static inline const int salad_train_callback##X(data_t* data, const size_t n, void* usr)                \
-{	                                                                                                    \
-	salad_t* const s = (salad_t*) usr;                                                                  \
-	                                                                                                    \
-	for (size_t i = 0; i < n; i++)                                                                      \
-	{                                                                                                   \
-		switch (#X[0]) /* This is a static check and will be optimized away */                          \
-		{                                                                                               \
-		case 'b':                                                                                       \
-			bloomizeb_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
-			break;                                                                                      \
-		case 'w':                                                                                       \
-			bloomizew_ex(s->model.x, data[i].buf, data[i].len, s->ngram_length, _(s)->delimiter.d);     \
-			break;                                                                                      \
-		default:                                                                                        \
-			bloomize_ex (s->model.x, data[i].buf, data[i].len, s->ngram_length);                        \
-			break;                                                                                      \
-		}                                                                                               \
-	}                                                                                                   \
-	return EXIT_SUCCESS;                                                                                \
+#define TRAINING_CALLBACK(X, _data_, _n_, _usr_)                                                                  \
+static inline const int salad_train_callback##X(data_t* data, const size_t n, void* usr)                          \
+{	                                                                                                              \
+	salad_t* const s = (salad_t*) usr;                                                                            \
+	                                                                                                              \
+	for (size_t i = 0; i < n; i++)                                                                                \
+	{                                                                                                             \
+		switch (#X[0]) /* This is a static check and will be optimized away */                                    \
+		{                                                                                                         \
+		case 'b':                                                                                                 \
+			bloomizeb_ex(TO_BLOOMFILTER(s->model), data[i].buf, data[i].len, s->ngram_length);                    \
+			break;                                                                                                \
+		case 'w':                                                                                                 \
+			bloomizew_ex(TO_BLOOMFILTER(s->model), data[i].buf, data[i].len, s->ngram_length, _(s)->delimiter.d); \
+			break;                                                                                                \
+		default:                                                                                                  \
+			bloomize_ex (TO_BLOOMFILTER(s->model), data[i].buf, data[i].len, s->ngram_length);                    \
+			break;                                                                                                \
+		}                                                                                                         \
+	}                                                                                                             \
+	return EXIT_SUCCESS;                                                                                          \
 }
 
-#define TRAINING_NET_CALLBACK(X, _data_, _n_, _usr_)                                                    \
-static inline const int salad_train_net_callback##X(data_t* data, const size_t n, void* usr)            \
-{	                                                                                                    \
-	assert(n == 1);                                                                                     \
-	salad_t* const s = (salad_t*) usr;                                                                  \
-	switch (#X[0]) /* This is a static check and will be optimized away */                              \
-	{                                                                                                   \
-	case 'b':                                                                                           \
-		bloomizeb_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
-		break;                                                                                          \
-	case 'w':                                                                                           \
-		bloomizew_ex(s->model.x, data[0].buf, data[0].len, s->ngram_length, _(s)->delimiter.d);         \
-		break;                                                                                          \
-	default:                                                                                            \
-		bloomize_ex (s->model.x, data[0].buf, data[0].len, s->ngram_length);                            \
-		break;                                                                                          \
-	}                                                                                                   \
-	return EXIT_SUCCESS;                                                                                \
+#define TRAINING_NET_CALLBACK(X, _data_, _n_, _usr_)                                                              \
+static inline const int salad_train_net_callback##X(data_t* data, const size_t n, void* usr)                      \
+{	                                                                                                              \
+	assert(n == 1);                                                                                               \
+	salad_t* const s = (salad_t*) usr;                                                                            \
+	switch (#X[0]) /* This is a static check and will be optimized away */                                        \
+	{                                                                                                             \
+	case 'b':                                                                                                     \
+		bloomizeb_ex(TO_BLOOMFILTER(s->model), data[0].buf, data[0].len, s->ngram_length);                        \
+		break;                                                                                                    \
+	case 'w':                                                                                                     \
+		bloomizew_ex(TO_BLOOMFILTER(s->model), data[0].buf, data[0].len, s->ngram_length, _(s)->delimiter.d);     \
+		break;                                                                                                    \
+	default:                                                                                                      \
+		bloomize_ex (TO_BLOOMFILTER(s->model), data[0].buf, data[0].len, s->ngram_length);                        \
+		break;                                                                                                    \
+	}                                                                                                             \
+	return EXIT_SUCCESS;                                                                                          \
 }
 
 TRAINING_CALLBACK(b, data, n, usr)

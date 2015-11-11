@@ -18,8 +18,10 @@
 
 #include "bloom.h"
 #include "io.h"
+#include "io/bloom.h"
 
 #include <util/util.h>
+
 
 const hashset_t to_hashset(const char* const str)
 {
@@ -49,51 +51,72 @@ hashfunc_t HASH_FCTS[NUM_HASHFCTS] =
 {
 	sax_hash_n,
 	sdbm_hash_n,
-	bernstein_hash_n,
+	djb_hash_n,
 	murmur_hash0_n,
 	murmur_hash1_n,
-	murmur_hash2_n
+	murmur_hash2_n,
+	djb2_hash_n,
+};
+
+const char* const HASH_FCTNAMES[NUM_HASHFCTS +1] =
+{
+		"sax", "sdbm", "djb",
+		"murmur1-0", "murmur1-1", "murmur1-2",
+		"djb2",
+		NULL // In order to be able to use cmp & cmp2 functions
 };
 
 const int to_hashid(hashfunc_t h)
 {
-	for (size_t j = 0; j < NUM_HASHFCTS; j++)
+	for (size_t i = 0; i < NUM_HASHFCTS; i++)
 	{
-		if (HASH_FCTS[j] == h)
+		if (HASH_FCTS[i] == h)
 		{
-			return j;
+			ASSERT(i <= INT_MAX);
+			return (int) i;
 		}
 	}
 	return -1;
+}
+
+const char* to_hashname(hashfunc_t h)
+{
+	for (size_t i = 0; i < NUM_HASHFCTS; i++)
+	{
+		if (HASH_FCTS[i] == h)
+		{
+			return HASH_FCTNAMES[i];
+		}
+	}
+	return NULL;
+}
+
+hashfunc_t to_hashfunc(const char* const str)
+{
+	const int i = cmp2(str, HASH_FCTNAMES);
+	return (i >= 0 ? HASH_FCTS[i] : NULL);
 }
 
 
 BLOOM* const bloom_init(const unsigned short size, const hashset_t hs)
 {
 	assert(size <= sizeof(void*) *8);
+	BLOOM* b = NULL;
 
 	switch (hs)
 	{
 	case HASHES_SIMPLE:
-		return bloom_create_ex(POW(2, size), HASHSET_SIMPLE);
+		b = bloom_create(POW(2, size));
+		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_SIMPLE);
+		break;
 
 	case HASHES_MURMUR:
-		return bloom_create_ex(POW(2, size), HASHSET_MURMUR);
+		b = bloom_create(POW(2, size));
+		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_MURMUR);
+		break;
 
 	default: break;
 	}
-	return NULL;
-}
-
-
-BLOOM* const bloom_init_from_file(FILE* const f)
-{
-	uint8_t nfuncs;
-	hashfunc_t* hashfuncs;
-	if (fread_hashspec(f, &hashfuncs, &nfuncs) < 0) return NULL;
-
-	BLOOM* const b = bloom_create_from_file_ex(f, hashfuncs, nfuncs);
-	free(hashfuncs);
 	return b;
 }
 

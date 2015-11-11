@@ -42,12 +42,15 @@ typedef struct {
 	hashfunc_t* funcs;
 } BLOOM;
 
-BLOOM* const bloom_create(const size_t size, const uint8_t nfuncs, ...);
-BLOOM* const vbloom_create(const size_t size, const uint8_t nfuncs, va_list args);
-BLOOM* const bloom_create_ex(const size_t size, hashfunc_t* const funcs, const uint8_t nfuncs);
-BLOOM* const bloom_create_from_file(FILE* const f, const uint8_t nfuncs, ...);
-BLOOM* const vbloom_create_from_file(FILE* const f, const uint8_t nfuncs, va_list args);
-BLOOM* const bloom_create_from_file_ex(FILE* const f, hashfunc_t* const funcs, const uint8_t nfuncs);
+BLOOM* const bloom_create(const size_t bitsize);
+
+typedef const int (*FN_READBYTE)(void* usr);
+const int bloom_set(BLOOM* const bloom, const uint8_t* const buf, const size_t n);
+const int bloom_set_ex(BLOOM* const bloom, FN_READBYTE fct, const size_t n, void* usr);
+
+const int bloom_set_hashfuncs(BLOOM* const bloom, const uint8_t nfuncs, ...);
+const int vbloom_set_hashfuncs(BLOOM* const bloom, const uint8_t nfuncs, va_list args);
+const int bloom_set_hashfuncs_ex(BLOOM* const bloom, hashfunc_t* const funcs, const uint8_t nfuncs);
 
 void bloom_clear(BLOOM* const bloom);
 void bloom_destroy(BLOOM* const bloom);
@@ -60,6 +63,6 @@ const int bloom_compare(BLOOM* const a, BLOOM* const b);
 void bloom_print(BLOOM* const bloom);
 void bloom_print_ex(FILE* const f, BLOOM* const bloom);
 
-const int bloom_to_file(BLOOM* const bloom, FILE* const f);
+const int bloom_to_file(const BLOOM* const bloom, FILE* const f);
 
 #endif /* SALAD_CONTAINER_BLOOM_EX_H__ */

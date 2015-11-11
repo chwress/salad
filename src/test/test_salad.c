@@ -71,7 +71,7 @@ static const int bloom_compare_bytes(BLOOM* const a, BLOOM* const b)
 
 CTEST2(salad, bloom_init)
 {
-	ASSERT_NOT_NULL(data->x.model.x);
+	ASSERT_NOT_NULL(TO_BLOOMFILTER(data->x.model));
 	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngram_length);
 	ASSERT_EQUAL(__(data->x).use_tokens, (strlen(DELIMITER) != 0));
 	DELIM(delim);
@@ -290,7 +290,7 @@ CTEST(salad, fileformat_consistency)
 
 	BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
 
-	if (ret != 0)
+	if (ret != EXIT_SUCCESS)
 	{
 		salad_destroy(&x);
 		CTEST_ERR("Failed while reading the model.");
