@@ -151,6 +151,8 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 	const size_t m = cur_model->bitsize;
 	info("Expected error: %.3f%%", pow(1- exp(((double) -k*n)/ ((double) m)), k) *100);
 
+	free(context.stats);
+
 	salad_destroy(&training);
 	salad_destroy(&cur);
 	return EXIT_SUCCESS;

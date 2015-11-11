@@ -42,5 +42,7 @@ const int _salad_stats_(const config_t* const c)
 	BLOOM* bloom = GET_BLOOMFILTER(s.model);
 	const size_t set = bloom_count(bloom);
 	status("Saturation: %.3f%%", (((double)set)/ ((double)bloom->bitsize))*100);
+
+	salad_destroy(&s);
 	return EXIT_SUCCESS;
 }
