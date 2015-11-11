@@ -38,7 +38,7 @@ const dim_t hash(const char* const s, const size_t len);
 struct sn
 {
 	dim_t dim;
-	float value;
+	double value;
 	struct sn** forward; // pointer to array of pointers
 };
 
@@ -55,11 +55,11 @@ vec_t* const vec_create(const size_t len);
 void vec_print(vec_t* const v);
 const size_t vec_length(const vec_t* const v);
 
-typedef void (*FN_VEC_FOREACH)(const dim_t dim, const float value, void* data);
+typedef void (*FN_VEC_FOREACH)(const dim_t dim, const double value, void* data);
 void vec_foreach(const vec_t* const vec, FN_VEC_FOREACH op, void* data);
 
-const float vec_get(const vec_t* const v, const dim_t dim);
-void vec_set(vec_t* const v, const dim_t dim, const float value);
+const double vec_get(const vec_t* const v, const dim_t dim);
+void vec_set(vec_t* const v, const dim_t dim, const double value);
 
 vec_t* const vec_read_liblinear(FILE* const f);
 

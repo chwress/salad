@@ -41,14 +41,14 @@ const dim_t hash(const char* const s, const size_t len)
 	dim_t mask = ((long long unsigned) 2 << (num_bits - 1)) - 1;
 
 	// TODO: 0x123457678 is the magic number used in Sally
-	return MurmurHash64B(s, len, 0x12345678) & mask;
+	return MurmurHash64B(s, (int32_t) len, 0x12345678) & mask;
 }
 
 
 const size_t random_level()
 {
 	static int first = 1;
-	int lvl = 0;
+	size_t lvl = 0;
 
 	if (first)
 	{
@@ -63,7 +63,7 @@ const size_t random_level()
 	return lvl;
 }
 
-vec_elem_t* make_node(const int level, const dim_t dim, const float value)
+vec_elem_t* make_node(const size_t level, const dim_t dim, const double value)
 {
 	vec_elem_t* sn = (vec_elem_t*) malloc(sizeof(vec_elem_t));
 	sn->forward = (vec_elem_t**) calloc(level + 1, sizeof(vec_elem_t *));
@@ -128,7 +128,7 @@ void vec_foreach(const vec_t* const vec, FN_VEC_FOREACH op, void* data)
 	}
 }
 
-const float vec_get(const vec_t* const vec, const dim_t dim)
+const double vec_get(const vec_t* const vec, const dim_t dim)
 {
 	assert(vec != NULL);
 
@@ -155,7 +155,7 @@ const float vec_get(const vec_t* const vec, const dim_t dim)
 
 void delete(vec_t* const vec, const dim_t dim);
 
-void vec_set(vec_t* const vec, const dim_t dim, const float value)
+void vec_set(vec_t* const vec, const dim_t dim, const double value)
 {
 	assert(vec != NULL);
 
@@ -248,7 +248,7 @@ vec_t* const vec_read_liblinear(FILE* const f)
 {
 	assert(f != NULL);
 
-	vec_t* const vec = vec_create(-1);
+	vec_t* const vec = vec_create(SIZE_MAX);
 	if (vec == NULL)
 	{
 		fprintf(stderr, "Could not create feature vector");
@@ -264,8 +264,8 @@ vec_t* const vec_read_liblinear(FILE* const f)
 		{
 			char* tail;
 			long long int ll = strtoll(line + 11, &tail, 10);
-			assert(ll <= SIZE_MAX);
-			vec->length = MIN(SIZE_MAX, ll);
+			assert(ll >= 0 && ll <= SIZE_MAX);
+			vec->length = MIN(SIZE_MAX, (size_t) MAX(0, ll));
 		}
 	}
 
@@ -275,10 +275,10 @@ vec_t* const vec_read_liblinear(FILE* const f)
 		return vec;
 	}
 
-	size_t read = getline(&line, &len, f);
+	ssize_t read = getline(&line, &len, f);
 	for (size_t i = 0; i < vec->length && read != -1; i++)
 	{
-		float w = atof(line);
+		double w = atof(line);
 		if (w > 0.0)
 		{
 			vec_set(vec, i, w);
