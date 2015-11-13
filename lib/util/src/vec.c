@@ -265,7 +265,7 @@ vec_t* const vec_read_liblinear(FILE* const f)
 			char* tail;
 			long long int ll = strtoll(line + 11, &tail, 10);
 			assert(ll >= 0 && ll <= SIZE_MAX);
-			vec->length = MIN(SIZE_MAX, (size_t) MAX(0, ll));
+			vec->length = (size_t) MIN(SIZE_MAX, (unsigned long) MAX(0, ll));
 		}
 	}
 

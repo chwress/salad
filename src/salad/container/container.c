@@ -20,6 +20,7 @@
 #include "bloom.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 
 const char* const container_to_string(container_type_t t)
@@ -46,7 +47,8 @@ const int container_init_bloomfilter(container_t* const c, const unsigned int fi
 	assert(c != NULL);
 	*c = EMPTY_CONTAINER;
 
-	return container_set_bloomfilter(c, bloom_init(filter_size, to_hashset(hashset)));
+	assert(filter_size <= USHRT_MAX);
+	return container_set_bloomfilter(c, bloom_init((unsigned short) filter_size, to_hashset(hashset)));
 }
 
 const int container_isvalid(container_t* const c)

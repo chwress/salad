@@ -27,28 +27,27 @@
 #include <ctype.h>
 
 
-const int fwrite_bloomconfig(const container_outputspec_t* const out, const BLOOM* const b)
+const BOOL fwrite_bloomconfig(const container_outputspec_t* const out, const BLOOM* const b)
 {
 	assert(out != NULL);
-	return (fwrite_bloomconfig_ex(out->config, b) ? CONTAINER_TXT(out) : -1);
+	return (CONTAINER_TXT(out) ? fwrite_bloomconfig_ex(out->config, b) : FALSE);
 }
 
-const int fwrite_bloomconfig_ex(FILE* const f, const BLOOM* const b)
+const BOOL fwrite_bloomconfig_ex(FILE* const f, const BLOOM* const b)
 {
 	assert(f != NULL);
 	assert(b != NULL);
 
-	int n = fprintf(f, "hashes = %s", (b->nfuncs <= 0 ? "" : to_hashname(b->funcs[0])));
-	if (n < 0) return -1;
+	const int n = fprintf(f, "hashes = %s", (b->nfuncs <= 0 ? "" : to_hashname(b->funcs[0])));
+	if (n <= 0) return FALSE;
 
 	for (size_t i = 1; i < b->nfuncs; i++)
 	{
-		const int m = fprintf(f, ",%s", to_hashname(b->funcs[i]));
-		if (m < 0) return -1;
-		n += m;
+		const int n = fprintf(f, ",%s", to_hashname(b->funcs[i]));
+		if (n <= 0) return FALSE;
 	}
 
-	return (fprintf(f, "\n") < 0 ? -1 : n+1);
+	return (fprintf(f, "\n") == 1);
 }
 
 
@@ -75,12 +74,12 @@ const int process_next(container_outputstate_t* const state, const char* const f
 	return TRUE;
 }
 
-const int fwrite_bloomdata_asis(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
-const int fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOOM* const b, container_outputstate_t* const state);
-const int fwrite_bloomdata_inline(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
-const int fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
+const BOOL fwrite_bloomdata_asis(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
+const BOOL fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOOM* const b, container_outputstate_t* const state);
+const BOOL fwrite_bloomdata_inline(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
+const BOOL fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_outputstate_t* const state);
 
-const int fwrite_bloomdata(const container_outputspec_t* const out, const BLOOM* const b, container_outputstate_t* const state)
+const BOOL fwrite_bloomdata(const container_outputspec_t* const out, const BLOOM* const b, container_outputstate_t* const state)
 {
 	assert(out != NULL);
 	assert(out->type != CONTAINER_OUTPUTFMT_BINARY); // DONT DO THIS!
@@ -96,22 +95,22 @@ const int fwrite_bloomdata(const container_outputspec_t* const out, const BLOOM*
 	case CONTAINER_OUTPUTFMT_SEPARATED:
 		return fwrite_bloomdata_ext(out->config, out->data, b, state);
 	default:
-		return -1;
+		return FALSE;
 	}
 }
 
-const int fwrite_bloomdata_asis(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
+const BOOL fwrite_bloomdata_asis(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
 {
 	assert(f != NULL);
 	assert(b != NULL);
 
-	if (!process_next(state, INLINE_MARKER)) return 0;
+	if (!process_next(state, INLINE_MARKER)) return TRUE;
 
-	const int n = fwrite(b->a, sizeof(char), b->size, f);
-	return (n != b->size ? -1 : n);
+	const size_t n = fwrite(b->a, sizeof(char), b->size, f);
+	return (n == b->size);
 }
 
-const int fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOOM* const b, container_outputstate_t* const state)
+const BOOL fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOOM* const b, container_outputstate_t* const state)
 {
 	assert(config != NULL);
 	assert(data != NULL);
@@ -121,35 +120,31 @@ const int fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOOM
 	if (!process_next(state, BLOOM_FNAME)) return 0;
 
 	const int n = fprintf(config, "data = %s/%"Z"\n", BLOOM_FNAME, b->bitsize);
-	if (n < 0) return -1;
+	if (n <= 0) return FALSE;
 
-	const int m = fwrite_bloomdata_asis(data, b, NULL);
-	return (m < 0 ? m : n +m);
+	return fwrite_bloomdata_asis(data, b, NULL);
 }
 
 
-const int fwrite_bloomdata_inline(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
+const BOOL fwrite_bloomdata_inline(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
 {
 	assert(f != NULL);
 	assert(b != NULL);
 
-	if (!process_next(state, INLINE_MARKER)) return 0;
+	if (!process_next(state, INLINE_MARKER)) return TRUE;
 
 	// Since we do not want to determine the size of the data based on some
 	// internals, we do something ugly instead ;)
 	const int n = fprintf(f, "data = %"Z"raw\n", b->bitsize);
-	if (n < 0) return -1;
+	if (n <= 0) return FALSE;
 
-	const int m = fwrite_bloomdata_asis(f, b, NULL);
-	if (m < 0) return -1;
+	if (!fwrite_bloomdata_asis(f, b, NULL)) return FALSE;
 
-	if (fprintf(f, "\n") < 0) return -1;
-
-	return n +m +1;
+	return (fprintf(f, "\n") == 1);
 }
 
 
-const int fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
+const BOOL fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_outputstate_t* const state)
 {
 	assert(f != NULL);
 	assert(b != NULL);
@@ -162,70 +157,62 @@ const int fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_ou
 	snprintf(buf, 0x100, "%d", INT_MAX);
 	for (char* x = buf; *x != 0x00; x++) *x = ' ';
 
-	int n = fprintf(f, "data = %"Z"\n", b->bitsize);
-	if (n < 0) return -1;
+	const int n = fprintf(f, "data = %"Z"\n", b->bitsize);
+	if (n <= 0) return FALSE;
 
 	for (size_t i = 0; i < b->size;)
 	{
 		for (size_t j = 0; j < 16 && i < b->size; j++)
 		{
-			const int m = fprintf(f, "%02x", b->a[i++]);
-			if (m < 0) return -1;
-			n += m;
+			const int n = fprintf(f, "%02x", b->a[i++]);
+			if (n <= 0) return FALSE;
 		}
-		const int m = fprintf(f, "\n");
-		if (m < 0) return -1;
-		n += m;
+		if (fprintf(f, "\n") != 1) return FALSE;
 	}
-	return n;
+	return TRUE;
 }
 
 
-const int fwrite_hashspec(FILE* const f, const BLOOM* const b)
+const BOOL fwrite_hashspec(FILE* const f, const BLOOM* const b)
 {
 	assert(f != NULL);
 
-	if (fwrite(&b->nfuncs, sizeof(uint8_t), 1, f) != 1) return -1;
+	if (fwrite(&b->nfuncs, sizeof(uint8_t), 1, f) != 1) return FALSE;
 
 	for (uint8_t i = 0; i < b->nfuncs; i++)
 	{
 		const int id = to_hashid(b->funcs[i]);
-		if (id < 0 || id >= 256) return -1;
+		if (id < 0 || id >= 256) return FALSE;
 
-		const uint8_t hid = id;
-		if (fwrite(&hid, sizeof(uint8_t), 1, f) != 1) return -1;
+		const uint8_t hid = (uint8_t) id;
+		if (fwrite(&hid, sizeof(uint8_t), 1, f) != 1) return FALSE;
 	}
 
-	return (1 +b->nfuncs) *sizeof(uint8_t);
+	return TRUE;
 }
 
 
-const int fwrite_bloom(FILE* const f, const BLOOM* const b)
+const BOOL fwrite_bloom(FILE* const f, const BLOOM* const b)
 {
 	return fwrite_bloom_ex(f, b, CONTAINER_OUTPUTFMT_TXT);
 }
 
-const int fwrite_bloom_ex(FILE* const f, const BLOOM* const b, const container_outputformat_t fmt)
+const BOOL fwrite_bloom_ex(FILE* const f, const BLOOM* const b, const container_outputformat_t fmt)
 {
 	container_outputspec_t spec = {f, NULL, fmt};
-
-	const int n = (CONTAINER_TXT(&spec) ? fwrite_bloomconfig_ex(f, b) : 0);
-	if (n < 0) return -1;
+	if (!CONTAINER_TXT(&spec) || !fwrite_bloomconfig_ex(f, b))
+	{
+		return FALSE;
+	}
 
 	CONTAINER_OUTPUTSTATE_T(state);
-	const int m = fwrite_bloomdata(&spec, b, &state);
-	if (m < 0) return -1;
-
-	return n +m +1;
+	return fwrite_bloomdata(&spec, b, &state);
 }
 
 
-const int fwrite_bloom_032(FILE* const f, const BLOOM* const b)
+const BOOL fwrite_bloom_032(FILE* const f, const BLOOM* const b)
 {
-	int n, m;
-	if ((n = fwrite_hashspec(f, b)) < 0) return -1;
-	if ((m = bloom_to_file(b, f)) < 0) return -1;
-	return n +m +1;
+	return (fwrite_hashspec(f, b) && bloom_to_file(b, f) < 0);
 }
 
 
@@ -240,12 +227,12 @@ static inline const int read_hexbyte(void* usr)
 
 	if (b2 < 0) return EOF;
 
-	char buf[3] = {b1, b2, 0};
+	char buf[3] = {(char) b1, (char) b2, 0};
 
 	unsigned int ch;
 	sscanf(buf, "%x", &ch);
 
-	return ch;
+	return (int) ch;
 }
 
 static inline const int read_byte(void* usr)
@@ -256,7 +243,7 @@ static inline const int read_byte(void* usr)
 	return fgetc(f);
 }
 
-const int fread_bloomconfig(FILE* const f, const char* const key, const char* const value, void* const usr)
+const BOOL fread_bloomconfig(FILE* const f, const char* const key, const char* const value, void* const usr)
 {
 	assert(usr != NULL);
 	container_iodata_t* const x = (container_iodata_t*) usr;
@@ -280,6 +267,7 @@ const int fread_bloomconfig(FILE* const f, const char* const key, const char* co
 		char* needle = buf;
 		for (; *needle != '\0'; needle++) if (*needle == ',') n++;
 
+		ASSERT(n <= UINT8_MAX);
 		hashfunc_t* funcs = (hashfunc_t*) calloc(n, sizeof(hashfunc_t));
 
 		size_t i = 0;
@@ -292,7 +280,7 @@ const int fread_bloomconfig(FILE* const f, const char* const key, const char* co
 		}
 		funcs[i] = to_hashfunc(prev);
 
-		bloom_set_hashfuncs_ex(container->data, funcs, n);
+		bloom_set_hashfuncs_ex(container->data, funcs, (uint8_t) n);
 		free(funcs); free(buf);
 		break;
 	}
@@ -360,61 +348,57 @@ const int fread_bloomconfig(FILE* const f, const char* const key, const char* co
 	return TRUE;
 }
 
-const int fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* const nfuncs)
+const BOOL fread_hashspec(FILE* const f, hashfunc_t** const hashfuncs, uint8_t* const nfuncs)
 {
 	*nfuncs = 0;
 	uint8_t fctid = 0xFF;
 
 	const size_t nread = fread(nfuncs, sizeof(uint8_t), 1, f);
-	if (nread != 1) return -1;
+	if (nread != 1) return FALSE;
 
 	*hashfuncs = (hashfunc_t*) calloc(*nfuncs, sizeof(hashfunc_t));
-	if (*hashfuncs == NULL)
-	{
-		return -1;
-	}
+	if (*hashfuncs == NULL) return FALSE;
+
 	for (uint8_t i = 0; i < *nfuncs; i++)
 	{
 		if (fread(&fctid, sizeof(uint8_t), 1, f) != 1 || fctid >= NUM_HASHFCTS)
 		{
 			free(*hashfuncs);
 			*hashfuncs = NULL;
-			return -1;
+			return FALSE;
 		}
 		(*hashfuncs)[i] = HASH_FCTS[fctid];
 	}
-	return nread;
+	return TRUE;
 }
 
-const int fread_bloom_txt(FILE* const f, BLOOM** b);
+const BOOL fread_bloom_txt(FILE* const f, BLOOM** b);
 
-const int fread_bloom(FILE* const f, BLOOM** b)
+const BOOL fread_bloom(FILE* const f, BLOOM** b)
 {
-	int ret = fread_bloom_txt(f, b);
-	if (ret == 0) // Seems to be in old format
-	{
-		ret = fread_bloom_032(f, b);
-	}
-	return ret;
+	if (fread_bloom_txt(f, b)) return TRUE;
+	if (fread_bloom_032(f, b)) return TRUE;
+
+	return FALSE;
 }
 
-const int fread_bloom_txt(FILE* const f, BLOOM** b)
+const BOOL fread_bloom_txt(FILE* const f, BLOOM** b)
 {
 	assert(f != NULL && b != NULL);
 	const size_t pos = ftell_s(f);
 
 	CONTAINER_T(c);
 	container_iodata_t state = {&c, NULL, NULL};
-	const int ret = fread_config(f, NULL, fread_bloomconfig, &state);
+	const size_t ret = fread_config(f, NULL, fread_bloomconfig, &state);
 	*b = c.data;
 
-	if (ret >= 0) return ret;
+	if (ret > 0) return TRUE;
 
 	fseek_s(f, pos, SEEK_SET);
-	return 0;
+	return FALSE;
 }
 
-const int fread_bloom_032(FILE* const f, BLOOM** b)
+const BOOL fread_bloom_032(FILE* const f, BLOOM** b)
 {
 	assert(f != NULL);
 	assert(b != NULL);
@@ -423,33 +407,27 @@ const int fread_bloom_032(FILE* const f, BLOOM** b)
 	uint8_t nfuncs;
 	hashfunc_t* hashfuncs;
 
-	const size_t pos = ftell_s(f);
-
-	const int n = fread_hashspec(f, &hashfuncs, &nfuncs);
-	if (n <= 0) return n;
+	if (!fread_hashspec(f, &hashfuncs, &nfuncs)) return FALSE;
 
 	size_t asize;
 	if (fread(&asize, sizeof(size_t), 1, f) != 1)
 	{
 		free(hashfuncs);
-		return -1;
+		return FALSE;
 	}
 
 	*b = bloom_create(asize);
 	bloom_set_hashfuncs_ex(*b, hashfuncs, nfuncs);
 	free(hashfuncs);
 
-	if (*b == NULL)
-	{
-		return -1;
-	}
+	if (*b == NULL) return FALSE;
 
 	const size_t numRead = fread((*b)->a, sizeof(char), (*b)->size, f);
 
 	if (numRead != (*b)->size)
 	{
 		bloom_destroy(*b);
-		return -1;
+		return FALSE;
 	}
-	return UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
+	return TRUE;
 }

@@ -26,6 +26,6 @@ extern void extract_bytegrams(const char* const str, const size_t len, const siz
 extern void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data);
 
 // token or word n-grams
-extern const int pick_delimiterchar(const delimiter_array_t delim);
-extern char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch);
+extern const char pick_delimiterchar(const delimiter_array_t delim);
+extern char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const char ch);
 extern void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);

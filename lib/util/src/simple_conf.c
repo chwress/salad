@@ -40,7 +40,7 @@ char* const readline(char** buf, size_t* len, FILE* f)
 	}
 }
 
-const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE handle, void* const usr)
+const size_t fread_config(FILE* const f, const char* const header, FN_KEYVALUE handle, void* const usr)
 {
 	assert(f != NULL);
 	const size_t pos = ftell_s(f);
@@ -72,7 +72,7 @@ const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE hand
 		if (y == NULL)
 		{
 			free(line);
-			return -1;
+			return 0;
 		}
 
 		y[0] = 0x00;

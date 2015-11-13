@@ -25,8 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef const int(*FN_KEYVALUE)(FILE* const f, const char* const key, const char* const value, void* const usr);
+#include "util.h"
 
-const int fread_config(FILE* const f, const char* const header, FN_KEYVALUE handler, void* const usr);
+typedef const BOOL(*FN_KEYVALUE)(FILE* const f, const char* const key, const char* const value, void* const usr);
+
+const size_t fread_config(FILE* const f, const char* const header, FN_KEYVALUE handler, void* const usr);
 
 #endif /* UTIL_SIMPLE_CONF_H_ */

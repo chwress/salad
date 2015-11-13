@@ -199,7 +199,7 @@ static inline const int file_read_next(file_t* const f, data_t* const out, const
 				return LINE_ITERATOR_EOF;
 			}
 
-			int j;
+			ssize_t j;
 			for (j = read -1; j >= 0; j--)
 			{
 				if (!it->strip[(int) (*line)[j]]) break;

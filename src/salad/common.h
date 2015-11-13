@@ -32,11 +32,11 @@ typedef uint8_t* const delimiter_array_t;
 #define NO_DELIMITER	NULL
 
 typedef size_t bitgram_t;
-extern const int BITGRAM_SIZE;
-extern const int BITGRAM_BITSIZE;
+extern const size_t BITGRAM_SIZE;
+extern const size_t BITGRAM_BITSIZE;
 
 typedef bitgram_t ngram_mask_t;
-extern const int MASK_BITSIZE;
+extern const size_t MASK_BITSIZE;
 
 /**
  * A generic representation of a set of delimiters that contains

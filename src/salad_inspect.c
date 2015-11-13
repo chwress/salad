@@ -147,9 +147,9 @@ const int salad_inspect_stub(const config_t* const c, const data_processor_t* co
 	info("Saturation: %.3f%%", (((double)N)/ ((double)cur_model->bitsize))*100);
 
 	const uint8_t k = cur_model->nfuncs;
-	const size_t n = context.num_uniq;
-	const size_t m = cur_model->bitsize;
-	info("Expected error: %.3f%%", pow(1- exp(((double) -k*n)/ ((double) m)), k) *100);
+	const long double n = (long double) context.num_uniq;
+	const long double m = (long double) cur_model->bitsize;
+	info("Expected error: %.3Lf%%", pow(1 - exp(-(k*n)/ m), k) *100);
 
 	free(context.stats);
 

@@ -40,7 +40,9 @@ const int cmp(const char* const s, ...)
 		if (strcmp(s, x) == 0)
 		{
 			va_end(args);
-			return i;
+
+			ASSERT(i <= INT_MAX);
+			return (int) i;
 		}
 		x = va_arg(args, char*);
 	}
@@ -57,8 +59,8 @@ const int cmp2(const char* const s, const char* const needles[])
 	{
 		if (strcmp(s, *arr) == 0)
 		{
-			ASSERT(i < INT_MAX);
-			return i;
+			ASSERT(i <= INT_MAX);
+			return (int) i;
 		}
 		arr++;
 	}
@@ -92,7 +94,6 @@ const int isprintable(const char* const s)
 const size_t inline_decode(char* s, const size_t len)
 {
 	char buf[5] = "0x00";
-	unsigned int ch;
 
 	size_t j = 0;
 	for (size_t i = 0; i < len; i++, j++)
@@ -120,8 +121,9 @@ const size_t inline_decode(char* s, const size_t len)
 		// is valid encoding?
 		if (isxdigit(buf[2]) && isxdigit(buf[3]))
 		{
+			unsigned int ch;
 			sscanf(buf, "%x", (unsigned int*) &ch);
-			s[j] = ch;
+			s[j] = (char) ch;
 		}
 		else
 		{
@@ -170,7 +172,7 @@ const size_t encode(char** out, size_t* outsize, const char* const s, const size
 		}
 	}
 
-	xsize = (y -x);
+	xsize = (size_t) (y -x);
 	x = (char*) realloc(x, sizeof(char) *xsize +1);
 	*y = 0x00;
 
@@ -292,7 +294,8 @@ void rand_s(char* const out, const size_t n)
 
 	for (size_t i = 0; i < n; ++i)
 	{
-		out[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+		// rand returns an integer between 0 and RAND_MAX.
+		out[i] = alphanum[((size_t) rand()) % (sizeof(alphanum) - 1)];
 	}
 	out[n] = 0;
 }
@@ -334,7 +337,7 @@ char* const fread_str(FILE* const f)
 
 const float frand()
 {
-	return (float) rand() / RAND_MAX;
+	return ((float) rand()) / ((float) RAND_MAX);
 }
 
 extern size_t ftell_s(FILE* const f);

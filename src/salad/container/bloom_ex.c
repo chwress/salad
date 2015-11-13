@@ -25,9 +25,10 @@
 
 #include <util/util.h>
 
+static const size_t CHAR_HIGHBIT = (((char) 1) << (sizeof(unsigned char) * 8 -1));
 
-#define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= (0x80>>((n)%CHAR_BIT)))
-#define GETBIT(a, n)  ((a)[(n)/CHAR_BIT] & (0x80>>((n)%CHAR_BIT)))
+#define SETBIT(a, n)  ((a)[(n)/CHAR_BIT] |= ((unsigned char) (CHAR_HIGHBIT>>((n)%CHAR_BIT))))
+#define GETBIT(a, n)  ((a)[(n)/CHAR_BIT] &  ((unsigned char) (CHAR_HIGHBIT>>((n)%CHAR_BIT))))
 
 BLOOM* const bloom_create(const size_t bitsize)
 {
@@ -185,7 +186,7 @@ void bloom_add_str(BLOOM* const bloom, const char* s, const size_t len)
 
 	for(size_t n = 0; n < bloom->nfuncs; ++n)
 	{
-		unsigned int h = bloom->funcs[n](s, len) % bloom->bitsize;
+		const size_t h = bloom->funcs[n](s, len) % bloom->bitsize;
 		SETBIT(bloom->a, h);
 	}
 }
@@ -196,7 +197,7 @@ void bloom_add_num(BLOOM* const bloom, const size_t num)
 
 	for(size_t n = 0; n < bloom->nfuncs; ++n)
 	{
-		unsigned int h = bloom->funcs[n]((char*) &num, sizeof(size_t)) % bloom->bitsize;
+		const size_t h = bloom->funcs[n]((char*) &num, sizeof(size_t)) % bloom->bitsize;
 		SETBIT(bloom->a, h);
 	}
 }
@@ -207,13 +208,13 @@ static inline int bloom_check(BLOOM* const bloom, const char* s, const size_t le
 
 	for(size_t n = 0; n < (bloom)->nfuncs; ++n)
 	{
-		hash_t h = (bloom)->funcs[n](s, len) % (bloom)->bitsize;
+		const size_t h = (bloom)->funcs[n](s, len) % (bloom)->bitsize;
 		if (!GETBIT((bloom)->a, h))
 		{
-			return 0;
+			return FALSE;
 		}
 	}
-	return 1;
+	return TRUE;
 }
 
 const int bloom_check_str(BLOOM* const bloom, const char* s, const size_t len)
@@ -239,7 +240,8 @@ const size_t bloom_count(BLOOM* const bloom)
 	for (size_t i = 0; i < bloom->size; i += sizeof(unsigned int))
 	{
 		unsigned int* foo = (unsigned int*) (bloom->a +i);
-		count += __builtin_popcount(*foo);
+		// __builtin_popcount: Returns the number of 1-bits in x
+		count += (size_t) __builtin_popcount(*foo);
 	}
 	return count;
 }
@@ -253,17 +255,17 @@ const int bloom_compare(BLOOM* const a, BLOOM* const b)
 
 	if (a == NULL || b == NULL)
 	{
-		return a -b;
+		return (a < b ? -1 : 1);
 	}
 
 	if (a->bitsize != b->bitsize)
 	{
-		return a->bitsize -b->bitsize;
+		return (a->bitsize < b->bitsize ? -1 : 1);
 	}
 
 	if (a->size != b->size)
 	{
-		return a->size -b->size;
+		return (a->size < b->size ? -1 : 1);
 	}
 
 #if 1 // DEBUGGING
@@ -315,7 +317,7 @@ const int bloom_to_file(const BLOOM* const bloom, FILE* const f)
 	if (fwrite(bloom->a, sizeof(char), bloom->size, f) != bloom->size) return -1;
 
 	fflush(f);
-	return bloom->size *sizeof(char) +sizeof(size_t);
+	return (int) MIN(INT_MAX, bloom->size *sizeof(char) +sizeof(size_t));
 }
 
 const int bloom_to_file_2(BLOOM* const bloom, FILE* const f)
@@ -326,5 +328,5 @@ const int bloom_to_file_2(BLOOM* const bloom, FILE* const f)
 	ok = (ok && fwrite(bloom->a, sizeof(char), bloom->size, f) == bloom->size);
 	fflush(f);
 
-	return (ok ? bloom->size *sizeof(char) +sizeof(size_t) : -1);
+	return (ok ? (int) MIN(INT_MAX, bloom->size *sizeof(char) +sizeof(size_t)) : -1);
 }

@@ -32,18 +32,18 @@
 #include <util/io.h>
 
 // WRITING
-const int fwrite_bloomconfig(const container_outputspec_t* const out, const BLOOM* const b);
-const int fwrite_bloomconfig_ex(FILE* const f, const BLOOM* const b);
-const int fwrite_bloomdata(const container_outputspec_t* const out, const BLOOM* const b, container_outputstate_t* const state);
+const BOOL fwrite_bloomconfig(const container_outputspec_t* const out, const BLOOM* const b);
+const BOOL fwrite_bloomconfig_ex(FILE* const f, const BLOOM* const b);
+const BOOL fwrite_bloomdata(const container_outputspec_t* const out, const BLOOM* const b, container_outputstate_t* const state);
 
-const int fwrite_bloom(FILE* const f, const BLOOM* const b);
-const int fwrite_bloom_ex(FILE* const f, const BLOOM* const b, const container_outputformat_t fmt);
+const BOOL fwrite_bloom(FILE* const f, const BLOOM* const b);
+const BOOL fwrite_bloom_ex(FILE* const f, const BLOOM* const b, const container_outputformat_t fmt);
 
 
 // READING
-const int fread_bloomconfig(FILE* const f, const char* const key, const char* const value, void* const usr);
-const int fread_bloom(FILE* const f, BLOOM** b);
-const int fread_bloom_032(FILE* const f, BLOOM** b);
+const BOOL fread_bloomconfig(FILE* const f, const char* const key, const char* const value, void* const usr);
+const BOOL fread_bloom(FILE* const f, BLOOM** b);
+const BOOL fread_bloom_032(FILE* const f, BLOOM** b);
 
 
 #endif /* SALAD_CONTAINER_IO_BLOOM_H_ */

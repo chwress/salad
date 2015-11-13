@@ -49,9 +49,11 @@ inline void extract_bitgrams(const char* const str, const size_t len, const size
 		}
 	}
 
-	bitgram_t u = *(bitgram_t*) x;
-	const size_t remainder = (len -(x -str)) *8;
+	const ptrdiff_t d = x -str;
+	assert(d > 0);
+	const size_t remainder = (len -((size_t) d)) *8;
 
+	bitgram_t u = *(bitgram_t*) x;
 	for (size_t i = 0; i < remainder -n +1; i++)
 	{
 		bitgram_t cur = (u & mask);
@@ -83,26 +85,26 @@ inline void extract_ngrams(const char* const str, const size_t len, const size_t
 
 
 // token or word n-grams
-inline const int pick_delimiterchar(const delimiter_array_t delim)
+inline const char pick_delimiterchar(const delimiter_array_t delim)
 {
-	for (size_t i = 0; i < 256; i++)
+	for (size_t i = 0; i < DELIM_SIZE; i++)
 	{
 		if (delim[i])
 		{
-			return i;
+			return (char) i;
 		}
 	}
 	return -1;
 }
 
-inline char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const int ch)
+inline char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const char ch)
 {
 	assert(str != NULL && *str != NULL && len != NULL);
 
 	size_t slen = 0;
 	char* s = (char*) malloc(*len +2);
 
-	int prev = ch;
+	char prev = ch;
     for (const char* x = *str; x < *str +*len; x++)
     {
 		if (delim[(unsigned char) *x])
@@ -130,7 +132,7 @@ inline char* const uniquify(const char** const str, size_t* const len, const del
 
 inline void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data)
 {
-	int ch = pick_delimiterchar(delim);
+	char ch = pick_delimiterchar(delim);
 
 	const char* s = str;
 	size_t slen = len;
@@ -150,7 +152,7 @@ inline void extract_wgrams(const char* const str, const size_t len, const size_t
     	}
     }
 
-    int i = n -1, a = n +1;
+    size_t i = n -1, a = n +1;
     for (; x < s +slen; x++)
     {
     	if (*x == ch)
@@ -158,9 +160,12 @@ inline void extract_wgrams(const char* const str, const size_t len, const size_t
     		i = (i+1) % a;
     		wgrams[i] = x +1;
 
-    		const int y = (i +1) % a;
+    		const size_t y = (i +1) % a;
     		const char* const next = wgrams[y];
-    		const size_t wlen =  wgrams[i] -next -1;
+
+    		const ptrdiff_t d = wgrams[i] -next;
+    		assert(d > 0); // and also > 1 due to construction of wgrams array
+    		const size_t wlen = ((size_t) d) -1;
 
     		fct(next, wlen, data);
     	}

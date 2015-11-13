@@ -161,7 +161,8 @@ const int salad_from_config(salad_t* const s, const config_t* const c)
 	salad_init(s);
 
 	// TODO: right now there only are bloom filters!
-	salad_set_bloomfilter_ex(s, bloom_init(c->filter_size, c->hash_set));
+	assert(c->filter_size <= USHRT_MAX);
+	salad_set_bloomfilter_ex(s, bloom_init((unsigned short) c->filter_size, c->hash_set));
 	salad_use_binary_ngrams(s, c->binary_ngrams);
 	salad_set_delimiter(s, c->delimiter);
 	salad_set_ngramlength(s, c->ngram_length);

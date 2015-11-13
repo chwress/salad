@@ -119,36 +119,45 @@ uint32_t djb2_hash_n(const char* const key, const size_t len)
 
 
 #include <util/murmur.h>
+
+#include <assert.h>
+#include <inttypes.h>
 #include <string.h>
 
 uint32_t murmur_hash0(const char* const key)
 {
-	return MurmurHash2(key, strlen(key), 0x428a2f98); // SHA-256 k[0]
+	assert(strlen(key) < INT32_MAX);
+	return MurmurHash2(key, (int32_t) strlen(key), 0x428a2f98); // SHA-256 k[0]
 }
 
 uint32_t murmur_hash0_n(const char* const key, const size_t len)
 {
-	return MurmurHash2(key, len, 0x428a2f98);
+	assert(len < INT32_MAX);
+	return MurmurHash2(key, (int32_t) len, 0x428a2f98);
 }
 
 uint32_t murmur_hash1(const char* const key)
 {
-	return MurmurHash2(key, strlen(key), 0x71374491); // SHA-256 k[1]
+	assert(strlen(key) < INT32_MAX);
+	return MurmurHash2(key, (int32_t) strlen(key), 0x71374491); // SHA-256 k[1]
 }
 
 uint32_t murmur_hash1_n(const char* const key, const size_t len)
 {
-	return MurmurHash2(key, len, 0x71374491);
+	assert(len < INT32_MAX);
+	return MurmurHash2(key, (int32_t) len, 0x71374491);
 }
 
 uint32_t murmur_hash2(const char* const key)
 {
-	return MurmurHash2(key, strlen(key), 0xb5c0fbcf); // SHA-256 k[2]
+	assert(strlen(key) < INT32_MAX);
+	return MurmurHash2(key, (int32_t) strlen(key), 0xb5c0fbcf); // SHA-256 k[2]
 }
 
 uint32_t murmur_hash2_n(const char* const key, const size_t len)
 {
-	return MurmurHash2(key, len, 0xb5c0fbcf);
+	assert(len < INT32_MAX);
+	return MurmurHash2(key, (int32_t) len, 0xb5c0fbcf);
 }
 
 

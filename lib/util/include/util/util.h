@@ -128,6 +128,7 @@ inline int fseek_s(FILE* const f, const size_t offset, const int whence)
 
 #define FALSE 0
 #define TRUE  1
+typedef int BOOL;
 
 #define UNUSED(x) (void)(x)
 
@@ -146,6 +147,7 @@ inline int fseek_s(FILE* const f, const size_t offset, const int whence)
 	{ \
 		fprintf(stderr, "Assertion failed: %s", #expr); \
 		fprintf(stderr, "in %s line %ud", __FILE__, __LINE__); \
+		exit(666); \
 	} \
 }
 

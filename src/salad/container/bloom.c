@@ -106,12 +106,12 @@ BLOOM* const bloom_init(const unsigned short size, const hashset_t hs)
 	switch (hs)
 	{
 	case HASHES_SIMPLE:
-		b = bloom_create(POW(2, size));
+		b = bloom_create((size_t) POW(2, size));
 		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_SIMPLE);
 		break;
 
 	case HASHES_MURMUR:
-		b = bloom_create(POW(2, size));
+		b = bloom_create((size_t) POW(2, size));
 		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_MURMUR);
 		break;
 
@@ -140,11 +140,10 @@ const int bloomfct_cmp(BLOOM* const bloom, ...)
 	hashfunc_t* funcs;
 	for (int i = 0; (funcs = va_arg(args, hashfunc_t*)) != NULL; i++)
 	{
-		// 'uint8_t' is promoted to 'int' when passed through '...'
-		const uint8_t nfuncs = va_arg(args, int);
+		const int nfuncs = va_arg(args, int);
 		if (nfuncs != bloom->nfuncs) continue;
 
-		if (bloomfct_equal(bloom, funcs, nfuncs))
+		if (bloomfct_equal(bloom, funcs, (uint8_t) nfuncs))
 		{
 			va_end(args);
 			return i;

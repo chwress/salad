@@ -51,12 +51,12 @@ ssize_t getdelim(char** buf, size_t* bufsiz, int delimiter, FILE* fp)
 	for (ptr = *buf, eptr = *buf + *bufsiz;;)
 	{
 		int c = fgetc(fp);
-		if (c == -1)
+		if (c < 0)
 		{
 			if (feof(fp)) break;
 			return -1;
 		}
-		*ptr++ = c;
+		*ptr++ = (char) c;
 		if (c == delimiter)
 		{
 			*ptr = '\0';
@@ -126,7 +126,7 @@ char* const getlines_ex(const char* const fname, const char* const prefix)
 			break;
 		}
 
-		const size_t s = MIN(size, read);
+		const size_t s = MIN(size, (size_t) read);
 		if (s > 0 && (prefix == NULL || starts_with(line, prefix)))
 		{
 			memcpy(log, line, s +1);

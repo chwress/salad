@@ -38,21 +38,13 @@ const char* const bytes2human_ex(char* const buf, const size_t n, const size_t x
 {
 	assert(buf != NULL);
 
-	int m = 0;
-	double d = x;
-	for (; d > 1024; m++) d /= 1024;
+	size_t m = 0;
+	long double d1 = (long double) x;
+	for (; d1 > 1024; m++) d1 /= 1024;
 
-	// Round to up to one decimal place
-	const size_t s = (size_t) ceil(d *10);
-
-	if (((double) s) == d)
-	{
-		snprintf(buf, n, "%"Z"%s", (SIZE_T) d, SYMBOLS[(int) variant][m]);
-	}
-	else
-	{
-		snprintf(buf, n, "%"Z".%d%s", (SIZE_T) (s /10), (int) (s %10), SYMBOLS[(int) variant][m]);
-	}
+	// Round up to one decimal place
+	const long double d2 = ceill(d1 *10.0) /10.0;
+	snprintf(buf, n, (d1 == d2 ? "%.0Lf%s" : "%.1Lf%s"), d1, SYMBOLS[(ssize_t) variant][m]);
 
 	return buf;
 }
@@ -76,5 +68,5 @@ const size_t human2bytes(const char* const x)
 	{
 		return 0;
 	}
-	return (m < 0 ? n : n * POW(1024, m));
+	return (size_t) (m < 0 ? n : ceil(n * POW(1024, m)));
 }

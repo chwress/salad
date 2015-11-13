@@ -25,9 +25,9 @@
 #include <util/util.h>
 
 
-const int BITGRAM_SIZE = sizeof(bitgram_t);
-const int BITGRAM_BITSIZE = sizeof(bitgram_t) * 8;
-const int MASK_BITSIZE = sizeof(ngram_mask_t) * 8 -7;
+const size_t BITGRAM_SIZE = sizeof(bitgram_t);
+const size_t BITGRAM_BITSIZE = sizeof(bitgram_t) * 8;
+const size_t MASK_BITSIZE = sizeof(ngram_mask_t) * 8 -7;
 
 
 void delimiter_init(delimiter_t* const d)
@@ -107,8 +107,10 @@ const char* const delimiter_array_to_string(const delimiter_array_t delim, char*
 	return *out;
 }
 
-#define SETBIT(m, x)	(m) |= (0x80>>(x))
-#define GETBIT(m, x)	(m) & (0x80>>(x))
+static const size_t MASK_HIGHBIT = (((ngram_mask_t) 1) << (sizeof(ngram_mask_t) * 8 -1));
+
+#define SETBIT(m, x)	(m) |= (MASK_HIGHBIT>>(x))
+#define GETBIT(m, x)	(m) & (MASK_HIGHBIT>>(x))
 
 int to_ngram_mask(const char* const s, ngram_mask_t* const out)
 {

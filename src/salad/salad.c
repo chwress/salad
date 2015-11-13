@@ -250,7 +250,7 @@ const int salad_from_file(const char* const filename, salad_t* const out)
 const int salad_from_file_ex(FILE* const f, salad_t* const out)
 {
 	salad_init(out);
-	return (fread_model(f, out) > 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	return (fread_model(f, out) ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
 const int salad_to_file(const salad_t* const s, const char* const filename)
@@ -273,7 +273,5 @@ const int salad_to_file_ex(const salad_t* const s, FILE* const f)
 	{
 		return EXIT_FAILURE;
 	}
-
-	const int n = fwrite_model(f, s);
-	return (n >= 0 ? EXIT_SUCCESS : EXIT_FAILURE);
+	return (fwrite_model(f, s) ? EXIT_SUCCESS : EXIT_FAILURE);
 }

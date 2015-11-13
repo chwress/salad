@@ -263,15 +263,15 @@ CTEST(salad, fileformat_consistency)
 		ASSERT_NOT_NULL(f_out);
 	}
 
-	const int n = fwrite_model(f_out, &x);
+	const BOOL ok = fwrite_model(f_out, &x);
 	fclose(f_out);
 
-	if (n < 0)
+	if (!ok)
 	{
 		salad_destroy(&x);
 		remove(TEST_FILE);
 		CTEST_ERR("Failed while writing the model.");
-		ASSERT_TRUE(n >= 0);
+		ASSERT_TRUE(ok);
 	}
 
 	FILE* const f_in = fopen(TEST_FILE, "rb");

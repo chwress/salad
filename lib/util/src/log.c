@@ -167,12 +167,12 @@ void progress(const size_t cur, const size_t total)
 
 	char* const start = bar +strlen(BAR.prefix);
 	char* const end   = bar +BAR.length -strlen(BAR.suffix);
-	const size_t len = end -start;
+	const double len = (double) MAX(0, end -start);
 
 	memcpy(bar, BAR.prefix, strlen(BAR.prefix));
 	memcpy(end, BAR.suffix, strlen(BAR.suffix));
 
-	const int done = (int) (len *((double) cur) /total);
+	const size_t done = (size_t) floor(len *((double) cur) / ((double) total));
 
 	if (done > 0)
 	{
@@ -180,10 +180,12 @@ void progress(const size_t cur, const size_t total)
 		start[done -1] = (cur < total ? BAR.head : BAR.end);
 	}
 
-	static int LABEL_SIZE = 4;
+	static size_t LABEL_SIZE = 4;
 
 	char perc[LABEL_SIZE +1];
-	snprintf(perc, LABEL_SIZE +1, "%u%%", (unsigned int) (100*((double)cur)/total));
+	const double x = (100.0 * ((double) cur)/((double) total));
+
+	snprintf(perc, LABEL_SIZE +1, "%.0f%%", x);
 	memcpy(start +LABEL_SIZE +1 -strlen(perc), perc, strlen(perc));
 
 	if (cur < total)

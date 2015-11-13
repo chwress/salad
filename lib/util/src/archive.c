@@ -81,18 +81,22 @@ const int archive_read_dumpfile(struct archive* const a, struct archive_entry* c
 
 	const void *buf;
 	size_t size;
-	off_t offset;
+	int64_t offset;
 
 	int ret = ARCHIVE_OK;
 	while (1)
 	{
-		int ret = archive_read_data_block(a, &buf, &size, &offset);
+		ret = archive_read_data_block(a, &buf, &size, &offset);
 		if (ret == ARCHIVE_EOF) break;
 
 		if (ret != ARCHIVE_OK) break;
 
-		ret = archive_write_data_block(out, buf, size, offset);
-		if (ret != ARCHIVE_OK) break;
+		const ssize_t n = archive_write_data_block(out, buf, size, offset);
+		if (n < 0)
+		{
+			ret = ARCHIVE_EOF;
+			break;
+		}
 	}
 
 	archive_write_easyclose(out);
@@ -131,23 +135,25 @@ const int archive_write_file(struct archive* const a, const char* const filename
 	const size_t n = ftell_s(f);
 	fseek_s(f, 0, SEEK_SET);
 
+	ASSERT(n <= INT64_MAX);
+
 	struct archive_entry* entry = archive_entry_new();
 	archive_entry_clear(entry);
 	archive_entry_set_pathname(entry, name);
-	archive_entry_set_size(entry, n);
+	archive_entry_set_size(entry, (int64_t) n);
 	archive_entry_set_filetype(entry, AE_IFREG);
 	archive_entry_set_perm(entry, 0644);
 	archive_write_header(a, entry);
 
-	static const int BUFFER_SIZE = 0x1000;
+	static const size_t BUFFER_SIZE = 0x1000;
 	char buf[BUFFER_SIZE];
 
 	size_t nread = 0;
 	do
 	{
 		nread = fread(buf, sizeof(char), BUFFER_SIZE, f);
-		const size_t nwrote = archive_write_data(a, buf, nread);
-		if (nread != nwrote)
+		const ssize_t nwrote = archive_write_data(a, buf, nread);
+		if (nwrote < 0 || nread != nwrote)
 		{
 			archive_entry_free(entry);
 			return ARCHIVE_FAILED;

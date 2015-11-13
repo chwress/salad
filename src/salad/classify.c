@@ -48,7 +48,7 @@ static inline void check(const char* const ngram, const size_t len, void* const 
 	assert(ngram != NULL && data != NULL);
 	check_t* const d = (check_t*) data;
 
-	d->num_known += bloom_check_str(d->bloom, ngram, len);
+	if (bloom_check_str(d->bloom, ngram, len)) d->num_known++;
 	d->num_ngrams++;
 }
 
@@ -77,9 +77,10 @@ static inline void check2(const char* const ngram, const size_t len, void* const
 	assert(ngram != NULL && data != NULL);
 	check_t* const d = (check_t*) data;
 
-	d[GOOD].num_known += bloom_check_str(d[GOOD].bloom, ngram, len);
-	d[BAD ].num_known += bloom_check_str(d[BAD ].bloom, ngram, len);
-	d[BAD ].num_ngrams++;
+	if (bloom_check_str(d[GOOD].bloom, ngram, len)) d[GOOD].num_known++;
+	if (bloom_check_str(d[BAD ].bloom, ngram, len)) d[BAD ].num_known++;
+
+	d[BAD].num_ngrams++;
 }
 
 #define CLASSIFY_2CLASS(X, bloom, bbloom, input, len, n, delim)                         \

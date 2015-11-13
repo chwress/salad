@@ -169,8 +169,9 @@ const int archive_meta(file_t* const f, const int group_input)
    	    if (group_input)
    	    {
 			const char* const slash = strrchr(name, '/');
+			ptrdiff_t d = slash -name;
 
-			if (slash == NULL || strncmp(name, cur->name, slash -name +1) != 0)
+			if (slash == NULL || strncmp(name, cur->name, (size_t) d +1) != 0)
 			{
 				// new class
 				if (meta->num_groups >= groups_capacity)
@@ -180,7 +181,8 @@ const int archive_meta(file_t* const f, const int group_input)
 					meta->groups = (group_t*) realloc(meta->groups, s);
 				}
 				cur = &meta->groups[meta->num_groups++];
-				STRNDUP((slash == NULL ? strlen(name) : slash -name) +1, name, cur->name);
+				const ptrdiff_t d = slash - name;
+				STRNDUP((slash == NULL ? strlen(name) : (size_t) d) +1, name, cur->name);
 				cur->n = 1;
 			}
 			else
@@ -296,9 +298,15 @@ static inline int archive_read_next(file_t* const f, data_t* const out, const si
 		out->buf = (char*) malloc(capacity * sizeof(char));
 		out->len = 0;
 
-		size_t read = 0, next_block = 0;
+		ssize_t read = 0, next_block = 0;
 		do
 		{
+			// This logically corresponds to the archive_read_data call.
+			// We however moved this up here in order not to check add negative
+			// values.
+			// First assignment is out->len += 0 due to the definition of 'read'
+			out->len += (size_t) read;
+
 			size_t next_block = MIN(BLOCK_SIZE, chunk_size -out->len);
 
 			if (out->len +next_block > capacity)
@@ -309,7 +317,6 @@ static inline int archive_read_next(file_t* const f, data_t* const out, const si
 
 			char* const x = out->buf +out->len;
 			read = archive_read_data(it->a, x, next_block);
-			out->len += read;
 
 		} while (read > 0);
 
@@ -357,7 +364,7 @@ const size_t archive_recv2(file_t* const f, FN_DATA callback, const size_t batch
 #define ARCHIVE_WRITESLICE(a, buf, _start_, end) {            \
 	const size_t start = _start_;                             \
 	const size_t len = ((end) -start);                        \
-	const size_t n = archive_write_data(a, buf +start, len);  \
+	const ssize_t n = archive_write_data(a, buf +start, len); \
 	if (n != len)                                             \
 	{	                                                      \
 		return i;                                             \
@@ -399,9 +406,11 @@ const size_t archive_write(file_t* const f, const dataset_t* const ds, void* con
 			}
 		}
 
+		ASSERT(len <= INT64_MAX);
+
 		archive_entry_clear(entry);
 		archive_entry_set_pathname(entry, fname);
-		archive_entry_set_size(entry, len);
+		archive_entry_set_size(entry, (int64_t) len);
 		archive_entry_set_filetype(entry, AE_IFREG);
 		archive_entry_set_perm(entry, 0644);
 		archive_write_header(a, entry);

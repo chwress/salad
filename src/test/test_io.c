@@ -198,7 +198,7 @@ const int test_recv_stub(const char* const filename, const data_processor_t* con
 	}
 
 	test_recv_t usr = { 0, ref };
-	const int ret = dp->recv(&input, test_recv_callback, 1, &usr);
+	const size_t ret = dp->recv(&input, test_recv_callback, 1, &usr);
 	dp->close(&input);
 
 	ASSERT_TRUE(usr.j == ref->n); // That basically is the same check as the following

@@ -508,7 +508,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			else
 			{
 				bs = TRUE;
-				config->batch_size = MIN(SIZE_MAX, batch_size);
+				config->batch_size = (size_t) MIN(SIZE_MAX, (unsigned long) MAX(0, batch_size));
 			}
 			break;
 		}
@@ -547,7 +547,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 				warn("Illegal n-gram length specified.");
 				warn("Defaulting to: %"Z"\n", (SIZE_T) config->ngram_length);
 			}
-			else config->ngram_length = MIN(SIZE_MAX, ngram_length);
+			else config->ngram_length = (size_t) MIN(SIZE_MAX, (unsigned long) ngram_length);
 			break;
 		}
 		case 'd':
@@ -568,7 +568,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 				warn("Illegal filter size specified.");
 				warn("Defaulting to: %u\n", (unsigned int) config->filter_size);
 			}
-			else config->filter_size = MIN(UINT_MAX, filter_size);
+			else config->filter_size = (unsigned int) MIN(UINT_MAX, (unsigned long) MAX(0, filter_size));
 			break;
 		}
 		case OPTION_HASHSET:
@@ -673,7 +673,7 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 			else
 			{
 				bs = TRUE;
-				config->batch_size = MIN(SIZE_MAX, batch_size);
+				config->batch_size = (size_t) MIN(SIZE_MAX, (unsigned long) batch_size);
 			}
 			break;
 		}

@@ -232,5 +232,6 @@ typedef struct
 
 const data_processor_t* const to_dataprocessor(const iomode_t m);
 
+typedef FILE* const (*FN_REQUESTFILE)(const char* const filename, void* const host);
 
 #endif /* UTIL_IO_H_ */

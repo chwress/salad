@@ -26,7 +26,7 @@
 #include <util/io.h>
 #include <util/log.h>
 
-#define TO_SEC(t) ((t).tv_sec+((t).tv_usec/1000000.0))
+#define TO_SEC(t) (((double) (t).tv_sec)+(((double) (t).tv_usec)/1000000.0))
 
 
 typedef struct {
@@ -34,7 +34,7 @@ typedef struct {
 	bloom_param_t param;
 
 	const config_t* const config;
-	float* const scores;
+	double* const scores;
 	FILE* const out;
 	double total_time;
 } predict_t;
@@ -42,7 +42,10 @@ typedef struct {
 
 #define TO_STRING(score) (isnan(score) ? \
 			x->config->nan : \
-			snprintf(buf, 0x100, "%f", 1.0 -score) > 0 ? buf : "(null)")
+			snprintf(buf, 0x100, "%f", 1.0 -((float)(score))) > 0 ? buf : "(null)")
+// XXX: The type conversion from double -> float is necessary to not break with
+// existing tests. Or to put it differently: perfect backwards compatibility
+
 
 const int salad_predict_callback(data_t* data, const size_t n, void* const usr)
 {
@@ -173,7 +176,10 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	{
 		config_t cfg;
 		cfg.ngram_length = good.ngram_length;
-		cfg.filter_size = log2(good_model->bitsize);
+
+		const long double d = ceill(log2l((long double) good_model->bitsize));
+		assert(d <= UINT_MAX);
+		cfg.filter_size = (unsigned int) d;
 
 		switch (bloomfct_cmp(good_model, HASHSET_SIMPLE, HASHSET_MURMUR))
 		{
@@ -200,7 +206,7 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 			.param = {good_model, bad_model, good.ngram_length, __(good).delimiter.d},
 			.config = c,
 			// TODO: we do not know the batch size of the recv function
-			.scores = (float*) calloc(c->batch_size, sizeof(float)),
+			.scores = (double*) calloc(c->batch_size, sizeof(double)),
 			.out = f_out,
 			.total_time = 0.0
 	};

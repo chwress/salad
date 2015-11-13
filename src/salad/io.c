@@ -49,7 +49,7 @@ void gen_tmpname(char* const buf, const size_t n)
 
 static const char* const CONFIG_HEADER = "Salad Configuration";
 
-const int fwrite_model(FILE* const f, const salad_t* const s)
+const BOOL fwrite_model(FILE* const f, const salad_t* const s)
 {
 #ifdef USE_ARCHIVES
 	return fwrite_model_zip(f, s);
@@ -58,60 +58,53 @@ const int fwrite_model(FILE* const f, const salad_t* const s)
 #endif
 }
 
-const int fwrite_modelconfig(const container_outputspec_t* const out, const salad_t* const s)
+const BOOL fwrite_modelconfig(const container_outputspec_t* const out, const salad_t* const s)
 {
 	assert(out != NULL);
-	return (fwrite_modelconfig_ex(out->config, s) ? CONTAINER_TXT(out) : -1);
+	return (CONTAINER_TXT(out) ? fwrite_modelconfig_ex(out->config, s) : FALSE);
 }
 
-const int fwrite_modelconfig_ex(FILE* const f, const salad_t* const s)
+const BOOL fwrite_modelconfig_ex(FILE* const f, const salad_t* const s)
 {
-	const int nheader = fprintf(f, "%s\n\n", CONFIG_HEADER);
-	if (nheader < 0) return -1;
+	int n = fprintf(f, "%s\n\n", CONFIG_HEADER);
+	if (n <= 0) return FALSE;
 
-	const int nbinary = fprintf(f, "binary = %s\n", (s->as_binary ? "True" : "False"));
-	if (nbinary < 0) return -1;
+	n = fprintf(f, "binary = %s\n", (s->as_binary ? "True" : "False"));
+	if (n <= 0) return FALSE;
 
-	const int ndelim = fprintf(f, "delimiter = %s\n", _(s)->delimiter.str);
-	if (ndelim < 0) return -1;
+	n = fprintf(f, "delimiter = %s\n", _(s)->delimiter.str);
+	if (n <= 0) return FALSE;
 
-	const int n = fprintf(f, "n = %"Z"\n", s->ngram_length);
-	if (n < 0) return -1;
+	n = fprintf(f, "n = %"Z"\n", s->ngram_length);
+	if (n <= 0) return FALSE;
 
 	const container_t* const c = (container_t*) s->model.x;
-	const int m = fwrite_containerconfig_ex(f, c);
-	if (m < 0) return -1;
-
-	return nheader + nbinary + ndelim + n + m;
+	return fwrite_containerconfig_ex(f, c);
 }
 
-const int fwrite_modeldata(const container_outputspec_t* const out, const salad_t* const s, container_outputstate_t* const state)
+const BOOL fwrite_modeldata(const container_outputspec_t* const out, const salad_t* const s, container_outputstate_t* const state)
 {
 	const container_t* const c = (container_t*) s->model.x;
 	return fwrite_containerdata(out, c, state);
 }
 
 
-const int fwrite_model_txt(FILE* const f, const salad_t* const s)
+const BOOL fwrite_model_txt(FILE* const f, const salad_t* const s)
 {
-	int n = fwrite_modelconfig_ex(f, s);
-	if (n < 0) return -1;
+	if (!fwrite_modelconfig_ex(f, s)) return FALSE;
 
 	CONTAINER_OUTPUTSTATE_T(state);
 	container_outputspec_t spec = {f, NULL, CONTAINER_OUTPUTFMT_MIXED};
 	container_t* c = (container_t*) s->model.x;
 
-	const int m = fwrite_containerdata(&spec, c, &state);
-	if (m < 0) return -1;
-
-	return n +m;
+	return fwrite_containerdata(&spec, c, &state);
 }
 
-const int fwrite_model_zip(FILE* const f, const salad_t* const s)
+const BOOL fwrite_model_zip(FILE* const f, const salad_t* const s)
 {
-#ifdef USE_ARCHIVES
-	const size_t pos = ftell_s(f);
-
+#ifndef USE_ARCHIVES
+	return FALSE;
+#else
 	// Initialize output file
 	struct archive* a = archive_write_easyopen(f, ZIP);
 	if (a == NULL) return -1;
@@ -125,9 +118,9 @@ const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 	FILE* config = fopen(tmpconfig, "w+");
 	if (config == NULL) return -1;
 
-	const int n = fwrite_modelconfig_ex(config, s);
+	const BOOL config_ok = fwrite_modelconfig_ex(config, s);
 
-	int m = -1, M = 0;
+	BOOL data_ok = FALSE;
 	CONTAINER_OUTPUTSTATE_T(state);
 	do
 	{
@@ -136,15 +129,14 @@ const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 		if (tmpdata == NULL)
 		{
 			remove(tmpconfig);
-			return -1;
+			return FALSE;
 		}
 
 		container_outputspec_t spec = {config, data, CONTAINER_OUTPUTFMT_SEPARATED};
-		m = fwrite_modeldata(&spec, s, &state);
-		M += m;
+		data_ok = fwrite_modeldata(&spec, s, &state);
 
 		fclose(data);
-		if (m < 0) break;
+		if (!data_ok) break;
 
 		archive_write_file(a, tmpdata, state.filename);
 		remove(tmpdata);
@@ -152,38 +144,32 @@ const int fwrite_model_zip(FILE* const f, const salad_t* const s)
 	} while (!state.done);
 
 	fclose(config);
-	if (n < 0 || m < 0)
+	if (!config_ok || !config_ok)
 	{
 		remove(tmpconfig);
 		remove(tmpdata);
-		return -1;
+		return FALSE;
 	}
 
 	archive_write_file(a, tmpconfig, "config");
 	remove(tmpconfig);
 
-	const size_t size = UNSIGNED_SUBSTRACTION(ftell_s(f), pos);
 	archive_write_easyclose(a);
-	return size;
-#else
-	return 0;
+	return TRUE;
 #endif
 }
 
 
-const int fread_model(FILE* const f, salad_t* const s)
+const BOOL fread_model(FILE* const f, salad_t* const s)
 {
-	int ret = fread_model_zip(f, s);
-	if (ret == 0) // not stored as archive
-	{
-		ret = fread_model_txt(f, s);
-	}
-	if (ret == 0) // seems to be in old format then
-	{
-		s->as_binary = FALSE;
-		ret = fread_model_032(f, s);
-	}
-	return ret;
+	if (fread_model_zip(f, s)) return TRUE;
+
+	// not stored as archive?
+	if (fread_model_txt(f, s)) return TRUE;
+
+	// seems to be in old format then
+	s->as_binary = FALSE;
+	return fread_model_032(f, s);
 }
 
 
@@ -207,7 +193,7 @@ typedef struct
 #define MODELCONF_SPEC_T(spec) modelconf_spec_t spec = EMPTY_MODELCONF_SPEC_INITIALIZER
 
 
-const int fread_modelconfig(FILE* const f, const char* const key, const char* const value, void* const usr)
+const BOOL fread_modelconfig(FILE* const f, const char* const key, const char* const value, void* const usr)
 {
 	assert(usr != NULL);
 	container_iodata_t* const x = (container_iodata_t*) usr;
@@ -218,7 +204,7 @@ const int fread_modelconfig(FILE* const f, const char* const key, const char* co
 	{
 	case 0:
 	{
-		long int b = strtol(value, &tail, 10);
+		int b = (strtol(value, &tail, 10) >= 1);
 		if (tail == value)
 		{
 			b = (stricmp(value, "True") == 0);
@@ -252,7 +238,7 @@ const int fread_modelconfig(FILE* const f, const char* const key, const char* co
 	return TRUE;
 }
 
-const int fread_model_txt(FILE* const f, salad_t* const s)
+const BOOL fread_model_txt(FILE* const f, salad_t* const s)
 {
 	assert(f != NULL && s != NULL);
 
@@ -264,13 +250,13 @@ const int fread_model_txt(FILE* const f, salad_t* const s)
 	conf.s = s;
 
 	container_iodata_t state = {&conf, NULL, NULL};
-	const int n = fread_config(f, CONFIG_HEADER, fread_modelconfig, &state);
-	if (n <= 0) return n;
+	const size_t n = fread_config(f, CONFIG_HEADER, fread_modelconfig, &state);
+	if (n <= 0) return FALSE;
 
 	// The bloom filter and the n-gram length are mandatory, though
-	if (!conf.ngramlen_specified) return -3;
+	if (!conf.ngramlen_specified) return FALSE;
 
-	return n;
+	return TRUE;
 }
 
 typedef struct {
@@ -305,20 +291,22 @@ FILE* const request_input(const char* const filename, void* const host)
 	return f;
 }
 
-const int fread_model_zip(FILE* const f, salad_t* const s)
+const BOOL fread_model_zip(FILE* const f, salad_t* const s)
 {
-#ifdef USE_ARCHIVES
+#ifndef USE_ARCHIVES
+	return FALSE;
+#else
 	const size_t pos = ftell_s(f);
 
 	uint16_t magic;
-	size_t n = fread(&magic, sizeof(uint16_t), 1, f);
+	const size_t n = fread(&magic, sizeof(uint16_t), 1, f);
 	fseek_s(f, pos, SEEK_SET);
-	if (n <= 0) return -1;
+	if (n != 1) return FALSE;
 
 	// Is ZIP archive?
 	if (magic != 0x4B50) // PK
 	{
-		return 0;
+		return FALSE;
 	}
 
 	// Generate temporary output filename
@@ -328,7 +316,7 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 	// Initialize output file
 	if (archive_read_dumpfile2(f, "config", tmpname) != ARCHIVE_OK)
 	{
-		return -1;
+		return FALSE;
 	}
 	fseek_s(f, 0, SEEK_SET);
 
@@ -336,7 +324,7 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 	if (config == NULL)
 	{
 		remove(tmpname);
-		return -2;
+		return FALSE;
 	}
 
 
@@ -349,25 +337,22 @@ const int fread_model_zip(FILE* const f, salad_t* const s)
 
 	requested_input_t x = {f, 0};
 	container_iodata_t state = {&conf, request_input, &x};
-	const int m = fread_config(config, CONFIG_HEADER, fread_modelconfig, &state);
+	const size_t m = fread_config(config, CONFIG_HEADER, fread_modelconfig, &state);
 
 	fclose(config); remove(tmpname);
-	if (m <= 0) return m;
+	if (m <= 0) return FALSE;
 
 	// The bloom filter and the n-gram length are mandatory, though
-	if (!conf.ngramlen_specified) return -3;
+	if (!conf.ngramlen_specified) return FALSE;
 
-	return x.nread + m;
-#else
-	return 0;
+	return TRUE;
 #endif
 }
 
 
-const int fread_model_032(FILE* const f, salad_t* const s)
+const BOOL fread_model_032(FILE* const f, salad_t* const s)
 {
 	assert(f != NULL && s != NULL);
-	const size_t pos = ftell(f);
 
 	// Set default values
 	salad_use_binary_ngrams(s, FALSE);
@@ -380,11 +365,11 @@ const int fread_model_032(FILE* const f, salad_t* const s)
 		free(delimiter);
 	}
 
-	size_t n = fread(&(s->ngram_length), sizeof(size_t), 1, f);
+	const size_t n = fread(&(s->ngram_length), sizeof(size_t), 1, f);
 
 	// The actual bloom filter values
 	BLOOM* b; fread_bloom(f, &b);
 	salad_set_bloomfilter_ex(s, b);
 
-	return (n <= 0 || s->ngram_length <= 0 || s->model.x == NULL ? -1 : UNSIGNED_SUBSTRACTION(ftell_s(f), pos));
+	return (n > 0 && s->ngram_length > 0 && s->model.x != NULL);
 }
