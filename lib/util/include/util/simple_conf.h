@@ -22,10 +22,10 @@
 #ifndef UTIL_SIMPLE_CONF_H_
 #define UTIL_SIMPLE_CONF_H_
 
+#include <util/util.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "util.h"
 
 typedef const BOOL(*FN_KEYVALUE)(FILE* const f, const char* const key, const char* const value, void* const usr);
 

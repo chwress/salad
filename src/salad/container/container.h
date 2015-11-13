@@ -22,10 +22,10 @@
 #ifndef SALAD_CONTAINER_CONTAINER_H_
 #define SALAD_CONTAINER_CONTAINER_H_
 
+#include <util/util.h>
+
 #include <stdlib.h>
 #include <stdio.h>
-
-#include <util/util.h>
 
 typedef enum { CONTAINER_BLOOMFILTER, CONTAINER_UNKNOWN, CONTAINER_ERROR } container_type_t;
 

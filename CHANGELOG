@@ -1,3 +1,21 @@
+0.6.0
+* It now is possible to process data on bit granularity
+  salad [train|inspect] --binary
+* Performance improvements while simoultaneously preserving
+  and further advancing readability of the source code.
+* Suppress the verbose output of Salad
+  salad [train|predict] -q
+* Extend the (unit) testing framework to support test of the
+  overall application and memchecks using valgrind.
+* Allow to select either client or server-side data when
+  processing network communication.
+* libfoodstoragebox
+  A library encapsulating advanced data structures such
+  as bloom filters.
+* Fixes for a critical bug when using group input and several
+  minor issues.
+* An (optionally compressed) text-based model file format
+
 0.5.0
 * Refinements to the user interface
   This includes a progress indicator, colors, etc.

@@ -17,12 +17,13 @@
 
 #include "common.h"
 
+#include <util/util.h>
+
 #include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <util/util.h>
 
 
 const size_t BITGRAM_SIZE = sizeof(bitgram_t);

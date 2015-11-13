@@ -28,10 +28,11 @@
  */
 
 #include "util/getline.h"
-#ifndef _GNU_SOURCE
 
 #include <util/util.h>
+#include <stdlib.h>
 
+#if (_XOPEN_SOURCE -0) < 700
 #include <errno.h>
 #include <string.h>
 
@@ -87,8 +88,6 @@ ssize_t getline(char **buf, size_t *bufsiz, FILE *fp)
 
 #endif
 
-
-#include "util/util.h"
 
 char* const getlines(const char* const fname)
 {

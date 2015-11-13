@@ -50,8 +50,8 @@ add_subdirectory(
 # CODE
 
 set(SRC "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/")
-file(GLOB sources "${SRC}/*.c")
-file(GLOB headers "${SRC}/*.h")
+file(GLOB sources "${SRC}/*.c" "${SRC}/io/*.c")
+file(GLOB headers "${SRC}/*.h" "${SRC}/io/*.h")
 
 list(REMOVE_ITEM sources "${SRC}/config.h")
 

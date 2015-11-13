@@ -46,7 +46,7 @@ if (_XOPEN_SOURCE_7)
 endif ()
 
 if (USE_NETWORK AND _XOPEN_SOURCE)
-	message(STATUS "Reject the usage of X/Open in favor of the network support.")
+	message(STATUS "Reject the usage of X/Open in favor of network support.")
 	set(_XOPEN_SOURCE FALSE)
 endif ()
 
@@ -74,10 +74,6 @@ endif ()
 
 if (NOT USE_ARCHIVES)
 	list(REMOVE_ITEM sources "${SRC}/io/archive.c")
-endif ()
-
-if (_XOPEN_SOURCE_7)
-	list(REMOVE_ITEM sources "${SRC}/getline.c")
 endif ()
 
 source_group("Source Files" FILES ${sources})

@@ -16,9 +16,10 @@
  */
 
 #include "util/getline.h"
-#include "util/vec.h"
-#include "util/util.h"
-#include "util/murmur.h"
+
+#include <util/vec.h>
+#include <util/util.h>
+#include <util/murmur.h>
 
 #include <stdio.h>
 #include <stdlib.h>

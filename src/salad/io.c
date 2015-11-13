@@ -259,6 +259,7 @@ const BOOL fread_model_txt(FILE* const f, salad_t* const s)
 	return TRUE;
 }
 
+#ifdef USE_ARCHIVES
 typedef struct {
 	FILE* archive;
 	size_t nread;
@@ -290,6 +291,7 @@ FILE* const request_input(const char* const filename, void* const host)
 
 	return f;
 }
+#endif
 
 const BOOL fread_model_zip(FILE* const f, salad_t* const s)
 {

@@ -22,12 +22,13 @@
 #ifndef UTIL_UTIL_H_
 #define UTIL_UTIL_H_
 
+#include <util/config.h>
+
 #include <assert.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <util/config.h>
 
 #ifdef IOTYPE_FILES
 #include <dirent.h>

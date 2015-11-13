@@ -22,6 +22,8 @@
 #ifndef SALAD_COMMON_H_
 #define SALAD_COMMON_H_
 
+#include <util/config.h>
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>

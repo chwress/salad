@@ -18,9 +18,8 @@
 #include "util/archive.h"
 
 #ifdef USE_ARCHIVES
-#include <archive_entry.h>
-
 #include <util/util.h>
+#include <archive_entry.h>
 #include <string.h>
 
 struct archive* const archive_read_easyopen(FILE* const f)

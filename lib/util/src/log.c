@@ -16,8 +16,9 @@
  */
 
 #include "util/log.h"
-#include "util/util.h"
-#include "util/colors.h"
+
+#include <util/util.h>
+#include <util/colors.h>
 
 #include <stdio.h>
 #include <string.h>

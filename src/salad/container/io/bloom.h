@@ -22,14 +22,15 @@
 #ifndef SALAD_CONTAINER_IO_BLOOM_H_
 #define SALAD_CONTAINER_IO_BLOOM_H_
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <util/config.h>
+#include <util/io.h>
 
 #include <container/bloom_ex.h>
 #include <container/container.h>
 #include <container/io/common.h>
 
-#include <util/io.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // WRITING
 const BOOL fwrite_bloomconfig(const container_outputspec_t* const out, const BLOOM* const b);

@@ -22,9 +22,10 @@
 #ifndef UTIL_ARCHIVE_H_
 #define UTIL_ARCHIVE_H_
 
+#include <util/config.h>
+
 #include <stdlib.h>
 #include <stdio.h>
-#include <util/config.h>
 
 #ifdef USE_ARCHIVES
 #include <time.h>

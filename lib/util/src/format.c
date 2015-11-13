@@ -16,10 +16,11 @@
  */
 
 #include "util/format.h"
-#include "util/util.h"
 
-#include <string.h>
+#include <util/util.h>
 #include <ctype.h>
+#include <string.h>
+#include <unistd.h>
 
 const char* SYMBOLS_CUSTOMARY[] = {"B", "K", "M", "G", "T", "P", "E", "Z", "Y", NULL};
 const char* SYMBOLS_CUSTOMARY_EXT[] = {"byte", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "iotta", NULL};

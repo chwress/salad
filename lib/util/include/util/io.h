@@ -22,10 +22,11 @@
 #ifndef UTIL_IO_H_
 #define UTIL_IO_H_
 
+#include <util/config.h>
+#include <util/util.h>
+
 #include <stdlib.h>
 #include <stdio.h>
-#include <util/config.h>
-#include "util.h"
 
 #ifdef USE_ARCHIVES
 #ifdef USE_NETWORK

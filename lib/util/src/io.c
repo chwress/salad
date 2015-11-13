@@ -19,13 +19,14 @@
 #include <util/util.h>
 #include <util/log.h>
 
+#include "io/common.h"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stddef.h>
 #include <unistd.h>
 
-#include "io/common.h"
 
 
 const char* const iomode_to_string(const iomode_t m)
