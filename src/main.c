@@ -422,24 +422,30 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 		}
 		else
 #endif
+		{
 #ifdef GROUPED_INPUT
 #ifdef USE_ARCHIVES
-		if (config->input_type != ARCHIVE)
+			if (config->input_type != ARCHIVE)
 #endif
-		{
-			warn("Unable to group data on this type of input");
-			config->group_input = FALSE;
-		}
-		if (config->group_input)
-		{
-			status("Input: %s (%s mode - grouped)",
-					config->input, iomode_to_string(config->input_type));
-		}
-		else
+			{
+				if (config->group_input)
+				{
+					warn("Unable to group data on this type of input");
+					config->group_input = FALSE;
+				}
+			}
+
+			if (config->group_input)
+			{
+				status("Input: %s (%s mode - grouped)",
+						config->input, iomode_to_string(config->input_type));
+			}
+			else
 #endif
-		{
-			status("Input: %s (%s mode)",
-			       config->input, iomode_to_string(config->input_type));
+			{
+				status("Input: %s (%s mode)",
+					   config->input, iomode_to_string(config->input_type));
+			}
 		}
 	}
 	return EXIT_SUCCESS;
