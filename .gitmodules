@@ -1,0 +1,4 @@
+[submodule "lib/ctest"]
+	path = lib/ctest
+	url = https://github.com/chwress/ctest.git
+	branch = lib
