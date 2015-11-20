@@ -165,10 +165,10 @@ void TEST_BLOOMIZE_COUNT_EX(const char X, salad_t* const s1, const count_exp_t e
 CTEST2(salad, bloomizeb_ex)
 {
 	static const char* bf =
-		"\x84\x00\x00\x02\x01\x01\x00\x44"
-		"\x02\x00\x00\x00\x1C\x00\x00\x22"
-		"\x88\x00\x00\x00\x10\x00\x00\x11"
-		"\x20\x00\x00\x00\x40\x00\x04\x08";
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00";
 
 	TEST_BLOOMIZE_EX(b, bf);
 
@@ -182,8 +182,8 @@ CTEST2(salad, bloomizeb_ex)
 
 	// TODO: bloomizeb_ex2
 
-	const count_exp_t exp1 = {318, 8* (strlen(TEST_STR1) -NGRAM_LENGTH) +1};
-	const count_exp_t exp2 = {326, 8* (strlen(TEST_STR2) -NGRAM_LENGTH) +1};
+	const count_exp_t exp1 = {312, 8* (strlen(TEST_STR1) -NGRAM_LENGTH) +1};
+	const count_exp_t exp2 = {320, 8* (strlen(TEST_STR2) -NGRAM_LENGTH) +1};
 	TEST_BLOOMIZE_COUNT_EX('b', &data->b1, exp1, &data->b2, exp2, 8, n);
 }
 
