@@ -31,21 +31,30 @@
 
 typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void* const data);
 
+#ifdef IS_BIGENDIAN
+#define TO_BITGRAM(x) (*(bitgram_t*) x)
+#define TO_CHARPTR(x, m) ((char*) &(x))
+#else
+#define TO_BITGRAM(x) REVERSE_REG((*(bitgram_t*) x))
+#define TO_CHARPTR(x, m) ((char*) &(x) +(BITGRAM_SIZE -(m)))
+#endif
+
 
 // bit n-grams
 inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
 {
-	const ngram_mask_t mask = ((ngram_mask_t) -1) >> (int) MAX(BITGRAM_BITSIZE -n, 0);
+	const ngram_mask_t mask = ((ngram_mask_t) -1) << (int) MAX(BITGRAM_BITSIZE -n, 0);
+	const size_t m = (size_t) ceil(((double) n)/8); // BITGRAM_SIZE
 
 	const char* x = str;
 	for (; x < str +len -BITGRAM_SIZE; x++)
 	{
-		bitgram_t u = *(bitgram_t*) x;
+		bitgram_t u = TO_BITGRAM(x);
 		for (int i = 0; i < CHAR_BIT; i++)
 		{
 			bitgram_t cur = (u & mask);
-			fct((char*) &cur, BITGRAM_SIZE, data);
-			u >>= 1;
+			fct(TO_CHARPTR(cur, m), m, data);
+			u <<= 1;
 		}
 	}
 
@@ -53,12 +62,12 @@ inline void extract_bitgrams(const char* const str, const size_t len, const size
 	assert(d > 0);
 	const size_t remainder = (len -((size_t) d)) *8;
 
-	bitgram_t u = *(bitgram_t*) x;
+	bitgram_t u = TO_BITGRAM(x);
 	for (size_t i = 0; i < remainder -n +1; i++)
 	{
 		bitgram_t cur = (u & mask);
-		fct((char*) &cur, BITGRAM_SIZE, data);
-		u >>= 1;
+		fct(TO_CHARPTR(cur, m), m, data);
+		u <<= 1;
 	}
 }
 
