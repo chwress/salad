@@ -217,10 +217,10 @@ static void FIND_IN_LOG(const struct main_data* const d, const char* const needl
 
 void CMP_FILES(const char* const a, const char* const b)
 {
-	FILE* f1 = fopen(a, "rb");
+	FILE* const f1 = fopen(a, "rb");
 	ASSERT_NOT_NULL(f1);
 
-	FILE* f2 = fopen(b, "rb");
+	FILE* const f2 = fopen(b, "rb");
 	if (f2 == NULL)
 	{
 		fclose(f1);
@@ -235,6 +235,23 @@ void CMP_FILES(const char* const a, const char* const b)
 	} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
 
 	fclose(f1); fclose(f2);
+	ASSERT_EQUAL(ch1, ch2);
+}
+
+void CMP_FILECONTENT(const char* const filename, const char* const data)
+{
+	FILE* const f = fopen(filename, "rb");
+	ASSERT_NOT_NULL(f);
+
+	const unsigned char* x = (unsigned char*) data;
+	int ch1, ch2;
+	do
+	{
+		ch1 = getc(f);
+		ch2 = *x++;
+	} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
+
+	fclose(f);
 	ASSERT_EQUAL(ch1, ch2);
 }
 
@@ -417,23 +434,70 @@ CTEST2(main, train)
 
 CTEST2(main, train_bgrams)
 {
+	char* const exp =
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00"
+		"\x80\x00\x00\x00\x80\x00\x00\x00";
+
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
+	ADD_PARAM(data, "--ngram-len", "3");
 	ADD_PARAM(data, "--binary", "");
+	ADD_PARAM(data, "--filter-size", "8");
 	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
 
-	CTEST_LOG("Not yet implemented");
+	SALAD_T(s);
+	salad_from_file(data->out, &s);
+
+	BLOOM* const b = GET_BLOOMFILTER(s.model);
+	ASSERT_DATA(exp, 32, b->a, b->size);
 }
 
 CTEST2(main, train_ngrams)
 {
-	CTEST_LOG("Not yet implemented");
+	char* const exp =
+		"\x32\x0b\x9c\x28\x46\x77\x6a\xbd"
+		"\xe0\x02\x60\x82\xd9\x0c\x59\x9c"
+		"\x26\x96\x81\x18\x73\x54\xfc\xc4"
+		"\xbf\x20\x19\x47\x05\x00\xa8\x0a";
+
+	SET_MODE(data, "train");
+	ADD_PARAM(data, "-i", TEST_INPUT);
+	ADD_PARAM(data, "--ngram-len", "3");
+	ADD_PARAM(data, "--filter-size", "8");
+	ADD_PARAM(data, "-o", data->out);
+	EXEC(0, data);
+
+	SALAD_T(s);
+	salad_from_file(data->out, &s);
+
+	BLOOM* const b = GET_BLOOMFILTER(s.model);
+	ASSERT_DATA(exp, 32, b->a, b->size);
 }
 
 CTEST2(main, train_wgrams)
 {
-	CTEST_LOG("Not yet implemented");
+	char* const exp =
+		"\x00\x00\x08\x00\x20\x28\x04\x00"
+		"\x02\x00\x10\x00\x00\x01\x00\x30"
+		"\x88\x10\x20\x00\x80\x00\x00\x00"
+		"\x00\x00\x20\x05\x00\x00\x28\x80";
+
+	SET_MODE(data, "train");
+	ADD_PARAM(data, "-i", TEST_INPUT);
+	ADD_PARAM(data, "--ngram-len", "3");
+	ADD_PARAM(data, "--ngram-delim", "' '");
+	ADD_PARAM(data, "--filter-size", "8");
+	ADD_PARAM(data, "-o", data->out);
+	EXEC(0, data);
+
+	SALAD_T(s);
+	salad_from_file(data->out, &s);
+
+	BLOOM* const b = GET_BLOOMFILTER(s.model);
+	ASSERT_DATA(exp, 32, b->a, b->size);
 }
 
 #ifdef USE_ARCHIVES
