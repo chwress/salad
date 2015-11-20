@@ -152,4 +152,31 @@ typedef int BOOL;
 	} \
 }
 
+
+#define REVERSE_UINT32(x) ( \
+		((x) & 0x000000FFU) << 24 | \
+		((x) & 0x0000FF00U) <<  8 | \
+		((x) & 0x00FF0000U) >>  8 | \
+		((x) & 0xFF000000U) >> 24 \
+	)
+
+#define REVERSE_UINT64(x) ( \
+		((x) & 0x00000000000000FFU) << 56 | \
+		((x) & 0x000000000000FF00U) << 40 | \
+		((x) & 0x0000000000FF0000U) << 24 | \
+		((x) & 0x00000000FF000000U) <<  8 | \
+		((x) & 0x000000FF00000000U) >>  8 | \
+		((x) & 0x0000FF0000000000U) >> 24 | \
+		((x) & 0x00FF000000000000U) >> 40 | \
+		((x) & 0xFF00000000000000U) >> 56 \
+	)
+
+#if SIZE_MAX == 0xffffffff
+#define REVERSE_REG(r) REVERSE_UINT32(r)
+#elif SIZE_MAX == 0xffffffffffffffff
+#define REVERSE_REG(r) REVERSE_UINT64(r)
+#else
+		error("unknown architecture");
+#endif
+
 #endif /* UTIL_UTIL_H_ */

@@ -9,6 +9,7 @@
 
 /* #undef USE_NETWORK */
 
+/* #undef IS_BIGENDIAN */
 #define HAS_Z_MODIFIER
 /* #undef _XOPEN_SOURCE */
 /* #undef IOTYPE_FILES */

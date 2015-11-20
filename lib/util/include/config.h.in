@@ -9,6 +9,7 @@
 
 #cmakedefine USE_NETWORK
 
+#cmakedefine IS_BIGENDIAN
 #cmakedefine HAS_Z_MODIFIER
 #cmakedefine _XOPEN_SOURCE @_XOPEN_SOURCE@	/* getline, strdup */
 /* #undef IOTYPE_FILES */

@@ -50,6 +50,8 @@ if (USE_NETWORK AND _XOPEN_SOURCE)
 	set(_XOPEN_SOURCE FALSE)
 endif ()
 
+include (TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIGENDIAN)
 
 set(SOURCE_DIR "src/")
 set(INCLUDE_DIR "include/")
