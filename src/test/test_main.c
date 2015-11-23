@@ -484,7 +484,7 @@ CTEST2(main, train_bgrams)
 	salad_from_file(data->out, &s);
 
 	BLOOM* const b = GET_BLOOMFILTER(s.model);
-	ASSERT_DATA(exp, 32, b->a, b->size);
+	ASSERT_DATA((unsigned char*) exp, 32, b->a, b->size);
 }
 
 CTEST2(main, train_ngrams)
@@ -507,7 +507,7 @@ CTEST2(main, train_ngrams)
 	salad_from_file(data->out, &s);
 
 	BLOOM* const b = GET_BLOOMFILTER(s.model);
-	ASSERT_DATA(exp, 32, b->a, b->size);
+	ASSERT_DATA((unsigned char*) exp, 32, b->a, b->size);
 }
 
 CTEST2(main, train_wgrams)
@@ -531,7 +531,7 @@ CTEST2(main, train_wgrams)
 	salad_from_file(data->out, &s);
 
 	BLOOM* const b = GET_BLOOMFILTER(s.model);
-	ASSERT_DATA(exp, 32, b->a, b->size);
+	ASSERT_DATA((unsigned char*) exp, 32, b->a, b->size);
 }
 
 #ifdef USE_ARCHIVES
