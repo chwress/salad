@@ -194,7 +194,7 @@ const int usage_train()
 	"                              or filenames respectively.\n"
 #endif
 	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
+	"                              processed in one go (Default: %"ZU").\n"
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
@@ -210,7 +210,7 @@ const int usage_train()
 	"  -o,  --output <file>        The output filename.\n"
 	"\n"
 	"Feature options:\n"
-	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
+	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"ZU").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of word/ token n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
 	"       --binary               Indicates to use bit n-grams rather than byte\n"
@@ -225,11 +225,11 @@ const int usage_train()
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
+	/* --batch-size  */ (SIZE_T) DEFAULT_CONFIG.batch_size,
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
-	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
+	/* --ngram-len   */ (SIZE_T) DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size,
 	/* --hash-set    */ hashset_to_string(DEFAULT_CONFIG.hash_set));
 	return EXIT_SUCCESS;
@@ -249,7 +249,7 @@ const int usage_predict()
 	"                              or filenames respectively.\n"
 #endif
 	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
+	"                              processed in one go (Default: %"ZU").\n"
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
@@ -273,7 +273,7 @@ const int usage_predict()
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -q,  --quiet                Suppress all output but warning and errors.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */  DEFAULT_CONFIG.batch_size
+	/* --batch-size  */  (SIZE_T) DEFAULT_CONFIG.batch_size
 #ifdef USE_NETWORK
 	/* --pcap-filter */ ,DEFAULT_CONFIG.pcap_filter
 #endif
@@ -295,7 +295,7 @@ const int usage_inspect()
 	"                              or filenames respectively.\n"
 #endif
 	"       --batch-size <num>     Set the size of batches that are read and \n"
-	"                              processed in one go (Default: %"Z").\n"
+	"                              processed in one go (Default: %"ZU").\n"
 #ifdef USE_NETWORK
 	"  -p,  --pcap-filter <str>    Filter expression for the PCAP library in case\n"
 	"                              network data is processed (Default: %s).\n"
@@ -308,7 +308,7 @@ const int usage_inspect()
 	"  -o,  --output <file>        The output filename.\n"
 	"\n"
 	"Feature options:\n"
-	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"Z").\n"
+	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"ZU").\n"
 	"  -d,  --ngram-delim <delim>  Set delimiters for the use of word/ token n-grams.\n"
 	"                              If omitted or empty byte n-grams are used.\n"
 	"       --binary               Indicates to use bit n-grams rather than byte\n"
@@ -322,11 +322,11 @@ const int usage_inspect()
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
 	"  -h,  --help                 Print this help screen.\n",
-	/* --batch-size  */ DEFAULT_CONFIG.batch_size,
+	/* --batch-size  */ (SIZE_T) DEFAULT_CONFIG.batch_size,
 #ifdef USE_NETWORK
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
-	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
+	/* --ngram-len   */ (SIZE_T) DEFAULT_CONFIG.ngram_length,
 	/* --filter-size */ DEFAULT_CONFIG.filter_size,
 	/* --hash-set    */ hashset_to_string(DEFAULT_CONFIG.hash_set));
 	return EXIT_SUCCESS;
@@ -553,7 +553,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			if (ngram_length <= 0)
 			{
 				warn("Illegal n-gram length specified.");
-				warn("Defaulting to: %"Z"\n", (SIZE_T) config->ngram_length);
+				warn("Defaulting to: %"ZU"\n", (SIZE_T) config->ngram_length);
 			}
 			else config->ngram_length = (size_t) MIN(SIZE_MAX, (unsigned long) ngram_length);
 			break;
@@ -676,7 +676,7 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 				warn("Illegal batch size specified.");
 				// This is not true in case of network data as input. Therefore,
 				// we simply suppress this output at this point.
-				// warn("Defaulting to: %"Z"\n", (SIZE_T) config->batch_size);
+				// warn("Defaulting to: %"ZU"\n", (SIZE_T) config->batch_size);
 			}
 			else
 			{

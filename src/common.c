@@ -122,7 +122,7 @@ void salad_header(const char* const msg, const metadata_t* const meta, const con
 	}
 	else
 	{
-		status("%s %"Z" strings in chunks of %"Z, msg, meta->num_items, c->batch_size);
+		status("%s %"ZU" strings in chunks of %"ZU, (SIZE_T) msg, meta->num_items, (SIZE_T) c->batch_size);
 	}
 
 	if (c->bloom != NULL)

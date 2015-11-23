@@ -95,7 +95,7 @@ const int salad_inspect_callback(data_t* data, const size_t n, void* const usr)
 
 	for (size_t i = 0; i < n; i++)
 	{
-		snprintf(x->buf, 0x100, "%10"Z"\t%10"Z"\t%10"Z"%10"Z"\n",
+		snprintf(x->buf, 0x100, "%10"ZU"\t%10"ZU"\t%10"ZU"%10"ZU"\n",
 					(SIZE_T) x->stats[i].new,
 					(SIZE_T) x->stats[i].uniq,
 					(SIZE_T) x->stats[i].total,

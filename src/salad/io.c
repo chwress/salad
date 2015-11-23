@@ -75,7 +75,7 @@ const BOOL fwrite_modelconfig_ex(FILE* const f, const salad_t* const s)
 	n = fprintf(f, "delimiter = %s\n", _(s)->delimiter.str);
 	if (n <= 0) return FALSE;
 
-	n = fprintf(f, "n = %"Z"\n", s->ngram_length);
+	n = fprintf(f, "n = %"ZU"\n", (SIZE_T) s->ngram_length);
 	if (n <= 0) return FALSE;
 
 	const container_t* const c = (container_t*) s->model.x;

@@ -47,13 +47,13 @@
 
 static const char* const EX1_INPUT1 = TEST_SRC "res/testing/ex1-train.zip";
 static const char* const EX1_INPUT2 = TEST_SRC "res/testing/ex1-test.zip";
-static const char* const EX1_OUTPUT = TEST_SRC "res/testing/ref/ex1/n=%"Z".model";
-static const char* const EX1_SCORES = TEST_SRC "res/testing/ref/ex1/n=%"Z".scores";
+static const char* const EX1_OUTPUT = TEST_SRC "res/testing/ref/ex1/n=%"ZU".model";
+static const char* const EX1_SCORES = TEST_SRC "res/testing/ref/ex1/n=%"ZU".scores";
 
 static const char* const EX2_INPUT1 = TEST_SRC "res/testing/ex2-train.zip";
-static const char* const EX2_OUTPUT = TEST_SRC "res/testing/ref/ex2/n=%"Z".model";
-static const char* const EX2_STATS  = TEST_SRC "res/testing/ref/ex2/n=%"Z".stats";
-static const char* const EX2_INSPECT= TEST_SRC "res/testing/ref/ex2/n=%"Z".inspect";
+static const char* const EX2_OUTPUT = TEST_SRC "res/testing/ref/ex2/n=%"ZU".model";
+static const char* const EX2_STATS  = TEST_SRC "res/testing/ref/ex2/n=%"ZU".stats";
+static const char* const EX2_INSPECT= TEST_SRC "res/testing/ref/ex2/n=%"ZU".inspect";
 
 
 CTEST_DATA(main)
@@ -515,9 +515,9 @@ CTEST2(main, ex1)
 		ADD_PARAM(data, "-f", "archive");
 		if (batch_size > 0)
 		{
-			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+			ADD_PARAM(data, "--batch-size", "%"ZU, (SIZE_T) batch_size);
 		}
-		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-n", "%"ZU, (SIZE_T) n);
 		ADD_PARAM(data, "-d", "%s", "\"%0a%0d%20%21%22.,:;?\"");
 		ADD_PARAM(data, "--hash-set", "simple");
 		ADD_PARAM(data, "-o", data->out);
@@ -531,7 +531,7 @@ CTEST2(main, ex1)
 		FIND_IN_LOG(data, "[*] Train salad on");
 
 		char buf[0x1000];
-		snprintf(buf, 0x1000, EX1_OUTPUT, n);
+		snprintf(buf, 0x1000, EX1_OUTPUT, (SIZE_T) n);
 
 		CMP_MODELS(data->out, buf);
 
@@ -546,7 +546,7 @@ CTEST2(main, ex1)
 		ADD_PARAM(data, "-f", "archive");
 		if (batch_size > 0)
 		{
-			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+			ADD_PARAM(data, "--batch-size", "%"ZU, (SIZE_T) batch_size);
 		}
 		ADD_PARAM(data, "-b", b);
 		ADD_PARAM(data, "-o", data->out);
@@ -575,9 +575,9 @@ CTEST2(main, ex2)
 		ADD_PARAM(data, "-f", "archive");
 		if (batch_size > 0)
 		{
-			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+			ADD_PARAM(data, "--batch-size", "%"ZU, (SIZE_T) batch_size);
 		}
-		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-n", "%"ZU, (SIZE_T) n);
 		ADD_PARAM(data, "-d", "''");
 		ADD_PARAM(data, "--hash-set", "simple");
 		ADD_PARAM(data, "-o", data->out);
@@ -591,7 +591,7 @@ CTEST2(main, ex2)
 		FIND_IN_LOG(data, "[*] Train salad on");
 
 		char buf[0x1000];
-		snprintf(buf, 0x1000, EX2_OUTPUT, n);
+		snprintf(buf, 0x1000, EX2_OUTPUT, (SIZE_T) n);
 
 		CMP_MODELS(data->out, buf);
 
@@ -615,9 +615,9 @@ CTEST2(main, ex2)
 		ADD_PARAM(data, "-f", "archive");
 		if (batch_size > 0)
 		{
-			ADD_PARAM(data, "--batch-size", "%"Z, batch_size);
+			ADD_PARAM(data, "--batch-size", "%"ZU, (SIZE_T) batch_size);
 		}
-		ADD_PARAM(data, "-n", "%"Z, n);
+		ADD_PARAM(data, "-n", "%"ZU, (SIZE_T) n);
 		ADD_PARAM(data, "-d", "''");
 		ADD_PARAM(data, "-o", data->out);
 		ret = EXEC_EX(data);
@@ -627,7 +627,7 @@ CTEST2(main, ex2)
 			return; // Input file doesn't exist?
 		}
 
-		snprintf(buf, 0x1000, EX2_INSPECT, n);
+		snprintf(buf, 0x1000, EX2_INSPECT, (SIZE_T) n);
 		CMP_FILES(data->out, buf);
 	}
 }

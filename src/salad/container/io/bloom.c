@@ -119,7 +119,7 @@ const BOOL fwrite_bloomdata_ext(FILE* const config, FILE* const data, const BLOO
 	static const char* const BLOOM_FNAME = "bloom.data";
 	if (!process_next(state, BLOOM_FNAME)) return 0;
 
-	const int n = fprintf(config, "data = %s/%"Z"\n", BLOOM_FNAME, b->bitsize);
+	const int n = fprintf(config, "data = %s/%"ZU"\n", BLOOM_FNAME, (SIZE_T) b->bitsize);
 	if (n <= 0) return FALSE;
 
 	return fwrite_bloomdata_asis(data, b, NULL);
@@ -135,7 +135,7 @@ const BOOL fwrite_bloomdata_inline(FILE* const f, const BLOOM* const b, containe
 
 	// Since we do not want to determine the size of the data based on some
 	// internals, we do something ugly instead ;)
-	const int n = fprintf(f, "data = %"Z"raw\n", b->bitsize);
+	const int n = fprintf(f, "data = %"ZU"raw\n", (SIZE_T) b->bitsize);
 	if (n <= 0) return FALSE;
 
 	if (!fwrite_bloomdata_asis(f, b, NULL)) return FALSE;
@@ -157,7 +157,7 @@ const BOOL fwrite_bloomdata_txt(FILE* const f, const BLOOM* const b, container_o
 	snprintf(buf, 0x100, "%d", INT_MAX);
 	for (char* x = buf; *x != 0x00; x++) *x = ' ';
 
-	const int n = fprintf(f, "data = %"Z"\n", b->bitsize);
+	const int n = fprintf(f, "data = %"ZU"\n", (SIZE_T) b->bitsize);
 	if (n <= 0) return FALSE;
 
 	for (size_t i = 0; i < b->size;)

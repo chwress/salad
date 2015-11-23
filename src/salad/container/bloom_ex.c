@@ -291,8 +291,8 @@ void bloom_print_ex(FILE* const f, BLOOM* const bloom)
 {
 	assert(f != NULL && bloom != NULL);
 
-	fprintf(f, "Size:    \t %" Z "\n", (SIZE_T) bloom->size);
-	fprintf(f, "Bit-Size:\t %" Z "\n", (SIZE_T) bloom->bitsize);
+	fprintf(f, "Size:    \t %"ZU"\n", (SIZE_T) bloom->size);
+	fprintf(f, "Bit-Size:\t %"ZU"\n", (SIZE_T) bloom->bitsize);
 	fprintf(f, "Data:\n");
 
 	int i = 0, j = 0;

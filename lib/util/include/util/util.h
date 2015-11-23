@@ -134,11 +134,17 @@ typedef int BOOL;
 #define UNUSED(x) (void)(x)
 
 #ifdef HAS_Z_MODIFIER
-	#define Z "zu"
+	#define Z "z"
+	#define ZU "zu"
+	#define ZD "zd"
 	#define SIZE_T size_t
+	#define SSIZE_T ssize_t
 #else
-	#define Z "lu"
+	#define Z "l"
+	#define ZU "lu"
+	#define ZD "ld"
 	#define SIZE_T unsigned long
+	#define SSIZE_T long
 #endif
 
 # define ASSERT(expr) \
