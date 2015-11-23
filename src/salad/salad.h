@@ -43,6 +43,11 @@ extern "C" {
 #endif
 
 
+typedef enum
+{
+	SALAD_OUTPUTFMT_UNKNOWN, SALAD_OUTPUTFMT_TXT, SALAD_OUTPUTFMT_ARCHIVE
+} salad_outputfmt_t;
+
 /**
  * The type identifier for the model used by salad.
  */
@@ -268,12 +273,13 @@ PUBLIC const int salad_to_file(const salad_t* const s, const char* const filenam
  *
  * @param[in] s The salad object to written to the file.
  * @param[in] f The FILE object of the file to write the salad object to.
+ * @param[in] fmt The output format to be used.
  *
  * @return An error indicator for whether the operation was
  *         successful or not. Zero means that that the operation
  *         was successful anything else indicates a particular error.
  */
-PUBLIC const int salad_to_file_ex(const salad_t* const s, FILE* const f);
+PUBLIC const int salad_to_file_ex(const salad_t* const s, FILE* const f, const salad_outputfmt_t fmt);
 
 #ifdef __cplusplus
 }

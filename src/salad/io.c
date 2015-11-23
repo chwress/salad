@@ -30,6 +30,47 @@
 #include <string.h>
 
 
+const char* const salad_outputfmt_to_string(const salad_outputfmt_t m)
+{
+	switch (m)
+	{
+	case SALAD_OUTPUTFMT_TXT:
+		return "txt";
+#ifdef USE_ARCHIVES
+	case SALAD_OUTPUTFMT_ARCHIVE:
+		return "archive";
+#endif
+	default:
+		return "unknown";
+	}
+}
+
+const salad_outputfmt_t salad_to_outputfmt(const char* const str)
+{
+	switch (cmp(str, "txt", "archive", NULL))
+	{
+	case 0:  return SALAD_OUTPUTFMT_TXT;
+#ifdef USE_ARCHIVES
+	case 1:  return SALAD_OUTPUTFMT_ARCHIVE;
+#endif
+	default: return SALAD_OUTPUTFMT_UNKNOWN;
+	}
+}
+
+const BOOL salad_isvalid_outputfmt(const char* const str)
+{
+	switch (cmp(str, "txt", "archive", NULL))
+	{
+#ifdef USE_ARCHIVES
+	case 1:
+#endif
+	case 0:  return TRUE;
+	default: return FALSE;
+	}
+}
+
+
+
 #ifdef USE_ARCHIVES
 #include <time.h>
 #include <util/archive.h>
@@ -94,7 +135,7 @@ const BOOL fwrite_model_txt(FILE* const f, const salad_t* const s)
 	if (!fwrite_modelconfig_ex(f, s)) return FALSE;
 
 	CONTAINER_OUTPUTSTATE_T(state);
-	container_outputspec_t spec = {f, NULL, CONTAINER_OUTPUTFMT_MIXED};
+	container_outputspec_t spec = {f, NULL, CONTAINER_OUTPUTFMT_TXT};
 	container_t* c = (container_t*) s->model.x;
 
 	return fwrite_containerdata(&spec, c, &state);

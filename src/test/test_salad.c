@@ -242,6 +242,9 @@ CTEST2(salad, bloomizew_ex)
 	TEST_BLOOMIZE_COUNT_EX('w', &data->b1, exp, &data->b2, exp, 1, n);
 }
 
+
+typedef const BOOL (*FN_WRITEMODEL)(FILE* const f, const salad_t* const s);
+
 CTEST(salad, fileformat_consistency)
 {
 	char* TEST_FILE = "test.out";
@@ -255,53 +258,64 @@ CTEST(salad, fileformat_consistency)
 	BLOOM* const xbloom = GET_BLOOMFILTER(x.model);
 	bloomize_ex(xbloom, TEST_STR1, strlen(TEST_STR1), x.ngram_length);
 
-	FILE* const f_out = fopen(TEST_FILE, "wb+");
-	if (f_out == NULL)
-	{
-		salad_destroy(&x);
-		CTEST_ERR("Unable to open test file '%s'.", TEST_FILE);
-		ASSERT_NOT_NULL(f_out);
-	}
 
-	const BOOL ok = fwrite_model(f_out, &x);
-	fclose(f_out);
+	FN_WRITEMODEL fcts[] = {
+			fwrite_model,
+			fwrite_model_txt,
+			fwrite_model_zip,
+			NULL
+	};
 
-	if (!ok)
+	for (size_t i = 0; fcts[i] != NULL; i++)
 	{
-		salad_destroy(&x);
+		FILE* const f_out = fopen(TEST_FILE, "wb+");
+		if (f_out == NULL)
+		{
+			salad_destroy(&x);
+			CTEST_ERR("Unable to open test file '%s'.", TEST_FILE);
+			ASSERT_NOT_NULL(f_out);
+		}
+
+		const BOOL ok = fcts[i](f_out, &x);
+		fclose(f_out);
+
+		if (!ok)
+		{
+			salad_destroy(&x);
+			remove(TEST_FILE);
+			CTEST_ERR("Failed while writing the model.");
+			ASSERT_TRUE(ok);
+		}
+
+		FILE* const f_in = fopen(TEST_FILE, "rb");
+		if (f_in == NULL)
+		{
+			salad_destroy(&x);
+			remove(TEST_FILE);
+			CTEST_ERR("Failed to open file.");
+			ASSERT_NOT_NULL(f_in);
+		}
+
+		SALAD_T(y);
+		const int ret = salad_from_file_ex(f_in, &y);
+		fclose(f_in);
 		remove(TEST_FILE);
-		CTEST_ERR("Failed while writing the model.");
-		ASSERT_TRUE(ok);
+
+		BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
+
+		if (ret != EXIT_SUCCESS)
+		{
+			salad_destroy(&x);
+			CTEST_ERR("Failed while reading the model.");
+			ASSERT_EQUAL(0, ret);
+		}
+
+		ASSERT_TRUE(!salad_spec_diff(&x, &y));
+		ASSERT_TRUE(bloom_compare(xbloom, ybloom) == 0);
+
+		salad_destroy(&y);
 	}
-
-	FILE* const f_in = fopen(TEST_FILE, "rb");
-	if (f_in == NULL)
-	{
-		salad_destroy(&x);
-		remove(TEST_FILE);
-		CTEST_ERR("Failed to open file.");
-		ASSERT_NOT_NULL(f_in);
-	}
-
-	SALAD_T(y);
-	const int ret = salad_from_file_ex(f_in, &y);
-	fclose(f_in);
-	remove(TEST_FILE);
-
-	BLOOM* const ybloom = GET_BLOOMFILTER(y.model);
-
-	if (ret != EXIT_SUCCESS)
-	{
-		salad_destroy(&x);
-		CTEST_ERR("Failed while reading the model.");
-		ASSERT_EQUAL(0, ret);
-	}
-
-	ASSERT_TRUE(!salad_spec_diff(&x, &y));
-	ASSERT_TRUE(bloom_compare(xbloom, ybloom) == 0);
-
 	salad_destroy(&x);
-	salad_destroy(&y);
 }
 
 // Test salad's modes (train, predict, inspect, ...)

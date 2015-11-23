@@ -19,6 +19,7 @@
 
 #include <salad/salad.h>
 #include <salad/util.h>
+#include <salad/io.h>
 #include <util/vec.h>
 #include <util/io.h>
 #include <util/log.h>
@@ -46,7 +47,7 @@ static struct option main_longopts[] = {
 };
 
 
-#define TRAIN_OPTION_STR "i:f:p:uo:n:d:s:eqh"
+#define TRAIN_OPTION_STR "i:f:p:uo:F:n:d:s:eqh"
 #define OPTION_INPUTFILTER 1000
 #define OPTION_BATCHSIZE   1001
 #define OPTION_HASHSET     1002
@@ -65,6 +66,9 @@ static struct option train_longopts[] = {
 	{ "batch-size",     required_argument, NULL, OPTION_BATCHSIZE },
 	{ "update-model",   no_argument,       NULL, 'u' },
 	{ "output",         required_argument, NULL, 'o' },
+#ifdef USE_ARCHIVES
+	{ "output-format",  required_argument, NULL, 'F' },
+#endif
 
 	// Feature options
 	{ "ngram-length",   required_argument, NULL, 'n' },
@@ -208,6 +212,11 @@ const int usage_train()
 	"                              that that model should be update rather than\n"
 	"                              recreated from scratch.\n"
 	"  -o,  --output <file>        The output filename.\n"
+#ifdef USE_ARCHIVES
+	// If there is no libarchive support we can only make use of text-based configurations.
+	"  -F,  --output-format <fmt>  Sets the format of output. This option might be \n"
+	"                              one of " SALAD_IOMODES ".\n"
+#endif
 	"\n"
 	"Feature options:\n"
 	"  -n,  --ngram-len <num>      Set length of n-grams (Default: %"ZU").\n"
@@ -465,14 +474,26 @@ const int check_output(config_t* const config)
 	return EXIT_SUCCESS;
 }
 
-const iomode_t as_iomode(const char* const x)
+const iomode_t as_inputmode(const char* const x)
 {
-	iomode_t y = to_iomode(x);
+	const iomode_t y = to_iomode(x);
 
 	if (!is_valid_iomode(x))
 	{
 		warn("Illegal input type '%s', using '%s' instead",
 		     x, iomode_to_string(y));
+	}
+	return y;
+}
+
+const salad_outputfmt_t as_outputmode(const char* const x)
+{
+	const salad_outputfmt_t y = salad_to_outputfmt(x);
+
+	if (!salad_isvalid_outputfmt(x))
+	{
+		warn("Illegal output type '%s', using '%s' instead",
+		     x, salad_outputfmt_to_string(y));
 	}
 	return y;
 }
@@ -496,7 +517,7 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 			break;
 
 		case 'f':
-			config->input_type = as_iomode(optarg);
+			config->input_type = as_inputmode(optarg);
 			break;
 
 		case OPTION_INPUTFILTER:
@@ -544,6 +565,10 @@ const saladstate_t parse_traininglike_options_ex(int argc, char* argv[], config_
 
 		case 'o':
 			config->output = optarg;
+			break;
+
+		case 'F':
+			config->output_type = as_outputmode(optarg);
 			break;
 
 		case 'n':
@@ -660,7 +685,7 @@ const saladstate_t parse_predict_options(int argc, char* argv[], config_t* const
 			break;
 
 		case 'f':
-			config->input_type = as_iomode(optarg);
+			config->input_type = as_inputmode(optarg);
 			break;
 
 		case OPTION_INPUTFILTER:

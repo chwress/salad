@@ -153,7 +153,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 		dp->recv(f_in, pick_callback(t, 0), c->batch_size, &s1);
 	}
 
-	const int ret = salad_to_file_ex(&s1, f_out);
+	const int ret = salad_to_file_ex(&s1, f_out, c->output_type);
 	salad_destroy(&s1);
 
 	return ret;

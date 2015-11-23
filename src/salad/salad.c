@@ -261,17 +261,31 @@ const int salad_to_file(const salad_t* const s, const char* const filename)
 		return EXIT_FAILURE;
 	}
 
-	const int ret = salad_to_file_ex(s, f);
+	const int ret = salad_to_file_ex(s, f, DEFAULT_OUTPUTFMT);
 
 	fclose(f);
 	return ret;
 }
 
-const int salad_to_file_ex(const salad_t* const s, FILE* const f)
+const int salad_to_file_ex(const salad_t* const s, FILE* const f, const salad_outputfmt_t fmt)
 {
 	if (s == NULL)
 	{
 		return EXIT_FAILURE;
 	}
-	return (fwrite_model(f, s) ? EXIT_SUCCESS : EXIT_FAILURE);
+
+	BOOL ret = FALSE;
+	switch (fmt)
+	{
+	case SALAD_OUTPUTFMT_TXT:
+		ret = fwrite_model_txt(f, s);
+		break;
+	case SALAD_OUTPUTFMT_ARCHIVE:
+		ret = fwrite_model_zip(f, s);
+		break;
+	default:
+		return EXIT_FAILURE;
+	}
+
+	return (ret ? EXIT_SUCCESS : EXIT_FAILURE);
 }

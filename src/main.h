@@ -238,6 +238,10 @@ int main(int argc, char* argv[]);
  * @par -o, --output &lt;file&gt;
  * The output filename.
  *
+ * @par -F, --output-format &lt;fmt&gt;
+ * Sets the format of the output. This option might be one of 'txt' or 'archive'.
+ * This depends on the configure Salad was compiled with -- cf. USE_ARCHIVES.
+ *
  * @subsection sec_featureops Feature Options:
  * @par -n, --ngram-len &lt;num&gt;
  * Set length of n-grams (Default: 3).

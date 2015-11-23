@@ -238,18 +238,19 @@ void CMP_FILES(const char* const a, const char* const b)
 	ASSERT_EQUAL(ch1, ch2);
 }
 
-void CMP_FILECONTENT(const char* const filename, const char* const data)
+void CMP_FILECONTENT(const char* const filename, const char* const data, const size_t n)
 {
 	FILE* const f = fopen(filename, "rb");
 	ASSERT_NOT_NULL(f);
 
 	const unsigned char* x = (unsigned char*) data;
+	const unsigned char* const end = (unsigned char*) data +n;
 	int ch1, ch2;
 	do
 	{
 		ch1 = getc(f);
 		ch2 = *x++;
-	} while ((ch1 != EOF) && (ch2 != EOF) && (ch1 == ch2));
+	} while ((ch1 != EOF) && (x != end) && (ch1 == ch2));
 
 	fclose(f);
 	ASSERT_EQUAL(ch1, ch2);
@@ -359,18 +360,20 @@ CTEST2(main, help)
 
 CTEST2(main, train)
 {
+	// No output specified
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	EXEC(1, data);
 	FIND_IN_LOG(data, "No output file");
 
-
+	// Illegal input specification
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT "-4KmR19beV");
 	ADD_PARAM(data, "-o", data->out);
 	EXEC(1, data);
 	FIND_IN_LOG(data, "Unable to open input");
 
+	// Default to lines mode
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "-o", data->out);
@@ -378,6 +381,7 @@ CTEST2(main, train)
 	FIND_IN_LOG(data, "(lines mode)");
 
 
+	// Input modes
 	const char* input_modes[] = {
 			"lines",
 			"files",
@@ -406,6 +410,7 @@ CTEST2(main, train)
 		FIND_IN_LOG(data, str);
 	}
 
+	// Input mode 'files' is not yet implemented
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "-f", "files");
@@ -413,7 +418,7 @@ CTEST2(main, train)
 	EXEC(1, data);
 	FIND_IN_LOG(data, "'files' is not yet implemented");
 
-
+	// Echoing program arguments
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "-o", data->out);
@@ -430,6 +435,32 @@ CTEST2(main, train)
 	ADD_PARAM(data, "--help", "");
 	EXEC(0, data);
 	FIND_IN_LOG(data, "Usage: salad train [options]");
+
+	// Output format txt
+	typedef struct {
+		const char* const fmt;
+		const char* const prefix;
+	} testpair_t;
+
+	const testpair_t output_fmts[] = {
+			{"txt", "Salad Configuration"},
+#ifdef USE_ARCHIVES
+			{"archive", "\x50\x4B"},
+#endif
+			{NULL, NULL}
+	};
+
+
+	for (const testpair_t* x = output_fmts; x->fmt != NULL; x++)
+	{
+		SET_MODE(data, "train");
+		ADD_PARAM(data, "-i", TEST_INPUT);
+		ADD_PARAM(data, "-o", data->out);
+		ADD_PARAM(data, "-F", x->fmt);
+		EXEC(0, data);
+
+		CMP_FILECONTENT(data->out, x->prefix, strlen(x->prefix));
+	}
 }
 
 CTEST2(main, train_bgrams)

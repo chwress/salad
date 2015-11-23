@@ -25,6 +25,7 @@
 #include <util/config.h>
 
 #include <salad/salad.h>
+#include <salad/io.h>
 #include <salad/container/common.h>
 #include <util/config.h>
 #include <util/util.h>
@@ -78,6 +79,7 @@ typedef struct
 	int update_model;
 	int transfer_spec; // Transfer the spec of the model to be updated.
 	char* output;
+	salad_outputfmt_t output_type;
 	size_t ngram_length;
 	char* delimiter;
 	int binary_ngrams;
@@ -104,6 +106,7 @@ static const config_t DEFAULT_CONFIG =
 	.update_model = FALSE,
 	.transfer_spec = FALSE,
 	.output = NULL,
+	.output_type = DEFAULT_OUTPUTFMT,
 	.ngram_length = 3,
 	.delimiter = NULL,
 	.binary_ngrams = FALSE,

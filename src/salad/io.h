@@ -23,10 +23,24 @@
 #define SALAD_IO_H_
 
 #include "util.h"
+#include "salad.h"
 
 #include <util/io.h>
 #include <container/io.h>
 #include <container/io/bloom.h>
+
+#ifdef USE_ARCHIVES
+#define SALAD_IOMODES "'txt' or 'archive'"
+#define DEFAULT_OUTPUTFMT SALAD_OUTPUTFMT_ARCHIVE
+#else
+#define SALAD_IOMODES "'txt'"
+#define DEFAULT_OUTPUTFMT SALAD_OUTPUTFMT_TXT
+#endif
+
+
+const char* const salad_outputfmt_to_string(const salad_outputfmt_t m);
+const salad_outputfmt_t salad_to_outputfmt(const char* const str);
+const BOOL salad_isvalid_outputfmt(const char* const str);
 
 static const char* const CONFIG_HEADER;
 
