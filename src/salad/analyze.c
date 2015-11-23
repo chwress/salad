@@ -40,10 +40,19 @@ typedef struct
 } bloomize_stats_ex_t;
 
 
+BLOOM* const bloomizeb(const char* str, const size_t len, const size_t n, const delimiter_array_t delim)
+{
+	BLOOM* const bloom = bloom_init(DEFAULT_BFSIZE, DEFAULT_HASHSET);
+	if (bloom != NULL)
+	{
+		bloomizeb_ex(bloom, str, len, n);
+	}
+	return bloom;
+}
 
 BLOOM* const bloomize(const char* str, const size_t len, const size_t n)
 {
-	BLOOM* const bloom = bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE);
+	BLOOM* const bloom = bloom_init(DEFAULT_BFSIZE, DEFAULT_HASHSET);
 	if (bloom != NULL)
 	{
 		bloomize_ex(bloom, str, len, n);
@@ -53,7 +62,7 @@ BLOOM* const bloomize(const char* str, const size_t len, const size_t n)
 
 BLOOM* const bloomizew(const char* str, const size_t len, const size_t n, const delimiter_array_t delim)
 {
-	BLOOM* const bloom = bloom_init(DEFAULT_BFSIZE, HASHES_SIMPLE);
+	BLOOM* const bloom = bloom_init(DEFAULT_BFSIZE, DEFAULT_HASHSET);
 	if (bloom != NULL)
 	{
 		bloomizew_ex(bloom, str, len, n, delim);

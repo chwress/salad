@@ -218,8 +218,8 @@ const int usage_train()
 	"                              --ngram-delim option.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
-	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
-	"                              (Default: 'simple').\n"
+	"       --hash-set <hashes>    Set the hash set to be used: 'simple', 'simple2'\n"
+	"                              or 'murmur' (Default: '%s').\n"
 	"\n"
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
@@ -230,7 +230,8 @@ const int usage_train()
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
 	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
-	/* --filter-size */ DEFAULT_CONFIG.filter_size);
+	/* --filter-size */ DEFAULT_CONFIG.filter_size,
+	/* --hash-set    */ hashset_to_string(DEFAULT_CONFIG.hash_set));
 	return EXIT_SUCCESS;
 }
 
@@ -315,8 +316,8 @@ const int usage_inspect()
 	"                              --ngram-delim option.\n"
 	"  -s,  --filter-size <num>    Set the size of the bloom filter as bits of\n"
 	"                              the index (Default: %u).\n"
-	"       --hash-set <hashes>    Set the hash set to be used: 'simple' or 'murmur'\n"
-	"                              (Default: 'simple').\n"
+	"       --hash-set <hashes>    Set the hash set to be used: 'simple', 'simple2'\n"
+	"                              or 'murmur' (Default: '%s').\n"
 	"\n"
 	"Generic options:\n"
 	"  -e,  --echo-params          Echo used parameters and settings.\n"
@@ -326,7 +327,8 @@ const int usage_inspect()
 	/* --pcap-filter */ DEFAULT_CONFIG.pcap_filter,
 #endif
 	/* --ngram-len   */ DEFAULT_CONFIG.ngram_length,
-	/* --filter-size */ DEFAULT_CONFIG.filter_size);
+	/* --filter-size */ DEFAULT_CONFIG.filter_size,
+	/* --hash-set    */ hashset_to_string(DEFAULT_CONFIG.hash_set));
 	return EXIT_SUCCESS;
 }
 

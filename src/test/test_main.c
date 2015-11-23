@@ -435,16 +435,17 @@ CTEST2(main, train)
 CTEST2(main, train_bgrams)
 {
 	char* const exp =
-		"\x80\x00\x00\x00\x80\x00\x00\x00"
-		"\x80\x00\x00\x00\x80\x00\x00\x00"
-		"\x80\x00\x00\x00\x80\x00\x00\x00"
-		"\x80\x00\x00\x00\x80\x00\x00\x00";
+		"\x84\x00\x00\x00\x84\x00\x00\x00"
+		"\x84\x00\x00\x00\x84\x00\x00\x00"
+		"\x84\x00\x00\x00\x84\x00\x00\x00"
+		"\x84\x00\x00\x00\x84\x00\x00\x00";
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "--ngram-len", "3");
 	ADD_PARAM(data, "--binary", "");
 	ADD_PARAM(data, "--filter-size", "8");
+	ADD_PARAM(data, "--hash-set", "simple2");
 	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
 
@@ -458,15 +459,16 @@ CTEST2(main, train_bgrams)
 CTEST2(main, train_ngrams)
 {
 	char* const exp =
-		"\x32\x0b\x9c\x28\x46\x77\x6a\xbd"
-		"\xe0\x02\x60\x82\xd9\x0c\x59\x9c"
-		"\x26\x96\x81\x18\x73\x54\xfc\xc4"
-		"\xbf\x20\x19\x47\x05\x00\xa8\x0a";
+		"\x12\x8f\x9c\x68\x04\xf7\x42\xbc"
+		"\xa0\x02\x64\xa2\xd8\x00\x51\x94"
+		"\x23\x9a\x61\xd8\x73\x55\xe8\x64"
+		"\xbe\x18\x30\x4f\x07\x00\xa0\x0a";
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "--ngram-len", "3");
 	ADD_PARAM(data, "--filter-size", "8");
+	ADD_PARAM(data, "--hash-set", "simple2");
 	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
 
@@ -480,16 +482,17 @@ CTEST2(main, train_ngrams)
 CTEST2(main, train_wgrams)
 {
 	char* const exp =
-		"\x00\x00\x08\x00\x20\x28\x04\x00"
-		"\x02\x00\x10\x00\x00\x01\x00\x30"
-		"\x88\x10\x20\x00\x80\x00\x00\x00"
-		"\x00\x00\x20\x05\x00\x00\x28\x80";
+		"\x00\x00\x08\x02\x20\x20\x04\x08"
+		"\x10\x00\x10\x00\x00\x01\x00\x20"
+		"\x80\x10\x21\x00\x80\x00\x00\x00"
+		"\x00\x00\x00\x01\x10\x00\x28\x00";
 
 	SET_MODE(data, "train");
 	ADD_PARAM(data, "-i", TEST_INPUT);
 	ADD_PARAM(data, "--ngram-len", "3");
 	ADD_PARAM(data, "--ngram-delim", "' '");
 	ADD_PARAM(data, "--filter-size", "8");
+	ADD_PARAM(data, "--hash-set", "simple2");
 	ADD_PARAM(data, "-o", data->out);
 	EXEC(0, data);
 
@@ -516,6 +519,7 @@ CTEST2(main, ex1)
 		}
 		ADD_PARAM(data, "-n", "%"Z, n);
 		ADD_PARAM(data, "-d", "%s", "\"%0a%0d%20%21%22.,:;?\"");
+		ADD_PARAM(data, "--hash-set", "simple");
 		ADD_PARAM(data, "-o", data->out);
 		int ret = EXEC_EX(data);
 		if (ret != 0)
@@ -575,6 +579,7 @@ CTEST2(main, ex2)
 		}
 		ADD_PARAM(data, "-n", "%"Z, n);
 		ADD_PARAM(data, "-d", "''");
+		ADD_PARAM(data, "--hash-set", "simple");
 		ADD_PARAM(data, "-o", data->out);
 		int ret = EXEC_EX(data);
 		if (ret != 0)

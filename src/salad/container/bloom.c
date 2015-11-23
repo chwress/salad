@@ -25,10 +25,11 @@
 
 const hashset_t to_hashset(const char* const str)
 {
-	switch (cmp(str, "simple", "murmur", NULL))
+	switch (cmp(str, "simple", "simple2", "murmur", NULL))
 	{
 	case 0: return HASHES_SIMPLE;
-	case 1: return HASHES_MURMUR;
+	case 1: return HASHES_SIMPLE2;
+	case 2: return HASHES_MURMUR;
 	default: break;
 	}
 
@@ -40,6 +41,7 @@ const char* const hashset_to_string(hashset_t hs)
 	switch(hs)
 	{
 	case HASHES_SIMPLE: return "simple";
+	case HASHES_SIMPLE2: return "simple2";
 	case HASHES_MURMUR: return "murmur";
 	default: break;
 	}
@@ -101,21 +103,26 @@ hashfunc_t to_hashfunc(const char* const str)
 BLOOM* const bloom_init(const unsigned short size, const hashset_t hs)
 {
 	assert(size <= sizeof(void*) *8);
-	BLOOM* b = NULL;
+	BLOOM* const b = bloom_create((size_t) POW(2, size));
+	if (b == NULL) return NULL;
 
 	switch (hs)
 	{
 	case HASHES_SIMPLE:
-		b = bloom_create((size_t) POW(2, size));
-		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_SIMPLE);
+		bloom_set_hashfuncs_ex(b, HASHSET_SIMPLE);
+		break;
+
+	case HASHES_SIMPLE2:
+		bloom_set_hashfuncs_ex(b, HASHSET_SIMPLE2);
 		break;
 
 	case HASHES_MURMUR:
-		b = bloom_create((size_t) POW(2, size));
-		if (b != NULL) bloom_set_hashfuncs_ex(b, HASHSET_MURMUR);
+		bloom_set_hashfuncs_ex(b, HASHSET_MURMUR);
 		break;
 
-	default: break;
+	default:
+		bloom_destroy(b);
+		return NULL;
 	}
 	return b;
 }

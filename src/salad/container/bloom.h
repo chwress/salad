@@ -30,13 +30,14 @@
 extern hashfunc_t HASH_FCTS[NUM_HASHFCTS];
 
 #define HASHSET_SIMPLE (hashfunc_t[]) {sax_hash_n, sdbm_hash_n, djb_hash_n}, 3
+#define HASHSET_SIMPLE2 (hashfunc_t[]) {sax_hash_n, sdbm_hash_n, djb2_hash_n}, 3
 #define HASHSET_MURMUR (hashfunc_t[]) {murmur_hash0_n, murmur_hash1_n, murmur_hash2_n}, 3
 
 const int to_hashid(hashfunc_t h);
 const char* to_hashname(hashfunc_t h);
 hashfunc_t to_hashfunc(const char* const str);
 
-typedef enum { HASHES_UNDEFINED, HASHES_SIMPLE, HASHES_MURMUR } hashset_t;
+typedef enum { HASHES_UNDEFINED, HASHES_SIMPLE, HASHES_SIMPLE2, HASHES_MURMUR } hashset_t;
 #define VALID_HASHES "'simple' or 'murmur'"
 
 const hashset_t to_hashset(const char* const str);
@@ -44,7 +45,7 @@ const char* const hashset_to_string(hashset_t hs);
 
 
 #define DEFAULT_BFSIZE 24
-#define DEFAULT_HASHSET HASHSET_SIMPLE
+#define DEFAULT_HASHSET HASHES_SIMPLE2
 
 BLOOM* const bloom_init(const unsigned short size, const hashset_t hs);
 const int bloomfct_cmp(BLOOM* const bloom, ...);

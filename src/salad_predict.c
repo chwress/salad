@@ -181,12 +181,15 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 		assert(d <= UINT_MAX);
 		cfg.filter_size = (unsigned int) d;
 
-		switch (bloomfct_cmp(good_model, HASHSET_SIMPLE, HASHSET_MURMUR))
+		switch (bloomfct_cmp(good_model, HASHSET_SIMPLE, HASHSET_SIMPLE2, HASHSET_MURMUR))
 		{
 		case 0:
 			cfg.hash_set = HASHES_SIMPLE;
 			break;
 		case 1:
+			cfg.hash_set = HASHES_SIMPLE2;
+			break;
+		case 2:
 			cfg.hash_set = HASHES_MURMUR;
 			break;
 		default:

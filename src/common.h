@@ -109,7 +109,7 @@ static const config_t DEFAULT_CONFIG =
 	.binary_ngrams = FALSE,
 	.count = 0,
 	.filter_size = 24,
-	.hash_set = HASHES_SIMPLE,
+	.hash_set = DEFAULT_HASHSET,
 	.nan = "nan",
 	.echo_params = FALSE
 };

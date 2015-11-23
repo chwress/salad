@@ -254,7 +254,7 @@ int main(int argc, char* argv[]);
  * Set the size of the bloom filter as bits of the index (Default: 24).
  *
  * @par     --hash-set &lt;hashes&gt;
- * Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple').
+ * Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2').
  *
  * @subsection sec_genericops Generic Options:
  * @par -e, --echo-params
@@ -458,7 +458,7 @@ const int _salad_stats_(const config_t* const c);
  * Set the size of the bloom filter as bits of the index (Default: 24).
  *
  * @par     --hash-set &lt;hashes&gt;
- * Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple').
+ * Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2').
  *
  * @subsection sec_genericops Generic Options:
  * @par -e, --echo-params
