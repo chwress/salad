@@ -156,7 +156,7 @@ static struct option stats_longopts[] = {
 #ifdef TEST_SALAD
 #define DBG_OPTION_STR "s:mh"
 
-static struct option dbg_longopts[] = {
+static struct option test_longopts[] = {
 	// I/O options
 	{ "suite",          required_argument, NULL, 's' },
 	{ "no-memcheck",    no_argument, NULL, 'm' },
@@ -173,7 +173,7 @@ const int usage_main()
 	print("Usage: salad [<mode>] [options]\n"
 	"\n"
 #ifdef TEST_SALAD
-	"<mode> may be one of 'train', 'predict', 'inspect', 'stats', 'dbg'\n"
+	"<mode> may be one of 'train', 'predict', 'inspect', 'stats', 'test'\n"
 #else
 	"<mode> may be one of 'train', 'predict', 'inspect', 'stats'\n"
 #endif
@@ -356,9 +356,9 @@ const int usage_stats()
 
 
 #ifdef TEST_SALAD
-const int usage_dbg()
+const int usage_test()
 {
-	print("Usage: salad dbg [options]\n"
+	print("Usage: salad test [options]\n"
 	"\n"
 	"Test options:\n"
 	"  -s,  --suite <str>          The test suite to execute.\n"
@@ -821,13 +821,13 @@ const saladstate_t parse_stats_options(int argc, char* argv[], config_t* const c
 }
 
 #ifdef TEST_SALAD
-const saladstate_t parse_dbg_options(int argc, char* argv[], test_config_t* const config)
+const saladstate_t parse_test_options(int argc, char* argv[], test_config_t* const config)
 {
 	assert(argv != NULL);
 	assert(config != NULL);
 
 	int option;
-	while ((option = getopt_long(argc, argv, DBG_OPTION_STR, dbg_longopts, NULL)) != -1)
+	while ((option = getopt_long(argc, argv, DBG_OPTION_STR, test_longopts, NULL)) != -1)
 	{
 		switch (option)
 		{
@@ -879,7 +879,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config,
 		case INSPECT:  return parse_inspect_options(argc, argv, config);
 		case STATS:    return parse_stats_options(argc, argv, config);
 #ifdef TEST_SALAD
-		case DBG:      return parse_dbg_options(argc, argv, test_config);
+		case DBG:      return parse_test_options(argc, argv, test_config);
 #endif
 		default:
 			error("Unknown mode '%s'.", argv[1]);
@@ -923,7 +923,7 @@ int main(int argc, char* argv[])
 	case SALAD_HELP_INSPECT: return usage_inspect();
 	case SALAD_HELP_STATS:   return usage_stats();
 #ifdef TEST_SALAD
-	case SALAD_HELP_DBG:     return usage_dbg();
+	case SALAD_HELP_DBG:     return usage_test();
 #endif
 	case SALAD_VERSION:      return version();
 	default: break;
@@ -958,7 +958,7 @@ int main(int argc, char* argv[])
 		break;
 #ifdef TEST_SALAD
 	case DBG:
-		ret = _salad_dbg_(&test_config);
+		ret = _salad_test_(&test_config);
 		break;
 #endif
 

@@ -318,7 +318,7 @@ void CMP_MODELS(const char* const a, const char* const b)
 }
 
 static const char* SALAD_MODES[] = {
-		"train", "predict", "inspect", "stats", "dbg", NULL
+		"train", "predict", "inspect", "stats", "test", NULL
 };
 
 
@@ -682,7 +682,7 @@ CTEST(valgrind, memcheck)
 	}
 	else
 	{
-		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all %s dbg -m", my_name);
+		snprintf(d.cmd , CMD_LENGTH, "valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all %s test -m", my_name);
 		EXEC_EX(&d);
 		remove(d.out);
 

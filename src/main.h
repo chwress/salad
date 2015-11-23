@@ -478,11 +478,11 @@ const int _salad_inspect_(const config_t* const c);
 
 #ifdef TEST_SALAD
 /**
- * @page salad-dbg (Unit) Testing of the implementation of Salad
+ * @page salad-test (Unit) Testing of the implementation of Salad
  *
  * @section SYNOPSIS
  *
- * salad dbg [options]
+ * salad test [options]
  *
  * @section DESCRIPTION
  *
@@ -501,7 +501,7 @@ const int _salad_inspect_(const config_t* const c);
  * @section sec_copyright COPYRIGHT
  * \copydoc hidden_copyright
  */
-const int _salad_dbg_(const test_config_t* const c);
+const int _salad_test_(const test_config_t* const c);
 #endif
 
 #endif /* MAIN_H_ */

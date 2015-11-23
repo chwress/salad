@@ -73,7 +73,7 @@ if (TEST_SALAD)
 	set(sources ${sources} ${test_sources})
 	set(headers ${headers} ${test_headers})
 else ()
-	list(REMOVE_ITEM sources "${SRC}/salad_dbg.c")
+	list(REMOVE_ITEM sources "${SRC}/salad_test.c")
 endif ()
 
 source_group("Source Files" FILES ${sources})

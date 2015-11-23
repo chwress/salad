@@ -24,7 +24,7 @@
 
 extern const char* salad_filename;
 
-const int _salad_dbg_(const test_config_t* const c)
+const int _salad_test_(const test_config_t* const c)
 {
 	assert(c != NULL);
 

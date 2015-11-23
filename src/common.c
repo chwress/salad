@@ -28,7 +28,7 @@ const char* const saladmode_to_string(saladmode_t m)
 	case PREDICT:  return "predict";
 	case INSPECT:  return "inspect";
 	case STATS:    return "stats";
-	case DBG:      return "dbg";
+	case DBG:      return "test";
 	default: break;
 	}
 	return "undefined";
@@ -36,7 +36,7 @@ const char* const saladmode_to_string(saladmode_t m)
 
 const saladmode_t to_saladmode(const char* const str)
 {
-	switch (cmp(str, "train", "predict", "inspect", "stats", "dbg", NULL))
+	switch (cmp(str, "train", "predict", "inspect", "stats", "test", NULL))
 	{
 	case 0: return TRAINING;
 	case 1: return PREDICT;
