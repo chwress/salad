@@ -15,7 +15,8 @@
   as bloom filters.
 * Fixes for a critical bug when using group input and several
   minor issues.
-* A (optionally compressed) text-based model file format
+* An optionally compressed, text-based model file format
+  salad train -F (txt|archive)
 * The default hashset ('simple2') makes use of djb2 hash
 
 0.5.0
