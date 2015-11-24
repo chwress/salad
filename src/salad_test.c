@@ -18,6 +18,10 @@
 #include "main.h"
 
 #define CTEST_MAIN
+#ifndef USE_COLORS
+#define CTEST_NO_COLORS
+#endif
+
 #include <ctest.h>
 
 #ifdef TEST_SALAD
