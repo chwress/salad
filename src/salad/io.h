@@ -30,10 +30,10 @@
 #include <container/io/bloom.h>
 
 #ifdef USE_ARCHIVES
-#define SALAD_IOMODES "'txt' or 'archive'"
+#define SALAD_OUTPUTFMTS "'txt' or 'archive'"
 #define DEFAULT_OUTPUTFMT SALAD_OUTPUTFMT_ARCHIVE
 #else
-#define SALAD_IOMODES "'txt'"
+#define SALAD_OUTPUTFMTS "'txt'"
 #define DEFAULT_OUTPUTFMT SALAD_OUTPUTFMT_TXT
 #endif
 

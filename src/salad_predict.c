@@ -218,7 +218,7 @@ const int salad_predict_stub(const config_t* const c, const data_processor_t* co
 	free(context.scores);
 
 #ifdef USE_NETWORK
-	if (c->input_type != NETWORK)
+	if (c->input_type != IOMODE_NETWORK)
 #endif
 	{
 		info("Net calculation time: %.4f seconds", context.total_time);

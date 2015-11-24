@@ -33,14 +33,14 @@ const char* const iomode_to_string(const iomode_t m)
 {
 	switch (m)
 	{
-	case LINES:        return "lines";
-	case FILES:        return "files";
+	case IOMODE_LINES:        return "lines";
+	case IOMODE_FILES:        return "files";
 #ifdef USE_ARCHIVES
-	case ARCHIVE:      return "archive";
+	case IOMODE_ARCHIVE:      return "archive";
 #endif
 #ifdef USE_NETWORK
-	case NETWORK:      return "network";
-	case NETWORK_DUMP: return "network-dump";
+	case IOMODE_NETWORK:      return "network";
+	case IOMODE_NETWORK_DUMP: return "network-dump";
 #endif
 	default:           return "unknown";
 	}
@@ -50,17 +50,17 @@ const iomode_t to_iomode(const char* const str)
 {
 	switch (cmp(str, "lines", "files", "archive", "network", "network-dump", NULL))
 	{
-	case 0:  return LINES;
-	case 1:  return FILES;
+	case 0:  return IOMODE_LINES;
+	case 1:  return IOMODE_FILES;
 #ifdef USE_ARCHIVES
-	case 2:  return ARCHIVE;
+	case 2:  return IOMODE_ARCHIVE;
 #endif
 #ifdef USE_NETWORK
-	case 3:  return NETWORK;
-	case 4:  return NETWORK_DUMP;
+	case 3:  return IOMODE_NETWORK;
+	case 4:  return IOMODE_NETWORK_DUMP;
 #endif
 	// Okay that actually cannot happen ;)
-	default: return FILES;
+	default: return IOMODE_FILES;
 	}
 }
 
@@ -248,14 +248,14 @@ const data_processor_t* const to_dataprocessor(const iomode_t m)
 {
 	switch (m)
 	{
-	case LINES:   return &dp_lines;
-	case FILES:   return &dp_files;
+	case IOMODE_LINES:   return &dp_lines;
+	case IOMODE_FILES:   return &dp_files;
 #ifdef USE_ARCHIVES
-	case ARCHIVE: return &dp_archive;
+	case IOMODE_ARCHIVE: return &dp_archive;
 #endif
 #ifdef USE_NETWORK
-	case NETWORK_DUMP:
-	case NETWORK: return &dp_network;
+	case IOMODE_NETWORK_DUMP:
+	case IOMODE_NETWORK: return &dp_network;
 #endif
 	default:      return NULL;
 	}

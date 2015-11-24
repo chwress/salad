@@ -30,15 +30,15 @@
 
 #ifdef USE_ARCHIVES
 #ifdef USE_NETWORK
-typedef enum { LINES, FILES, ARCHIVE, NETWORK, NETWORK_DUMP } iomode_t;
+typedef enum { IOMODE_LINES, IOMODE_FILES, IOMODE_ARCHIVE, IOMODE_NETWORK, IOMODE_NETWORK_DUMP } iomode_t;
 #else
-typedef enum { LINES, FILES, ARCHIVE } iomode_t;
+typedef enum { IOMODE_LINES, IOMODE_FILES, IOMODE_ARCHIVE } iomode_t;
 #endif
 #else
 #ifdef USE_NETWORK
-typedef enum { LINES, FILES, NETWORK, NETWORK_DUMP } iomode_t;
+typedef enum { IOMODE_LINES, IOMODE_FILES, IOMODE_NETWORK, IOMODE_NETWORK_DUMP } iomode_t;
 #else
-typedef enum { LINES, FILES } iomode_t;
+typedef enum { IOMODE_LINES, IOMODE_FILES } iomode_t;
 #endif
 #endif
 
@@ -48,15 +48,15 @@ const int is_valid_iomode(const char* const str);
 
 #ifdef USE_ARCHIVES
 #ifdef USE_NETWORK
-	#define VALID_IOMODES "'lines', 'files', 'archive', 'network' or 'network-dump'"
+	#define IOMODES "'lines', 'files', 'archive', 'network' or 'network-dump'"
 #else
-	#define VALID_IOMODES "'lines', 'files' or 'archive'"
+	#define IOMODES "'lines', 'files' or 'archive'"
 #endif
 #else
 #ifdef USE_NETWORK
-	#define VALID_IOMODES "'lines', 'files', 'network' or 'network-dump'"
+	#define IOMODES "'lines', 'files', 'network' or 'network-dump'"
 #else
-	#define VALID_IOMODES "'lines' or 'files'"
+	#define IOMODES "'lines' or 'files'"
 #endif
 #endif
 

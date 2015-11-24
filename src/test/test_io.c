@@ -65,13 +65,13 @@ CTEST_DATA(io)
 
 CTEST_SETUP(io)
 {
-	data->lines = to_dataprocessor(LINES);
-	data->files = to_dataprocessor(FILES);
+	data->lines = to_dataprocessor(IOMODE_LINES);
+	data->files = to_dataprocessor(IOMODE_FILES);
 #ifdef USE_ARCHIVES
-	data->archive = to_dataprocessor(ARCHIVE);
+	data->archive = to_dataprocessor(IOMODE_ARCHIVE);
 #endif
 #ifdef USE_NETWORK
-	data->network = to_dataprocessor(NETWORK);
+	data->network = to_dataprocessor(IOMODE_NETWORK);
 #endif
 
 	size_t num_refs = 0;

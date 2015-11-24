@@ -56,7 +56,7 @@ const int salad_heart(const config_t* const c, FN_SALAD fct)
 
 #ifdef USE_NETWORK
 	net_param_t p = {
-			(c->input_type == NETWORK),
+			(c->input_type == IOMODE_NETWORK),
 			 c->pcap_filter,
 			 c->net_clientcomm,
 			 c->net_servercomm,

@@ -93,7 +93,7 @@ typedef struct
 static const config_t DEFAULT_CONFIG =
 {
 	.mode = UNDEFINED,
-	.input_type = LINES,
+	.input_type = IOMODE_LINES,
 	.batch_size = 128,
 	.group_input = FALSE,
 	.input_filter = "",

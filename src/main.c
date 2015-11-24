@@ -192,7 +192,7 @@ const int usage_train()
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
-	"                              one of " VALID_IOMODES ".\n"
+	"                              one of " IOMODES ".\n"
 #ifdef USE_REGEX_FILTER
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
@@ -215,7 +215,7 @@ const int usage_train()
 #ifdef USE_ARCHIVES
 	// If there is no libarchive support we can only make use of text-based configurations.
 	"  -F,  --output-format <fmt>  Sets the format of output. This option might be \n"
-	"                              one of " SALAD_IOMODES ".\n"
+	"                              one of " SALAD_OUTPUTFMTS ".\n"
 #endif
 	"\n"
 	"Feature options:\n"
@@ -252,7 +252,7 @@ const int usage_predict()
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
-	"                              one of " VALID_IOMODES ".\n"
+	"                              one of " IOMODES ".\n"
 #ifdef USE_REGEX_FILTER
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
@@ -298,7 +298,7 @@ const int usage_inspect()
 	"I/O options:\n"
 	"  -i,  --input <file>         The input filename.\n"
 	"  -f,  --input-format <fmt>   Sets the format of input. This option might be \n"
-	"                              one of " VALID_IOMODES ".\n"
+	"                              one of " IOMODES ".\n"
 #ifdef USE_REGEX_FILTER
 	"       --input-filter <regex> The regular expression for filtering input lines\n"
 	"                              or filenames respectively.\n"
@@ -411,13 +411,13 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 	{
 #ifdef USE_NETWORK
 #ifndef ALLOW_LIVE_TRAINING
-		if (config->input_type == NETWORK && filesOnly)
+		if (config->input_type == IOMODE_NETWORK && filesOnly)
 		{
 			error("Use a network dump for training");
 			return EXIT_FAILURE;
 		}
 #endif
-		if (config->input_type == NETWORK || config->input_type == NETWORK_DUMP)
+		if (config->input_type == IOMODE_NETWORK || config->input_type == IOMODE_NETWORK_DUMP)
 		{
 			if (check_batchsize && config->batch_size != 1)
 			{
@@ -436,7 +436,7 @@ const int check_input(config_t* const config, const int filesOnly, const int che
 		{
 #ifdef GROUPED_INPUT
 #ifdef USE_ARCHIVES
-			if (config->input_type != ARCHIVE)
+			if (config->input_type != IOMODE_ARCHIVE)
 #endif
 			{
 				if (config->group_input)
@@ -929,7 +929,7 @@ int main(int argc, char* argv[])
 	default: break;
 	}
 
-	if (config.input_type == FILES)
+	if (config.input_type == IOMODE_FILES)
 	{
 		error("Input mode 'files' is not yet implemented.");
 		return bye(EXIT_FAILURE);

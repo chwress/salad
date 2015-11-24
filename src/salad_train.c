@@ -143,7 +143,7 @@ const int salad_train_stub(const config_t* const c, const data_processor_t* cons
 	const model_type_t t = to_model_type(s1.as_binary, __(s1).use_tokens);
 
 #ifdef USE_NETWORK
-	if (c->input_type == NETWORK || c->input_type == NETWORK_DUMP)
+	if (c->input_type == IOMODE_NETWORK || c->input_type == IOMODE_NETWORK_DUMP)
 	{
 		dp->recv(f_in, pick_callback(t, 1), c->batch_size, &s1);
 	}
