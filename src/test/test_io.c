@@ -101,7 +101,7 @@ CTEST_SETUP(io)
 		if (data->ref.expected[i].len != n)
 		{
 			testdata_free(&data->ref);
-			ASSERT_EQUAL(data->ref.expected[i].len, n);
+			ASSERT_EQUAL_U(data->ref.expected[i].len, n);
 		}
 	}
 }

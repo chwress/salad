@@ -62,12 +62,12 @@ CTEST_TEARDOWN(bloom)
 
 CTEST2(bloom, create)
 {
-	const int INTSIZE = (data->BITSIZE +CHAR_BIT -1)/CHAR_BIT;
+	const size_t INTSIZE = (data->BITSIZE +CHAR_BIT -1)/CHAR_BIT;
 
 	ASSERT_NOT_NULL(data->b1);
 	ASSERT_EQUAL(NUM_FUNCS, data->b1->nfuncs);
-	ASSERT_EQUAL(data->BITSIZE, data->b1->bitsize);
-	ASSERT_EQUAL(INTSIZE, data->b1->size);
+	ASSERT_EQUAL_U(data->BITSIZE, data->b1->bitsize);
+	ASSERT_EQUAL_U(INTSIZE, data->b1->size);
 
 	int x = 0;
 	for (size_t i = 0; i < data->b1->size; ++i)
@@ -132,7 +132,7 @@ CTEST2(bloom, count)
 {
 	data->b1->a[0] = 0x03;
 	data->b1->a[data->b1->size -1] = 0x80;
-	ASSERT_EQUAL(3, bloom_count(data->b1));
+	ASSERT_EQUAL_U(3, bloom_count(data->b1));
 }
 
 CTEST2(bloom, clear)
@@ -140,15 +140,15 @@ CTEST2(bloom, clear)
 	data->b1->a[0] = 0xCA;
 	data->b1->a[data->b1->size -1] = 0xFE;
 	bloom_clear(data->b1);
-	ASSERT_EQUAL(0, bloom_count(data->b1));
+	ASSERT_EQUAL_U(0, bloom_count(data->b1));
 }
 
 CTEST2(bloom, hash_collisions)
 {
 	bloom_add_str(data->x1, "abc", 3);
-	ASSERT_EQUAL(3, bloom_count(data->x1));
+	ASSERT_EQUAL_U(3, bloom_count(data->x1));
 
 	bloom_add_str(data->x2, "abc", 3);
-	ASSERT_EQUAL(3, bloom_count(data->x2));
+	ASSERT_EQUAL_U(3, bloom_count(data->x2));
 }
 

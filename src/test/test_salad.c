@@ -72,7 +72,7 @@ static const int bloom_compare_bytes(BLOOM* const a, BLOOM* const b)
 CTEST2(salad, bloom_init)
 {
 	ASSERT_NOT_NULL(TO_BLOOMFILTER(data->x.model));
-	ASSERT_EQUAL(NGRAM_LENGTH, data->x.ngram_length);
+	ASSERT_EQUAL_U(NGRAM_LENGTH, data->x.ngram_length);
 	ASSERT_EQUAL(__(data->x).use_tokens, (strlen(DELIMITER) != 0));
 	DELIM(delim);
 	to_delimiter_array(DELIMITER, delim);
@@ -114,7 +114,7 @@ CTEST(salad, spec_diff)
 {	                                                                                                     \
 	BLOOM* const x = GET_BLOOMFILTER(data->x.model);                                                     \
 	                                                                                                     \
-	ASSERT_EQUAL(0, bloom_count(x));                                                                     \
+	ASSERT_EQUAL_U(0, bloom_count(x));                                                                   \
 	BLOOMIZE_EX(#X[0], x, TEST_STR1, strlen(TEST_STR1), data->x.ngram_length, __(data->x).delimiter.d);  \
 	ASSERT_DATA((unsigned char*) (bf), 32, x->a, x->size);                                               \
 }
@@ -136,30 +136,30 @@ void TEST_BLOOMIZE_COUNT_EX(const char X, salad_t* const s1, const count_exp_t e
 	// Clears b2, adds TEST_STR1 to both
 	BLOOMIZE_EX3(X, b1, b2, TEST_STR1, strlen(TEST_STR1), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL(0, bloom_compare(b1, b2));
-	ASSERT_EQUAL(0, stats.new);
-	ASSERT_EQUAL(exp1.uniq, stats.uniq);
-	ASSERT_EQUAL(exp1.total, stats.total);
+	ASSERT_EQUAL_U(0, stats.new);
+	ASSERT_EQUAL_U(exp1.uniq, stats.uniq);
+	ASSERT_EQUAL_U(exp1.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to b2 only
 	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_NOT_EQUAL(0, bloom_compare(b1, b2));
-	ASSERT_EQUAL(new, stats.new);
-	ASSERT_EQUAL(exp2.uniq, stats.uniq);
-	ASSERT_EQUAL(exp2.total, stats.total);
+	ASSERT_EQUAL_U(new, stats.new);
+	ASSERT_EQUAL_U(exp2.uniq, stats.uniq);
+	ASSERT_EQUAL_U(exp2.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to both
 	BLOOMIZE_EX3(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
-	ASSERT_EQUAL(new, stats.new);
-	ASSERT_EQUAL(exp2.uniq, stats.uniq);
-	ASSERT_EQUAL(exp2.total, stats.total);
+	ASSERT_EQUAL_U(new, stats.new);
+	ASSERT_EQUAL_U(exp2.uniq, stats.uniq);
+	ASSERT_EQUAL_U(exp2.total, stats.total);
 
 	// Clears b2, adds TEST_STR2 to b2 only
 	BLOOMIZE_EX4(X, b1, b2, TEST_STR2, strlen(TEST_STR2), n, _(s1)->delimiter.d, &stats);
 	ASSERT_EQUAL((X == 'w' ? 4 : 0), bloom_compare_bytes(b1, b2));
-	ASSERT_EQUAL(0, stats.new);
-	ASSERT_EQUAL(exp2.uniq, stats.uniq);
-	ASSERT_EQUAL(exp2.total, stats.total);
+	ASSERT_EQUAL_U(0, stats.new);
+	ASSERT_EQUAL_U(exp2.uniq, stats.uniq);
+	ASSERT_EQUAL_U(exp2.total, stats.total);
 }
 
 CTEST2(salad, bloomizeb_ex)

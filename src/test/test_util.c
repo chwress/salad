@@ -90,12 +90,12 @@ CTEST(util, starts_with)
 CTEST(util, count_char)
 {
 	char str[] = "1/4 pounder with cheese";
-	ASSERT_EQUAL(1, count_char(str, '1'));
-	ASSERT_EQUAL(3, count_char(str, ' '));
-	ASSERT_EQUAL(4, count_char(str, 'e'));
-	ASSERT_EQUAL(1, count_char(str, 'o'));
-	ASSERT_EQUAL(0, count_char(str, 'a'));
-	ASSERT_EQUAL(0, count_char(str, 0x00));
+	ASSERT_EQUAL_U(1, count_char(str, '1'));
+	ASSERT_EQUAL_U(3, count_char(str, ' '));
+	ASSERT_EQUAL_U(4, count_char(str, 'e'));
+	ASSERT_EQUAL_U(1, count_char(str, 'o'));
+	ASSERT_EQUAL_U(0, count_char(str, 'a'));
+	ASSERT_EQUAL_U(0, count_char(str, 0x00));
 }
 
 #define TEST_JOIN_EX(exp, prefix, sep, strs, fmt)       \

@@ -426,7 +426,7 @@ CTEST2(main, train)
 	EXEC(0, data);
 
 	char* const log = read_log_ex(data, "[I] ");
-	ASSERT_EQUAL(1 +3, count_char(log, '\n'));
+	ASSERT_EQUAL_U(1 +3, count_char(log, '\n'));
 	ASSERT_NOT_NULL(strstr(log, "n-Gram length: 3"));
 	ASSERT_NOT_NULL(strstr(log, "Filter size: 24"));
 	ASSERT_NOT_NULL(strstr(log, "Hash set: simple"));
