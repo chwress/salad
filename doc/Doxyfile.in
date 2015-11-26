@@ -1,5 +1,5 @@
 PROJECT_NAME           = "Letter Salad"
-OUTPUT_DIRECTORY       = @CMAKE_CURRENT_SOURCE_DIR@/@DOC_DIR@/@PROJECTNAME@/
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUTDIR@/
 OUTPUT_LANGUAGE        = English
 EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
@@ -96,7 +96,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/@SOURCE_DIR@
+INPUT                  = @DOXYGEN_INPUTDIR@
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

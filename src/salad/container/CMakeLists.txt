@@ -30,7 +30,6 @@ set(STRICT TRUE)
 
 include(VegetableBed.cmake)
 find_veggiebed(BASE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-find_veggiebed(BASE_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
 set(SOURCE_DIR ".")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
@@ -115,11 +114,17 @@ if (${DOXYGEN_VERSION})
 endif ()
 
 if (DOXYGEN_FOUND)
+	set(DOXYGEN_OUTPUTDIR "${CMAKE_BINARY_DIR}/${DOC_DIR}")
+	if (NOT CMAKE_BINARY_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
+		set(DOXYGEN_OUTPUTDIR "${DOXYGEN_OUTPUTDIR}/${PROJECTNAME}")
+	endif ()
+	set(DOXYGEN_INPUTDIR "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 	set(DOXYGEN_FILE_PATTERN "bloom.h bloom_ex.h hash.h")
-	configure_file(${BASE_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
+
+	configure_file(${BASE_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target("${PROJECTNAME}_doc"
-		${DOXYGEN_EXECUTABLE} ${BASE_BINARY_DIR}/${DOC_DIR}/Doxyfile
+		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile
 		WORKING_DIRECTORY ${BASE_SOURCE_DIR}/${DOC_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 	set_target_properties("${PROJECTNAME}_doc" PROPERTIES OUTPUT_NAME "doc")

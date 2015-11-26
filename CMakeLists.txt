@@ -164,12 +164,16 @@ if (${DOXYGEN_VERSION})
 endif ()
 
 if (DOXYGEN_FOUND)
+	set(DOXYGEN_OUTPUTDIR "${CMAKE_BINARY_DIR}/${DOC_DIR}/${PROJECTNAME}")
+	set(DOXYGEN_INPUTDIR  "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
 	set(DOXYGEN_FILE_PATTERN "main.h")
+
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 
 	add_custom_target(doc
 		${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${DOC_DIR}
+		DEPENDS "libsalad_doc"
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif ()
 
