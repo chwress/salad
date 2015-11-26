@@ -128,14 +128,14 @@
 /**
  * @page salad A Content Anomaly Detector Based on n-Grams
  *
- * @section SYNOPSIS
+ * @section sec_syn SYNOPSIS
  *
  * salad [&lt;mode&gt;] [options]
  *
- * @section DESCRIPTION
+ * @section sec_desc DESCRIPTION
  * \copydoc hidden_intro
  *
- * @section OPTIONS
+ * @section sec_ops OPTIONS
  *
  * The options depend on the provided mode of operation. If no mode is
  * specified, the following generic options are available:
@@ -175,11 +175,11 @@ int main(int argc, char* argv[]);
 /**
  * @page salad-train Training mode of Salad
  *
- * @section SYNOPSIS
+ * @section train_sec_syn SYNOPSIS
  *
  * salad train [options]
  *
- * @section DESCRIPTION
+ * @section train_sec_desc DESCRIPTION
  *
  * Trains a detector based on n-grams extracted from the provided data which
  * might be given in various <em>input format</em>s. The
@@ -198,9 +198,9 @@ int main(int argc, char* argv[]);
  * different hash functions and (2) three differently seeded instances of the
  * murmur hash function.
  *
- * @section OPTIONS
+ * @section train_sec_ops OPTIONS
  *
- * @subsection sec_ioops I/O Options:
+ * @subsection train_sec_ioops I/O Options:
  * @par -i, --input &lt;file&gt;
  * The input filename.
  *
@@ -242,7 +242,7 @@ int main(int argc, char* argv[]);
  * Sets the format of the output. This option might be one of 'txt' or 'archive'.
  * This depends on the configure Salad was compiled with -- cf. USE_ARCHIVES.
  *
- * @subsection sec_featureops Feature Options:
+ * @subsection train_sec_featureops Feature Options:
  * @par -n, --ngram-len &lt;num&gt;
  * Set length of n-grams (Default: 3).
  *
@@ -260,7 +260,7 @@ int main(int argc, char* argv[]);
  * @par     --hash-set &lt;hashes&gt;
  * Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2').
  *
- * @subsection sec_genericops Generic Options:
+ * @subsection train_sec_genericops Generic Options:
  * @par -e, --echo-params
  * Echo used parameters and settings.
  *
@@ -270,7 +270,7 @@ int main(int argc, char* argv[]);
  * @par -h, --help
  * Print the help screen.
  *
- * @section sec_copyright COPYRIGHT
+ * @section train_sec_copyright COPYRIGHT
  * \copydoc hidden_copyright
  */
 const int _salad_train_(const config_t* const c);
@@ -278,11 +278,11 @@ const int _salad_train_(const config_t* const c);
 /**
  * @page salad-predict Prediction mode of Salad
  *
- * @section SYNOPSIS
+ * @section predict_sec_syn SYNOPSIS
  *
  * salad predict [options]
  *
- * @section DESCRIPTION
+ * @section predict_sec_desc DESCRIPTION
  *
  * Predicts the anomaly score or the classification value respectively of the
  * provided data which might be given in various <em>input format</em>s.
@@ -295,9 +295,9 @@ const int _salad_train_(const config_t* const c);
  * Due to structure of the decision function <em>NaN</em> value may occur.
  * Therefore it might be necessary to specify a default value for these cases.
  *
- * @section OPTIONS
+ * @section predict_sec_ops OPTIONS
  *
- * @subsection sec_ioops I/O Options:
+ * @subsection predict_sec_ioops I/O Options:
  * @par -i, --input &lt;file&gt;
  * The input filename.
  *
@@ -340,11 +340,11 @@ const int _salad_train_(const config_t* const c);
  * @par -o, --output &lt;file&gt;
  * The output filename.
  *
- * @subsection sec_featureops Feature Options:
+ * @subsection predict_sec_featureops Feature Options:
  * @par -r, --nan-str &lt;str&gt;
  * Set the string to be shown for NaN values.
  *
- * @subsection sec_genericops Generic Options:
+ * @subsection stats_sec_genericops Generic Options:
  * @par -e, --echo-params
  * Echo used parameters and settings.
  *
@@ -354,7 +354,7 @@ const int _salad_train_(const config_t* const c);
  * @par -h, --help
  * Print the help screen.
  *
- * @section sec_copyright COPYRIGHT
+ * @section predict_sec_copyright COPYRIGHT
  * \copydoc hidden_copyright
  */
 const int _salad_predict_(const config_t* const c);
@@ -362,16 +362,16 @@ const int _salad_predict_(const config_t* const c);
 /**
  * @page salad-stats Statistics mode of Salad
  *
- * @section SYNOPSIS
+ * @section stats_sec_syn SYNOPSIS
  *
  * salad stats [options]
  *
- * @section DESCRIPTION
+ * @section stats_sec_desc DESCRIPTION
  *
  * Provides statistical information of the specified Bloom filter. In particular
  * this currently is limited to the filter's saturation.
  *
- * @section OPTIONS
+ * @section stats_sec_ops OPTIONS
  *
  * @subsection sec_ioops I/O Options:
  * @par -b,  --bloom &lt;file&gt;
@@ -381,7 +381,7 @@ const int _salad_predict_(const config_t* const c);
  * @par -h, --help
  * Print the help screen.
  *
- * @section sec_copyright COPYRIGHT
+ * @section stats_sec_copyright COPYRIGHT
  * \copydoc hidden_copyright
  */
 const int _salad_stats_(const config_t* const c);
@@ -389,11 +389,11 @@ const int _salad_stats_(const config_t* const c);
 /**
  * @page salad-inspect Inspection mode of Salad
  *
- * @section SYNOPSIS
+ * @section inspect_sec_syn SYNOPSIS
  *
  * salad inspect [options]
  *
- * @section DESCRIPTION
+ * @section inspect_sec_desc DESCRIPTION
  *
  * Performs a detailed inspection of the n-grams that would be extracted in the
  * course of processing the data using salad-train and the model
@@ -408,9 +408,9 @@ const int _salad_stats_(const config_t* const c);
  * suitable for this particular data set or classification might be the better
  * choice in this setting.
  *
- * @section OPTIONS
+ * @section inspect_sec_ops OPTIONS
  *
- * @subsection sec_ioops I/O Options:
+ * @subsection inspect_sec_ioops I/O Options:
  * @par -i, --input &lt;file&gt;
  * The input filename.
  *
@@ -446,7 +446,7 @@ const int _salad_stats_(const config_t* const c);
  * @par -o, --output &lt;file&gt;
  * The output filename.
  *
- * @subsection sec_featureops Feature Options:
+ * @subsection inspect_sec_featureops Feature Options:
  * @par -n, --ngram-len &lt;num&gt;
  * Set length of n-grams (Default: 3).
  *
@@ -464,14 +464,14 @@ const int _salad_stats_(const config_t* const c);
  * @par     --hash-set &lt;hashes&gt;
  * Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2').
  *
- * @subsection sec_genericops Generic Options:
+ * @subsection inspect_sec_genericops Generic Options:
  * @par -e, --echo-params
  * Echo used parameters and settings.
  *
  * @par -h, --help
  * Print the help screen.
  *
- * @section sec_copyright COPYRIGHT
+ * @section inspect_sec_copyright COPYRIGHT
  * \copydoc hidden_copyright
  */
 const int _salad_inspect_(const config_t* const c);
@@ -484,14 +484,14 @@ const int _salad_inspect_(const config_t* const c);
  *
  * salad test [options]
  *
- * @section DESCRIPTION
+ * @section test_sec_desc DESCRIPTION
  *
  * Performs a series of in-depth tests of \b Salad's implementation and the
  * libraries used.
  *
- * @section OPTIONS
+ * @section test_sec_ops OPTIONS
  *
- * @subsection sec_ioops Test Options:
+ * @subsection test_sec_testops Test Options:
  * @par -m, --no-memcheck
  * Disable the memcheck (using valgrind).
  *
