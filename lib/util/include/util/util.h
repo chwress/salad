@@ -148,7 +148,7 @@ typedef int BOOL;
 #endif
 
 #ifdef HAS_L_MODIFIER
-	#define LF "lF"
+	#define LF "Lf"
 	#define LONG_DOUBLE long double
 #else
 	#define LF "g"
