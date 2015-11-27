@@ -35,7 +35,7 @@ const char* const container_to_string(container_type_t t)
 container_t* const container_create()
 {
 	container_t* const c = (container_t*) calloc(1, sizeof(container_t));
-	if (c == NULL) NULL;
+	if (c == NULL) return NULL;
 
 	*c = EMPTY_CONTAINER;
 	return c;
