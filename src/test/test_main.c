@@ -27,7 +27,6 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <sys/wait.h>
 #include <stdio.h>
 
 #include <limits.h>
