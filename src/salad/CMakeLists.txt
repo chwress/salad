@@ -150,7 +150,7 @@ if (DOXYGEN_FOUND)
 		set(DOXYGEN_OUTPUTDIR "${DOXYGEN_OUTPUTDIR}/${PROJECTNAME}")
 	endif ()
 	set(DOXYGEN_INPUTDIR  "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}")
-	set(DOXYGEN_FILE_PATTERN "salad.h common.h")
+	set(DOXYGEN_FILE_PATTERN "salad.h common.h config.h")
 
 	configure_file(${BASE_SOURCE_DIR}/${DOC_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/${DOC_DIR}/Doxyfile @ONLY)
 

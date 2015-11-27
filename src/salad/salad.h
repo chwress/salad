@@ -1,8 +1,9 @@
-/*
- * Salad - A Content Anomaly Detector based on n-Grams
- * Copyright (c) 2012-2015, Christian Wressnegger
- * --
- * This file is part of Letter Salad or Salad for short.
+/**
+ * @class hidden_copyright
+ * \n
+ *
+ * Copyright (c) 2012-2015, Christian Wressnegger\n
+ * All rights reserved.
  *
  * Salad is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,6 +28,26 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/**
+ * @mainpage Salad - A Content Anomaly Detector based on n-Grams
+ *
+ * @section sec_overview Overview
+ *
+ * \b Letter \b Salad or \b Salad for short, is an efficient and flexible
+ * implementation of the well-known anomaly detection method Anagram by Wang et
+ * al (RAID 2006)
+ *
+ * It however extends the original method in different ways: First, the
+ * tool does not only operate on n-grams of bytes, but is also capable of
+ * comparing n-grams over bits or words and tokens. Second, \b Salad implements
+ * a 2-class version of the detector that enables discriminating strings of two
+ * types.
+ *
+ * \copydoc hidden_version
+ *
+ * @section sec_license License (GPL-3)
+ * \copydoc hidden_copyright
+ */
 
 #if defined _WIN32 || defined __CYGWIN__
   #define PUBLIC __declspec(dllexport)

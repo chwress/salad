@@ -31,7 +31,7 @@
 #include <util/util.h>
 #include <util/io.h>
 
-#include <config.h>
+#include "config.h"
 
 #ifndef USE_ARCHIVES
 // Just to make sure ;)
