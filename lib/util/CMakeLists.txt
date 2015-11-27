@@ -37,13 +37,19 @@ option(USE_COLORS          "Enable the use of colors for console output" ON)
 
 
 set(HAS_Z_MODIFIER TRUE)
+set(HAS_L_MODIFIER TRUE)
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_Z_MODIFIER FALSE) 
+	set(HAS_Z_MODIFIER FALSE)
+	set(HAS_L_MODIFIER FALSE)
+	
+	if (USE_COLORS)
+		message(WARNING "Cannot use colors on Windows!")
+		set(USE_COLORS FALSE)
+	endif ()
 endif ()
 
-set(HAS_L_MODIFIER TRUE)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_L_MODIFIER FALSE) 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows") 
 endif ()
 
 if (_XOPEN_SOURCE_7)
