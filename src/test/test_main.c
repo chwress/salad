@@ -155,7 +155,12 @@ static const int EXEC_EX(const struct main_data* const d)
 	char cmd[CMD_LENGTH +100];
 	snprintf(cmd, CMD_LENGTH +100, " %s > %s 2>&1", d->cmd, d->log);
 
-	return WEXITSTATUS(system(cmd));
+	const int ret = system(cmd);
+#ifdef WEXITSTATUS
+	return WEXITSTATUS(ret);
+#else
+	return ret;
+#endif
 }
 
 static const int EXEC(const int expected_return_value, const struct main_data* const d)
