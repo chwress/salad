@@ -41,6 +41,11 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	set(HAS_Z_MODIFIER FALSE) 
 endif ()
 
+set(HAS_L_MODIFIER TRUE)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	set(HAS_L_MODIFIER FALSE) 
+endif ()
+
 if (_XOPEN_SOURCE_7)
 	set(_XOPEN_SOURCE "700")
 endif ()
@@ -142,13 +147,9 @@ endif (USE_NETWORK)
 
 
 # regex stuff
-set(HAS_Z_MODIFIER TRUE)
-if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set(HAS_Z_MODIFIER FALSE)
-	if (USE_REGEX_FILTER)
-		message(STATUS "Right now it is not possible to use the regex filter on Windows")
-		set(USE_REGEX_FILTER FALSE)
-	endif ()
+if (USE_REGEX_FILTER AND ${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+	message(STATUS "Right now it is not possible to use the regex filter on Windows")
+	set(USE_REGEX_FILTER FALSE)
 endif ()
 
 

@@ -11,6 +11,7 @@
 
 /* #undef IS_BIGENDIAN */
 #define HAS_Z_MODIFIER
+#define HAS_L_MODIFIER
 /* #undef _XOPEN_SOURCE */
 /* #undef IOTYPE_FILES */
 

@@ -147,6 +147,14 @@ typedef int BOOL;
 	#define SSIZE_T long
 #endif
 
+#ifdef HAS_L_MODIFIER
+	#define LF "lF"
+	#define LONG_DOUBLE long double
+#else
+	#define LF "g"
+	#define LONG_DOUBLE double
+#endif
+
 # define ASSERT(expr) \
 { \
 	assert(expr); \

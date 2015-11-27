@@ -45,7 +45,7 @@ const char* const bytes2human_ex(char* const buf, const size_t n, const size_t x
 
 	// Round up to one decimal place
 	const long double d2 = ceill(d1 *10.0) /10.0;
-	snprintf(buf, n, (d1 == d2 ? "%.0Lf%s" : "%.1Lf%s"), d1, SYMBOLS[(ssize_t) variant][m]);
+	snprintf(buf, n, (d1 == d2 ? "%.0"LF"%s" : "%.1"LF"%s"), (LONG_DOUBLE) d1, SYMBOLS[(ssize_t) variant][m]);
 
 	return buf;
 }
