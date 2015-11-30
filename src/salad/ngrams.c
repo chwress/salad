@@ -18,14 +18,14 @@
 #include "ngrams.h"
 
 // bit n-grams
-extern void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data);
-extern void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);
+extern inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data);
+extern inline void extract_bgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);
 
 // byte or character n-grams
-extern void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data);
-extern void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data);
+extern inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data);
+extern inline void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data);
 
 // token or word n-grams
-extern const char pick_delimiterchar(const delimiter_array_t delim);
-extern char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const char ch);
-extern void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);
+extern inline const char pick_delimiterchar(const delimiter_array_t delim);
+extern inline char* const uniquify(const char** const str, size_t* const len, const delimiter_array_t delim, const char ch);
+extern inline void extract_wgrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM fct, void* const data);

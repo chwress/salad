@@ -119,8 +119,8 @@ void metadata_free(metadata_t* const meta)
 }
 
 
-extern void slices_resize(slices_t* const slices, const size_t new_size);
-extern void slices_grow(slices_t* const slices);
+extern inline void slices_resize(slices_t* const slices, const size_t new_size);
+extern inline void slices_grow(slices_t* const slices);
 
 void destroy_slices(slices_t* const c)
 {
