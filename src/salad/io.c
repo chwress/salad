@@ -79,7 +79,7 @@ const BOOL salad_isvalid_outputfmt(const char* const str)
 void gen_tmpname(char* const buf, const size_t n)
 {
 	if (n < 1) return;
-	buf[n] = 0x00;
+	buf[n -1] = 0x00;
 
 	if (n < 2) return;
 	buf[0] = '.';
@@ -167,8 +167,9 @@ const BOOL fwrite_model_zip(FILE* const f, const salad_t* const s)
 	{
 		// Container data
 		FILE* data = fopen(tmpdata, "w+");
-		if (tmpdata == NULL)
+		if (data == NULL)
 		{
+			fclose(config);
 			remove(tmpconfig);
 			return FALSE;
 		}
