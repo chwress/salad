@@ -1,4 +1,4 @@
-.TH "salad-inspect" 1 "Fri Aug 22 2014" "Letter Salad" \" -*- nroff -*-
+.TH "salad-inspect" 1 "Mon Nov 30 2015" "Letter Salad" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -50,6 +50,16 @@ Sets the size of batches that are read and processed in one go\&. When processin
 Filter expression for the PCAP library in case network data is processed (Default: tcp)\&. This option is only available if Salad was compiled with network support -- cf\&. USE_NETWORK\&.
 .RE
 .PP
+\fB--client-only\fP
+.RS 4
+Only consider the client-side of the network communication -- cf\&. USE_NETWORK\&.
+.RE
+.PP
+\fB--server-only\fP
+.RS 4
+Only consider the server-side of the network communication -- cf\&. USE_NETWORK\&.
+.RE
+.PP
 \fB-b, --bloom <file>\fP
 .RS 4
 The bloom filter to be used\&.
@@ -68,7 +78,12 @@ Set length of n-grams (Default: 3)\&.
 .PP
 \fB-d, --ngram-delim <delim>\fP
 .RS 4
-Set delimiters for the use of words n-grams\&. If omitted or empty byte n-grams are used\&.
+Set delimiters for the use of word/ token n-grams\&. If omitted or empty byte n-grams are used\&.
+.RE
+.PP
+\fB--binary\fP
+.RS 4
+Indicates to use bit n-grams rather than byte or token n-grams and consequently, disables the --ngram-delim option\&.
 .RE
 .PP
 \fB-s, --filter-size <num>\fP
@@ -78,7 +93,7 @@ Set the size of the bloom filter as bits of the index (Default: 24)\&.
 .PP
 \fB--hash-set <hashes>\fP
 .RS 4
-Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple')\&.
+Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2')\&.
 .RE
 .PP
 .SS "Generic Options:"
@@ -94,7 +109,7 @@ Print the help screen\&.
 .PP
 .SH "COPYRIGHT"
 .PP
-Copyright (c) 2012-2014, Christian Wressnegger
+Copyright (c) 2012-2015, Christian Wressnegger
 .br
 All rights reserved\&.
 .PP

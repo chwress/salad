@@ -1,4 +1,4 @@
-.TH "salad-train" 1 "Fri Aug 22 2014" "Letter Salad" \" -*- nroff -*-
+.TH "salad-train" 1 "Mon Nov 30 2015" "Letter Salad" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -10,7 +10,7 @@ salad-train \- Training mode of Salad
 salad train [options]
 .SH "DESCRIPTION"
 .PP
-Trains a detector based on n-grams extracted from the provided data which might be given in various \fIinput format\fPs\&. The detector is here represented as Bloom filter of a specific \fIsize\fP that gets populated by the extracted n-grams\&. The \fIlength\fP of the n-gram is indicated by the variable n\&. For the type of n-gram it is possible to choose between byte and word n-grams indicated by the \fIn-gram delimiter\fP\&. Thereby \fBSalad\fP implements the general bag-of-words model\&.
+Trains a detector based on n-grams extracted from the provided data which might be given in various \fIinput format\fPs\&. The detector is here represented as Bloom filter of a specific \fIsize\fP that gets populated by the extracted n-grams\&. The \fIlength\fP of the n-gram is indicated by the variable n\&. For the type of n-gram it is possible to choose between bit, byte and token n-grams indicated by the \fIn-gram delimiter\fP\&. Thereby \fBSalad\fP implements the general bag-of-words model\&.
 .PP
 Bloom filters basically are associative bit arrays\&. Therefore, \fBSalad\fP is restricted to the binary embedding of n-grams, that is, the representation of the pure Boolean occurrence of such n-grams\&. The actual mapping of an n-gram to the index within the bit array is achieved by hashing the n-gram value\&. To do so \fBSalad\fP offers two different \fIhash sets\fP: (1) three fundamentally different hash functions and (2) three differently seeded instances of the murmur hash function\&.
 .SH "OPTIONS"
@@ -23,7 +23,7 @@ The input filename\&.
 .PP
 \fB-f, --input-format <fmt>\fP
 .RS 4
-Sets the format of input\&. This option might be one of 'lines', 'files', 'archive', 'network' or 'network-dump'\&. This depends on the configure Salad was compiled with -- cf\&. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING\&.
+Sets the format of input\&. This option might be one of 'lines', 'files', 'archive', 'network' or 'network-dump'\&. This depends on the configuration Salad was compiled with -- cf\&. USE_ARCHIVES, USE_NETWORK, ALLOW_LIVE_TRAINING\&.
 .RE
 .PP
 \fB--input-filter <regex>\fP
@@ -36,24 +36,34 @@ The regular expression for filtering input lines or filenames respectively depen
 Sets the size of batches that are read and processed in one go\&. When processing network streams this is automatically set to 1\&.
 .RE
 .PP
-\fB-u, --update-model\fP
-.RS 4
-In case the specified output file exists and contains a valid model this flag indicates that that model should be update rather than recreated from scratch\&.
-.RE
-.PP
 \fB-p, --pcap-filter <str>\fP
 .RS 4
 Filter expression for the PCAP library in case network data is processed (Default: tcp)\&. This option is only available if Salad was compiled with network support -- cf\&. USE_NETWORK\&.
 .RE
 .PP
+\fB--client-only\fP
+.RS 4
+Only consider the client-side of the network communication -- cf\&. USE_NETWORK\&.
+.RE
+.PP
+\fB--server-only\fP
+.RS 4
+Only consider the server-side of the network communication -- cf\&. USE_NETWORK\&.
+.RE
+.PP
 \fB-u, --update-model\fP
 .RS 4
-In case the specified output file exists and contains a valid model this flag indicates that that model should be update rather than recreated from scratch
+In case the specified output file exists and contains a valid model this flag indicates that that model should be update rather than recreated from scratch\&.
 .RE
 .PP
 \fB-o, --output <file>\fP
 .RS 4
 The output filename\&.
+.RE
+.PP
+\fB-F, --output-format <fmt>\fP
+.RS 4
+Sets the format of the output\&. This option might be one of 'txt' or 'archive'\&. This depends on the configure Salad was compiled with -- cf\&. USE_ARCHIVES\&.
 .RE
 .PP
 .SS "Feature Options:"
@@ -64,7 +74,12 @@ Set length of n-grams (Default: 3)\&.
 .PP
 \fB-d, --ngram-delim <delim>\fP
 .RS 4
-Set delimiters for the use of words n-grams\&. If omitted or empty byte n-grams are used\&.
+Set delimiters for the use of word/ token n-grams\&. If omitted or empty byte n-grams are used\&.
+.RE
+.PP
+\fB--binary\fP
+.RS 4
+Indicates to use bit n-grams rather than byte or token n-grams and consequently, disables the --ngram-delim option\&.
 .RE
 .PP
 \fB-s, --filter-size <num>\fP
@@ -74,13 +89,18 @@ Set the size of the bloom filter as bits of the index (Default: 24)\&.
 .PP
 \fB--hash-set <hashes>\fP
 .RS 4
-Set the hash set to be used: 'simple' or 'murmur' (Default: 'simple')\&.
+Set the hash set to be used: 'simple', 'simple2' or 'murmur' (Default: 'simple2')\&.
 .RE
 .PP
 .SS "Generic Options:"
 \fB-e, --echo-params\fP
 .RS 4
 Echo used parameters and settings\&.
+.RE
+.PP
+\fB-q, --quiet\fP
+.RS 4
+Suppress all output but warning and errors\&.
 .RE
 .PP
 \fB-h, --help\fP
@@ -90,7 +110,7 @@ Print the help screen\&.
 .PP
 .SH "COPYRIGHT"
 .PP
-Copyright (c) 2012-2014, Christian Wressnegger
+Copyright (c) 2012-2015, Christian Wressnegger
 .br
 All rights reserved\&.
 .PP
