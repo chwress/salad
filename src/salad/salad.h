@@ -64,9 +64,14 @@ extern "C" {
 #endif
 
 
+/**
+ * The format specification for the model files used by salad.
+ */
 typedef enum
 {
-	SALAD_OUTPUTFMT_UNKNOWN, SALAD_OUTPUTFMT_TXT, SALAD_OUTPUTFMT_ARCHIVE
+	SALAD_OUTPUTFMT_UNKNOWN, //!< Unspecified output format.
+	SALAD_OUTPUTFMT_TXT, //!< Human-readable, textual output.
+	SALAD_OUTPUTFMT_ARCHIVE //!< Textual and binary output compressed as archive.
 } salad_outputfmt_t;
 
 /**

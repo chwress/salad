@@ -173,9 +173,9 @@ const int usage_main()
 	print("Usage: salad [<mode>] [options]\n"
 	"\n"
 #ifdef TEST_SALAD
-	"<mode> may be one of 'train', 'predict', 'inspect', 'stats', 'test'\n"
+	"<mode> may be one of 'train', 'predict', 'inspect', 'stats' or 'test'\n"
 #else
-	"<mode> may be one of 'train', 'predict', 'inspect', 'stats'\n"
+	"<mode> may be one of 'train', 'predict', 'inspect' or 'stats'\n"
 #endif
 	"\n"
 	"Generic options:\n"
