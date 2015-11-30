@@ -52,21 +52,21 @@ static inline void check(const char* const ngram, const size_t len, void* const 
 	d->num_ngrams++;
 }
 
-#define CLASSIFY_1CLASS(X, bloom, input, len, n, delim)                   \
-{	                                                                      \
-	BLOOM* const _bloom_ = bloom;                                         \
-	const char* const _input_ = input;                                    \
-	const size_t _len_ = len;                                             \
-	const size_t _n_ = n;                                                 \
-	const delimiter_array_t _delim_ = delim;                              \
-	                                                                      \
-	check_t data;                                                         \
-	data.bloom = _bloom_;                                                 \
-	data.num_known = 0;                                                   \
-	data.num_ngrams = 0;                                                  \
-	                                                                      \
-	extract_##X##grams(_input_, _len_, _n_, _delim_, check, &data);       \
-	return ((double) (data.num_ngrams -data.num_known))/ data.num_ngrams; \
+#define CLASSIFY_1CLASS(X, bloom, input, len, n, delim)                     \
+{	                                                                        \
+	BLOOM* const C1C_bloom = bloom;                                         \
+	const char* const C1C_input = input;                                    \
+	const size_t C1C_len = len;                                             \
+	const size_t C1C_n = n;                                                 \
+	const delimiter_array_t C1C_delim = delim;                              \
+	                                                                        \
+	check_t data;                                                           \
+	data.bloom = C1C_bloom;                                                 \
+	data.num_known = 0;                                                     \
+	data.num_ngrams = 0;                                                    \
+	                                                                        \
+	extract_##X##grams(C1C_input, C1C_len, C1C_n, C1C_delim, check, &data); \
+	return ((double) (data.num_ngrams -data.num_known))/ data.num_ngrams;   \
 }
 
 #define GOOD 0
@@ -85,23 +85,23 @@ static inline void check2(const char* const ngram, const size_t len, void* const
 
 #define CLASSIFY_2CLASS(X, bloom, bbloom, input, len, n, delim)                         \
 {	                                                                                    \
-	BLOOM* const _bloom_ = bloom;                                                       \
-	BLOOM* const _bbloom_ = bbloom;                                                     \
-	const char* const _input_ = input;                                                  \
-	const size_t _len_ = len;                                                           \
-	const size_t _n_ = n;                                                               \
-	const delimiter_array_t _delim_ = delim;                                            \
+	BLOOM* const C2C_bloom = bloom;                                                     \
+	BLOOM* const C2C_bbloom = bbloom;                                                   \
+	const char* const C2C_input = input;                                                \
+	const size_t C2C_len = len;                                                         \
+	const size_t C2C_n = n;                                                             \
+	const delimiter_array_t C2C_delim = delim;                                          \
 	                                                                                    \
 	check_t data[2];                                                                    \
-	data[GOOD].bloom = _bloom_;                                                         \
+	data[GOOD].bloom = C2C_bloom;                                                       \
 	data[GOOD].num_known = 0;                                                           \
 	data[GOOD].num_ngrams = 0;                                                          \
 	                                                                                    \
-	data[BAD].bloom = _bbloom_;                                                         \
+	data[BAD].bloom = C2C_bbloom;                                                       \
 	data[BAD].num_known = 0;                                                            \
 	data[BAD].num_ngrams = 0;                                                           \
 	                                                                                    \
-	extract_##X##grams(_input_, _len_, _n_, _delim_, check2, &data);                    \
+	extract_##X##grams(C2C_input, C2C_len, C2C_n, C2C_delim, check2, &data);            \
 	return (((double)data[BAD].num_known) -data[GOOD].num_known)/ data[BAD].num_ngrams; \
 }
 

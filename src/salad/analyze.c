@@ -138,33 +138,33 @@ static inline void count(const char* const ngram, const size_t len, void* const 
 }
 
 
-#define BLOOMIZE_DUAL(X, bloom1, _bloom2, str, len, n, delim, out, fct)         \
-{                                                                               \
-	BLOOM* const _bloom1_ = bloom1;                                             \
-	BLOOM* const _bloom2_ = bloom2;                                             \
-	const char* const _str_ = str;                                              \
-	const size_t _len_ = len;                                                   \
-	const size_t _n_ = n;                                                       \
-	const delimiter_array_t _delim_ = delim;                                    \
-	bloomize_stats_t* const _out_ = out;                                        \
-	                                                                            \
-	if (out == NULL)                                                            \
-	{                                                                           \
-		BLOOMIZE_EX(#X[0], _bloom1_, _str_, _len_, _n_, _delim_);               \
-		return;                                                                 \
-	}                                                                           \
-	                                                                            \
-	bloomize_stats_ex_t data;                                                   \
-	data.bloom1 = _bloom1_;                                                     \
-	data.bloom2 = _bloom2_;                                                     \
-	data.new = data.uniq = data.total = 0;                                      \
-	                                                                            \
-	bloom_clear(_bloom2_);                                                      \
-	extract_##X##grams(_str_, _len_, _n_, _delim_, fct, &data);                 \
-	                                                                            \
-	_out_->new = data.new;                                                      \
-	_out_->uniq = data.uniq;                                                    \
-	_out_->total = data.total;                                                  \
+#define BLOOMIZE_DUAL(X, bloom1, _bloom2, str, len, n, delim, out, fct)  \
+{                                                                        \
+	BLOOM* const BD_bloom1 = bloom1;                                     \
+	BLOOM* const BD_bloom2 = bloom2;                                     \
+	const char* const BD_str = str;                                      \
+	const size_t BD_len = len;                                           \
+	const size_t BD_n = n;                                               \
+	const delimiter_array_t BD_delim = delim;                            \
+	bloomize_stats_t* const BD_out = out;                                \
+	                                                                     \
+	if (out == NULL)                                                     \
+	{                                                                    \
+		BLOOMIZE_EX(#X[0], BD_bloom1, BD_str, BD_len, BD_n, BD_delim);   \
+		return;                                                          \
+	}                                                                    \
+	                                                                     \
+	bloomize_stats_ex_t data;                                            \
+	data.bloom1 = BD_bloom1;                                             \
+	data.bloom2 = BD_bloom2;                                             \
+	data.new = data.uniq = data.total = 0;                               \
+	                                                                     \
+	bloom_clear(BD_bloom2);                                              \
+	extract_##X##grams(BD_str, BD_len, BD_n, BD_delim, fct, &data);      \
+	                                                                     \
+	BD_out->new = data.new;                                              \
+	BD_out->uniq = data.uniq;                                            \
+	BD_out->total = data.total;                                          \
 }
 
 // bit n-grams
