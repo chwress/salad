@@ -70,11 +70,10 @@ set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
 
 # DEPENDENCIES
 
-if (CMAKE_COMPILER_IS_GNUCC)
-    find_library(M_LIB m)
-    if (M_LIB)
-        target_link_libraries(${TARGETNAME} ${M_LIB})
-    endif ()
+# libm
+find_library(M_LIB m)
+if (M_LIB)
+    target_link_libraries(${TARGETNAME} ${M_LIB})
 endif ()
 
 # libutil
