@@ -216,8 +216,8 @@ data_processor_t dp_files   = {
 		.open = NULL,
 		.meta = NULL,
 		.filter = all_filter,
-		.read = NULL, .read = NULL,
-		.recv = NULL, .recv = NULL,
+		.read = NULL, .read2 = NULL,
+		.recv = NULL, .recv2 = NULL,
 		.write = NULL,
 		.close = NULL };
 
