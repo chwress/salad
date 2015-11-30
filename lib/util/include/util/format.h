@@ -40,8 +40,8 @@ typedef enum {
 extern const char* const* SYMBOLS[];
 
 
-const const char* const bytes2human(char* const buf, const size_t n, const size_t x);
-const const char* const bytes2human_ex(char* const buf, const size_t n, const size_t x, const symbol_variants_t variant);
+const char* const bytes2human(char* const buf, const size_t n, const size_t x);
+const char* const bytes2human_ex(char* const buf, const size_t n, const size_t x, const symbol_variants_t variant);
 const size_t human2bytes(const char* const x);
 
 #endif /* UTIL_FORMAT_H_ */
