@@ -44,6 +44,7 @@
 #define TEST_OUT "test.out"
 #define TEST_LOG "test.log"
 
+#ifdef USE_ARCHIVES
 static const char* const EX1_INPUT1 = TEST_SRC "res/testing/ex1-train.zip";
 static const char* const EX1_INPUT2 = TEST_SRC "res/testing/ex1-test.zip";
 static const char* const EX1_OUTPUT = TEST_SRC "res/testing/ref/ex1/n=%"ZU".model";
@@ -53,6 +54,7 @@ static const char* const EX2_INPUT1 = TEST_SRC "res/testing/ex2-train.zip";
 static const char* const EX2_OUTPUT = TEST_SRC "res/testing/ref/ex2/n=%"ZU".model";
 static const char* const EX2_STATS  = TEST_SRC "res/testing/ref/ex2/n=%"ZU".stats";
 static const char* const EX2_INSPECT= TEST_SRC "res/testing/ref/ex2/n=%"ZU".inspect";
+#endif
 
 
 CTEST_DATA(main)
