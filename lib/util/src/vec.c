@@ -91,7 +91,7 @@ void vec_print(vec_t* const vec)
 	fprintf(stdout, "{");
 	while (x != NULL)
 	{
-		fprintf(stdout, "%" PRIu64 ": %f", x->dim, x->value);
+		fprintf(stdout, "%"ZU": %f", (SIZE_T) x->dim, x->value);
 		x = x->forward[0];
 		if (x != NULL)
 			printf(",");
@@ -140,11 +140,12 @@ const double vec_get(const vec_t* const vec, const dim_t dim)
 	}
 
 	vec_elem_t* x = vec->header;
-	for (size_t i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level +1; i > 0; i--)
 	{
-		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
+		const size_t j = i -1;
+		while (x->forward[j] != NULL && x->forward[j]->dim < dim)
 		{
-			x = x->forward[i];
+			x = x->forward[j];
 		}
 	}
 	x = x->forward[0];
@@ -170,13 +171,14 @@ void vec_set(vec_t* const vec, const dim_t dim, const double value)
 	vec_elem_t* update[MAX_LEVEL + 1];
 	memset(update, 0, MAX_LEVEL + 1);
 
-	for (size_t i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level +1; i > 0; i--)
 	{
-		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
+		const size_t j = i -1;
+		while (x->forward[j] != NULL && x->forward[j]->dim < dim)
 		{
-			x = x->forward[i];
+			x = x->forward[j];
 		}
-		update[i] = x;
+		update[j] = x;
 	}
 	x = x->forward[0];
 
@@ -213,13 +215,14 @@ void delete(vec_t* const vec, const dim_t dim)
 	vec_elem_t* update[MAX_LEVEL + 1];
 	memset(update, 0, MAX_LEVEL + 1);
 
-	for (size_t i = vec->level; i >= 0; i--)
+	for (size_t i = vec->level +1; i > 0; i--)
 	{
-		while (x->forward[i] != NULL && x->forward[i]->dim < dim)
+		const size_t j = i -1;
+		while (x->forward[j] != NULL && x->forward[j]->dim < dim)
 		{
-			x = x->forward[i];
+			x = x->forward[j];
 		}
-		update[i] = x;
+		update[j] = x;
 	}
 	x = x->forward[0];
 
