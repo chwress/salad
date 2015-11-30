@@ -154,7 +154,7 @@ static struct option stats_longopts[] = {
 
 
 #ifdef TEST_SALAD
-#define DBG_OPTION_STR "s:mh"
+#define TEST_OPTION_STR "s:mh"
 
 static struct option test_longopts[] = {
 	// I/O options
@@ -827,7 +827,7 @@ const saladstate_t parse_test_options(int argc, char* argv[], test_config_t* con
 	assert(config != NULL);
 
 	int option;
-	while ((option = getopt_long(argc, argv, DBG_OPTION_STR, test_longopts, NULL)) != -1)
+	while ((option = getopt_long(argc, argv, TEST_OPTION_STR, test_longopts, NULL)) != -1)
 	{
 		switch (option)
 		{
@@ -841,13 +841,13 @@ const saladstate_t parse_test_options(int argc, char* argv[], test_config_t* con
 
 		case '?':
 		case 'h':
-			return SALAD_HELP_DBG;
+			return SALAD_HELP_TEST;
 
 		default:
 			// In order to catch program argument that correspond to
 			// features that were excluded at compile time.
 			fprintf(stderr, "invalid option -- '%c'\n", option);
-			return SALAD_HELP_DBG;
+			return SALAD_HELP_TEST;
 		}
 	}
 	return SALAD_RUN;
@@ -879,7 +879,7 @@ const saladstate_t parse_options(int argc, char* argv[], config_t* const config,
 		case INSPECT:  return parse_inspect_options(argc, argv, config);
 		case STATS:    return parse_stats_options(argc, argv, config);
 #ifdef TEST_SALAD
-		case DBG:      return parse_test_options(argc, argv, test_config);
+		case TEST:     return parse_test_options(argc, argv, test_config);
 #endif
 		default:
 			error("Unknown mode '%s'.", argv[1]);
@@ -923,7 +923,7 @@ int main(int argc, char* argv[])
 	case SALAD_HELP_INSPECT: return usage_inspect();
 	case SALAD_HELP_STATS:   return usage_stats();
 #ifdef TEST_SALAD
-	case SALAD_HELP_DBG:     return usage_test();
+	case SALAD_HELP_TEST:    return usage_test();
 #endif
 	case SALAD_VERSION:      return version();
 	default: break;
@@ -957,7 +957,7 @@ int main(int argc, char* argv[])
 		ret = _salad_stats_(&config);
 		break;
 #ifdef TEST_SALAD
-	case DBG:
+	case TEST:
 		ret = _salad_test_(&test_config);
 		break;
 #endif

@@ -28,7 +28,7 @@ const char* const saladmode_to_string(saladmode_t m)
 	case PREDICT:  return "predict";
 	case INSPECT:  return "inspect";
 	case STATS:    return "stats";
-	case DBG:      return "test";
+	case TEST:      return "test";
 	default: break;
 	}
 	return "undefined";
@@ -42,7 +42,7 @@ const saladmode_t to_saladmode(const char* const str)
 	case 1: return PREDICT;
 	case 2: return INSPECT;
 	case 3: return STATS;
-	case 4: return DBG;
+	case 4: return TEST;
 	}
 	return UNDEFINED;
 }

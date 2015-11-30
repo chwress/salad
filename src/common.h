@@ -44,7 +44,7 @@ typedef enum {
 	PREDICT,
 	INSPECT,
 	STATS,
-	DBG
+	TEST
 } saladmode_t;
 
 const char* const saladmode_to_string(saladmode_t m);
@@ -59,7 +59,7 @@ typedef enum {
 	SALAD_HELP_PREDICT,
 	SALAD_HELP_INSPECT,
 	SALAD_HELP_STATS,
-	SALAD_HELP_DBG,
+	SALAD_HELP_TEST,
 	SALAD_VERSION
 } saladstate_t;
 
