@@ -86,7 +86,12 @@ if (NOT USE_NETWORK)
 endif ()
 
 if (NOT USE_ARCHIVES)
+	list(REMOVE_ITEM sources "${SRC}/archive.c")
 	list(REMOVE_ITEM sources "${SRC}/io/archive.c")
+endif ()
+
+if (NOT IOTYPE_FILES)
+	list(REMOVE_ITEM sources "${SRC}/io/directory.c")
 endif ()
 
 source_group("Source Files" FILES ${sources})
