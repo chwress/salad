@@ -18,6 +18,7 @@
 * An optionally compressed, text-based model file format
   salad train -F (txt|archive)
 * The default hashset ('simple2') makes use of djb2 hash
+* Flawless builds using gcc, mingw and clang
 
 0.5.0
 * Refinements to the user interface
