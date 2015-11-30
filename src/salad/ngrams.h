@@ -44,7 +44,7 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
 {
 	const ngram_mask_t mask = ((ngram_mask_t) -1) << (int) MAX(BITGRAM_BITSIZE -n, 0);
-	const size_t m = (size_t) ceil(((double) n)/8);
+	const size_t m = (n + BITGRAM_SIZE - 1) / BITGRAM_SIZE;
 
 	const char* x = str;
 	for (; x < str +len -BITGRAM_SIZE; x++)
