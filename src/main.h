@@ -23,6 +23,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include <config.h>
+
 #include "common.h"
 #include "test/common.h"
 
