@@ -44,7 +44,7 @@ typedef void(*FN_PROCESS_NGRAM)(const char* const ngram, const size_t len, void*
 inline void extract_bitgrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM fct, void* const data)
 {
 	const ngram_mask_t mask = ((ngram_mask_t) -1) << (int) MAX(BITGRAM_BITSIZE -n, 0);
-	const size_t m = (size_t) ceil(((double) n)/8); // BITGRAM_SIZE
+	const size_t m = (size_t) ceil(((double) n)/8);
 
 	const char* x = str;
 	for (; x < str +len -BITGRAM_SIZE; x++)
@@ -80,11 +80,14 @@ inline void extract_bgrams(const char* const str, const size_t len, const size_t
 // byte or character n-grams
 inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data)
 {
-	const char* x = str;
-    for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
-    {
-    	fct(x, n, data);
-    }
+	// XXX: This is necessary to shut up the compiler on Windows using MinGW
+	// We need to verify if this has any performance penalties, I hope this
+	// get optimized away :/
+	const char* x = str -1;
+	for (; (x +1) <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
+	{
+		fct((x +1), n, data);
+	}
 }
 
 inline void extract_ngrams(const char* const str, const size_t len, const size_t n, const delimiter_array_t delim, FN_PROCESS_NGRAM const fct, void* const data)
