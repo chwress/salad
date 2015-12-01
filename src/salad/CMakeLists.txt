@@ -85,11 +85,18 @@ set_target_properties("${TARGETNAME}" PROPERTIES OUTPUT_NAME  ${OUTPUTNAME})
 
 # DEPENDENCIES
 
+# XXX: This is needed for certain versions of cmake
+function(include_directories2 dirs)
+	foreach (d ${ARGV})
+		include_directories(${d})
+	endforeach ()
+endfunction ()
+
 # libfootstoragebox
 if (FSB_AS_DEPENDENCY)
 	find_package(libfoodstoragebox REQUIRED)
 
-	include_directories("${libfoodstoragebox_INCLUDE_DIRS}")
+	include_directories2("${libfoodstoragebox_INCLUDE_DIRS}")
 	target_link_libraries(${TARGETNAME} ${libfoodstoragebox_LIBRARIES})
 	add_dependencies("${TARGETNAME}" "${libfoodstoragebox_TARGET}")
 
@@ -100,8 +107,7 @@ endif ()
 
 # libutil
 find_package(libutil REQUIRED)
-
-include_directories("${libutil_INCLUDE_DIRS}")
+include_directories2(${libutil_INCLUDE_DIRS})
 target_link_libraries(${TARGETNAME} ${libutil_LIBRARIES})
 add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
 

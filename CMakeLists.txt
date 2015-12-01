@@ -92,24 +92,31 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_DIR}/salad")
 
 # DEPENDENCIES
 
+# XXX: This is needed for certain versions of cmake
+function(include_directories2 dirs)
+	foreach (d ${ARGV})
+		include_directories(${d})
+	endforeach ()
+endfunction ()
+
 # libsalad
 find_package(libsalad REQUIRED)
 
-include_directories("${libsalad_INCLUDE_DIRS}")
+include_directories2("${libsalad_INCLUDE_DIRS}")
 target_link_libraries("${TARGETNAME}" "${libsalad_LIBRARIES}")
 add_dependencies("${TARGETNAME}" "${libsalad_TARGET}")
 
 # libutil
 find_package(libutil REQUIRED)
 
-include_directories("${libutil_INCLUDE_DIRS}")
+include_directories2("${libutil_INCLUDE_DIRS}")
 target_link_libraries("${TARGETNAME}" "${libutil_LIBRARIES}")
 add_dependencies("${TARGETNAME}" "${libutil_TARGET}")
 
 # ctest
 if (TEST_SALAD)
 	find_package(ctest REQUIRED)
-	include_directories("${ctest_INCLUDE_DIRS}")
+	include_directories2("${ctest_INCLUDE_DIRS}")
 endif ()
 
 if (USE_NETWORK)
