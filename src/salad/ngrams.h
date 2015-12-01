@@ -80,13 +80,10 @@ inline void extract_bgrams(const char* const str, const size_t len, const size_t
 // byte or character n-grams
 inline void extract_bytegrams(const char* const str, const size_t len, const size_t n, FN_PROCESS_NGRAM const fct, void* const data)
 {
-	// XXX: This is necessary to shut up the compiler on Windows using MinGW
-	// We need to verify if this has any performance penalties, I hope this
-	// get optimized away :/
-	const char* x = str -1;
-	for (; (x +1) <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
+	const char* x = str;
+	for (; x <= str + len -n; x++) // num_ngrams = strlen(.) -n +1
 	{
-		fct((x +1), n, data);
+		fct(x, n, data);
 	}
 }
 
