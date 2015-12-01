@@ -121,7 +121,6 @@ uint32_t djb2_hash_n(const char* const key, const size_t len)
 #include <util/murmur.h>
 
 #include <assert.h>
-#include <inttypes.h>
 #include <string.h>
 
 uint32_t murmur_hash0(const char* const key)
