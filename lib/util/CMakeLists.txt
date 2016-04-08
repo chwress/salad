@@ -33,7 +33,6 @@ option(EXTENDED_METADATA   "Enable the support for extended meta data (filenames
 option(GROUPED_INPUT       "Enable support for grouped inputs" OFF)
 option(USE_NETWORK         "Enable support for reading data from network interfaces (requires libnids)" OFF)
 option(_XOPEN_SOURCE_7     "Enable X/Open 7 extensions (incorporating POSIX 2008)" OFF)
-option(USE_COLORS          "Enable the use of colors for console output" ON)
 
 
 set(HAS_Z_MODIFIER TRUE)

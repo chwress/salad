@@ -15,6 +15,4 @@
 #cmakedefine _XOPEN_SOURCE @_XOPEN_SOURCE@	/* getline, strdup */
 /* #undef IOTYPE_FILES */
 
-#cmakedefine USE_COLORS
-
 #endif /* UTIL_CONFIG_H_ */
