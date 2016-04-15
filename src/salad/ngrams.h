@@ -59,7 +59,6 @@ inline void extract_bitgrams(const char* const str, const size_t len, const size
 	}
 
 	const ptrdiff_t d = x -str;
-	assert(d > 0);
 	const size_t remainder = (len -((size_t) d)) *8;
 
 	bitgram_t u = TO_BITGRAM(x);
