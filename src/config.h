@@ -3,9 +3,9 @@
 
 /**
  * @class hidden_version
- * \version 0.6.0
+ * \version 0.6.1
  */
-#define VERSION_STR "0.6.0"
+#define VERSION_STR "0.6.1"
 
 /* #undef ALLOW_LIVE_TRAINING */
 
