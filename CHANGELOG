@@ -1,3 +1,6 @@
+0.6.1
+* Fix the handling of input strings shorter than a registers width 
+
 0.6.0
 * It now is possible to process data on bit granularity
   salad [train|inspect] --binary
