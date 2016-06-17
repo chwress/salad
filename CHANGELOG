@@ -4,7 +4,7 @@
 0.6.0
 * It now is possible to process data on bit granularity
   salad [train|inspect] --binary
-* Performance improvements while simoultaneously preserving
+* Performance improvements while simultaneously preserving
   and further advancing readability of the source code.
 * Suppress the verbose output of Salad
   salad [train|predict] -q
